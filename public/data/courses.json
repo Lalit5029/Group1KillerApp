@@ -1,0 +1,182 @@
+[
+  {
+    "id": "course-1",
+    "Class": "BEN 212",
+    "Section": "M001",
+    "DaysTimes": "MoWe 9:30AM - 10:50AM",
+    "Room": "Link Hall 331",
+    "Instructor": "M. Blatchley",
+    "MeetingDates": "01/13/2024 - 05/01/2024"
+  },
+  {
+    "id": "course-2",
+    "Class": "BEN 341",
+    "Section": "M001",
+    "DaysTimes": "TuTh 11:00AM - 12:20PM",
+    "Room": "Link Hall 331",
+    "Instructor": "R. Sureshkumar",
+    "MeetingDates": "01/13/2024 - 05/01/2024"
+  },
+  {
+    "id": "course-3",
+    "Class": "BEN 364",
+    "Section": "M001",
+    "DaysTimes": "MoWe 2:00PM - 3:20PM",
+    "Room": "Link Hall 331",
+    "Instructor": "L. Lin",
+    "MeetingDates": "01/13/2024 - 05/01/2024"
+  },
+  {
+    "id": "course-4",
+    "Class": "BEN 375",
+    "Section": "M001",
+    "DaysTimes": "TuTh 2:00PM - 3:20PM",
+    "Room": "Link Hall 331",
+    "Instructor": "Z. Ma",
+    "MeetingDates": "01/13/2024 - 05/01/2024"
+  },
+  {
+    "id": "course-5",
+    "Class": "BEN 385",
+    "Section": "M001",
+    "DaysTimes": "MoWe 11:00AM - 12:20PM",
+    "Room": "Link Hall 331",
+    "Instructor": "Y. Zheng",
+    "MeetingDates": "01/13/2024 - 05/01/2024"
+  },
+  {
+    "id": "course-6",
+    "Class": "ECS 101",
+    "Section": "M001",
+    "DaysTimes": "MoWe 9:30AM - 10:50AM",
+    "Room": "Link Hall 105",
+    "Instructor": "J. Smith",
+    "MeetingDates": "01/13/2024 - 05/01/2024"
+  },
+  {
+    "id": "course-7",
+    "Class": "CIS 151",
+    "Section": "M001",
+    "DaysTimes": "TuTh 9:30AM - 10:50AM",
+    "Room": "Hinds Hall 018",
+    "Instructor": "L. Wilson",
+    "MeetingDates": "01/13/2024 - 05/01/2024"
+  },
+  {
+    "id": "course-8",
+    "Class": "CHE 106",
+    "Section": "M002",
+    "DaysTimes": "TuTh 11:00AM - 12:20PM",
+    "Room": "Science Building 210",
+    "Instructor": "A. Johnson",
+    "MeetingDates": "01/13/2024 - 05/01/2024"
+  },
+  {
+    "id": "course-9",
+    "Class": "MAT 295",
+    "Section": "M003",
+    "DaysTimes": "MoWeFr 8:00AM - 9:20AM",
+    "Room": "Carnegie Hall 100",
+    "Instructor": "P. Williams",
+    "MeetingDates": "01/13/2024 - 05/01/2024"
+  },
+  {
+    "id": "course-10",
+    "Class": "PHY 211",
+    "Section": "M001",
+    "DaysTimes": "TuTh 2:00PM - 3:20PM",
+    "Room": "Physics Building 120",
+    "Instructor": "R. Thompson",
+    "MeetingDates": "01/13/2024 - 05/01/2024"
+  },
+  {
+    "id": "course-11",
+    "Class": "WRT 105",
+    "Section": "M004",
+    "DaysTimes": "MoWe 1:00PM - 2:20PM",
+    "Room": "Hall of Languages 207",
+    "Instructor": "M. Davis",
+    "MeetingDates": "01/13/2024 - 05/01/2024"
+  },
+  {
+    "id": "course-12",
+    "Class": "FYS 101",
+    "Section": "M005",
+    "DaysTimes": "Fr 10:00AM - 11:20AM",
+    "Room": "Hall of Languages 114",
+    "Instructor": "T. Roberts",
+    "MeetingDates": "01/13/2024 - 05/01/2024"
+  },
+  {
+    "id": "course-13",
+    "Class": "MAE 315",
+    "Section": "M002",
+    "DaysTimes": "MoWeFr 11:00AM - 12:20PM",
+    "Room": "Link Hall 203",
+    "Instructor": "K. Brown",
+    "MeetingDates": "01/13/2024 - 05/01/2024"
+  },
+  {
+    "id": "course-14",
+    "Class": "MAT 296",
+    "Section": "M001",
+    "DaysTimes": "MoWeFr 10:00AM - 11:20AM",
+    "Room": "Carnegie Hall 122",
+    "Instructor": "S. Miller",
+    "MeetingDates": "01/13/2024 - 05/01/2024"
+  },
+  {
+    "id": "course-15",
+    "Class": "PHY 212",
+    "Section": "M001",
+    "DaysTimes": "TuTh 3:30PM - 4:50PM",
+    "Room": "Physics Building 115",
+    "Instructor": "E. Anderson",
+    "MeetingDates": "01/13/2024 - 05/01/2024"
+  },
+  {
+    "id": "course-16",
+    "Class": "PHY 221",
+    "Section": "M001",
+    "DaysTimes": "We 5:00PM - 7:00PM",
+    "Room": "Physics Laboratory 101",
+    "Instructor": "R. Thompson",
+    "MeetingDates": "01/13/2024 - 05/01/2024"
+  },
+  {
+    "id": "course-17",
+    "Class": "PHY 222",
+    "Section": "M001",
+    "DaysTimes": "Th 5:00PM - 7:00PM",
+    "Room": "Physics Laboratory 102",
+    "Instructor": "E. Anderson",
+    "MeetingDates": "01/13/2024 - 05/01/2024"
+  },
+  {
+    "id": "course-18",
+    "Class": "ECS 221",
+    "Section": "M001",
+    "DaysTimes": "MoWe 2:00PM - 3:20PM",
+    "Room": "Link Hall 203",
+    "Instructor": "D. Johnson",
+    "MeetingDates": "01/13/2024 - 05/01/2024"
+  },
+  {
+    "id": "course-19",
+    "Class": "WRT 205",
+    "Section": "M001",
+    "DaysTimes": "TuTh 12:30PM - 1:50PM",
+    "Room": "Hall of Languages 207",
+    "Instructor": "C. Williams",
+    "MeetingDates": "01/13/2024 - 05/01/2024"
+  },
+  {
+    "id": "course-20",
+    "Class": "MAT 397",
+    "Section": "M001",
+    "DaysTimes": "MoWeFr 12:45PM - 2:05PM",
+    "Room": "Carnegie Hall 122",
+    "Instructor": "L. Zhang",
+    "MeetingDates": "01/13/2024 - 05/01/2024"
+  }
+] 

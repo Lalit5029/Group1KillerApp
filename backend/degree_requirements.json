@@ -1,0 +1,632 @@
+[
+  {
+    "title": "University RequirementsCOMPLETE",
+    "status": "Incomplete",
+    "courses": [
+      {
+        "code": "FYS 101",
+        "title": "First Year Seminar",
+        "grade": "A",
+        "credits": "1",
+        "term": "Fall 2021"
+      },
+      {
+        "code": "FST 204",
+        "title": "Food, Identity, and Power",
+        "grade": "B",
+        "credits": "3",
+        "term": "Fall 2024"
+      }
+    ]
+  },
+  {
+    "title": "Major in Computer ScienceIN-PROGRESS",
+    "status": "Incomplete",
+    "courses": [
+      {
+        "code": "ENL 211",
+        "title": "Comp for ESOL Students",
+        "grade": "B",
+        "credits": "3",
+        "term": "Spring 2022"
+      },
+      {
+        "code": "ENL 213",
+        "title": "Adv Wrt  for ESOL Students",
+        "grade": "B",
+        "credits": "3",
+        "term": "Fall 2022"
+      },
+      {
+        "code": "CRS 225",
+        "title": "Public Advocacy",
+        "grade": "B",
+        "credits": "3",
+        "term": "Spring 2023"
+      },
+      {
+        "code": "ECS 392",
+        "title": "Ethical Aspects of ECS",
+        "grade": "A",
+        "credits": "3",
+        "term": "Fall 2024"
+      },
+      {
+        "code": "PHI 251",
+        "title": "Logic",
+        "grade": "B-",
+        "credits": "3",
+        "term": "Spring 2022"
+      },
+      {
+        "code": "HOM 166",
+        "title": "Understanding Music II",
+        "grade": "C+",
+        "credits": "3",
+        "term": "Spring 2022"
+      },
+      {
+        "code": "PHI 171",
+        "title": "Critical Thinking",
+        "grade": "B+",
+        "credits": "3",
+        "term": "Fall 2024"
+      },
+      {
+        "code": "PHI 197",
+        "title": "Human Nature",
+        "grade": "A",
+        "credits": "3",
+        "term": "Spring 2024"
+      },
+      {
+        "code": "ECN 101",
+        "title": "Introductory Microeconomics",
+        "grade": "B+",
+        "credits": "3",
+        "term": "Fall 2021"
+      },
+      {
+        "code": "HST 320",
+        "title": "Traditional China",
+        "grade": "A-",
+        "credits": "3",
+        "term": "Fall 2024"
+      },
+      {
+        "code": "PHY 211",
+        "title": "General Physics I",
+        "grade": "B",
+        "credits": "3",
+        "term": "Fall 2021"
+      },
+      {
+        "code": "PHY 221",
+        "title": "General Physics I Laboratory",
+        "grade": "A",
+        "credits": "1",
+        "term": "Fall 2021"
+      },
+      {
+        "code": "CHE 106",
+        "title": "General Chemistry Lecture I",
+        "grade": "B",
+        "credits": "3",
+        "term": "Fall 2022"
+      },
+      {
+        "code": "CHE 107",
+        "title": "General Chemistry Laboratory I",
+        "grade": "A-",
+        "credits": "1",
+        "term": "Fall 2022"
+      },
+      {
+        "code": "FST 204",
+        "title": "Food, Identity, and Power",
+        "grade": "B",
+        "credits": "3",
+        "term": "Fall 2024"
+      },
+      {
+        "code": "GEO 108",
+        "title": "Mapping Today",
+        "grade": "C-",
+        "credits": "3",
+        "term": "Spring 2023"
+      },
+      {
+        "code": "WGS 101",
+        "title": "Intro to Women's & Gender Stds",
+        "grade": "IP",
+        "credits": "(3)",
+        "term": "Spring 2025"
+      },
+      {
+        "code": "MAT 295",
+        "title": "Calculus I",
+        "grade": "A-",
+        "credits": "4",
+        "term": "Fall 2021"
+      },
+      {
+        "code": "MAT 296",
+        "title": "Calculus II",
+        "grade": "C-",
+        "credits": "4",
+        "term": "Spring 2022"
+      },
+      {
+        "code": "MAT 331",
+        "title": "1st Course in Linear Algebra",
+        "grade": "C-",
+        "credits": "3",
+        "term": "Fall 2023"
+      },
+      {
+        "code": "CIS 321",
+        "title": "Intro to Probablty/Statis",
+        "grade": "A-",
+        "credits": "4",
+        "term": "Spring 2023"
+      },
+      {
+        "code": "ECS 101",
+        "title": "Introduction to Engr/Cmptr Sci",
+        "grade": "A",
+        "credits": "3",
+        "term": "Fall 2022"
+      },
+      {
+        "code": "ECS 102",
+        "title": "Introduction to Computing",
+        "grade": "A-",
+        "credits": "3",
+        "term": "Spring 2022"
+      },
+      {
+        "code": "CIS 252",
+        "title": "Elements of Computer Science",
+        "grade": "B",
+        "credits": "4",
+        "term": "Fall 2022"
+      },
+      {
+        "code": "CIS 375",
+        "title": "Intro to Discrete Mathematics",
+        "grade": "A",
+        "credits": "3",
+        "term": "Spring 2023"
+      },
+      {
+        "code": "CIS 341",
+        "title": "Cptr Organ&Progrmmng Syst",
+        "grade": "C",
+        "credits": "3",
+        "term": "Fall 2023"
+      },
+      {
+        "code": "CSE 384",
+        "title": "Systems & Network Programming",
+        "grade": "A-",
+        "credits": "3",
+        "term": "Spring 2024"
+      },
+      {
+        "code": "CIS 351",
+        "title": "Data Structures",
+        "grade": "B-",
+        "credits": "3",
+        "term": "Spring 2023"
+      },
+      {
+        "code": "CIS 352",
+        "title": "Progrmng Lang:Thry&Prctic",
+        "grade": "B",
+        "credits": "3",
+        "term": "Fall 2023"
+      },
+      {
+        "code": "CIS 453",
+        "title": "Software Spec. and Design",
+        "grade": "A",
+        "credits": "3",
+        "term": "Fall 2024"
+      },
+      {
+        "code": "CIS 454",
+        "title": "Software Implementation",
+        "grade": "IP",
+        "credits": "(3)",
+        "term": "Spring 2025"
+      },
+      {
+        "code": "CIS 473",
+        "title": "Automata and Computability",
+        "grade": "B",
+        "credits": "3",
+        "term": "Spring 2024"
+      },
+      {
+        "code": "CIS 477",
+        "title": "Intro/Analysis of Algorithms",
+        "grade": "B",
+        "credits": "3",
+        "term": "Fall 2023"
+      },
+      {
+        "code": "CSE 486",
+        "title": "Design Operating Systems",
+        "grade": "B",
+        "credits": "3",
+        "term": "Fall 2024"
+      },
+      {
+        "code": "CIS 400",
+        "title": "Pervasive Computing",
+        "grade": "A",
+        "credits": "3",
+        "term": "Spring 2024"
+      },
+      {
+        "code": "CIS 400",
+        "title": "Data Science in Practice",
+        "grade": "IP",
+        "credits": "(3)",
+        "term": "Spring 2025"
+      },
+      {
+        "code": "CIS 425",
+        "title": "Intro Comp. Graphics",
+        "grade": "B-",
+        "credits": "3",
+        "term": "Spring 2024"
+      },
+      {
+        "code": "CIS 428",
+        "title": "Introduction to Cryptography",
+        "grade": "IP",
+        "credits": "(3)",
+        "term": "Spring 2025"
+      },
+      {
+        "code": "CIS 487",
+        "title": "Access Control, Security&Trust",
+        "grade": "IP",
+        "credits": "(3)",
+        "term": "Spring 2025"
+      },
+      {
+        "code": "PHI 378",
+        "title": "Minds and Machines",
+        "grade": "IP",
+        "credits": "(3)",
+        "term": "Spring 2025"
+      }
+    ]
+  },
+  {
+    "title": "Computer Science Core GPAIN-PROGRESS",
+    "status": "Incomplete",
+    "courses": [
+      {
+        "code": "CIS 252",
+        "title": "Elements of Computer Science",
+        "grade": "B",
+        "credits": "4",
+        "term": "Fall 2022"
+      },
+      {
+        "code": "CIS 375",
+        "title": "Intro to Discrete Mathematics",
+        "grade": "A",
+        "credits": "3",
+        "term": "Spring 2023"
+      },
+      {
+        "code": "CIS 341",
+        "title": "Cptr Organ&Progrmmng Syst",
+        "grade": "C",
+        "credits": "3",
+        "term": "Fall 2023"
+      },
+      {
+        "code": "CIS 351",
+        "title": "Data Structures",
+        "grade": "B-",
+        "credits": "3",
+        "term": "Spring 2023"
+      },
+      {
+        "code": "CIS 352",
+        "title": "Progrmng Lang:Thry&Prctic",
+        "grade": "B",
+        "credits": "3",
+        "term": "Fall 2023"
+      },
+      {
+        "code": "CIS 453",
+        "title": "Software Spec. and Design",
+        "grade": "A",
+        "credits": "3",
+        "term": "Fall 2024"
+      },
+      {
+        "code": "CIS 454",
+        "title": "Software Implementation",
+        "grade": "IP",
+        "credits": "(3)",
+        "term": "Spring 2025"
+      },
+      {
+        "code": "CIS 473",
+        "title": "Automata and Computability",
+        "grade": "B",
+        "credits": "3",
+        "term": "Spring 2024"
+      },
+      {
+        "code": "CIS 477",
+        "title": "Intro/Analysis of Algorithms",
+        "grade": "B",
+        "credits": "3",
+        "term": "Fall 2023"
+      },
+      {
+        "code": "CSE 486",
+        "title": "Design Operating Systems",
+        "grade": "B",
+        "credits": "3",
+        "term": "Fall 2024"
+      },
+      {
+        "code": "CSE 384",
+        "title": "Systems & Network Programming",
+        "grade": "A-",
+        "credits": "3",
+        "term": "Spring 2024"
+      }
+    ]
+  },
+  {
+    "title": "ECS/Math/Science GPACOMPLETE",
+    "status": "Incomplete",
+    "courses": [
+      {
+        "code": "CHE 106",
+        "title": "General Chemistry Lecture I",
+        "grade": "B",
+        "credits": "3",
+        "term": "Fall 2022"
+      },
+      {
+        "code": "CHE 107",
+        "title": "General Chemistry Laboratory I",
+        "grade": "A-",
+        "credits": "1",
+        "term": "Fall 2022"
+      },
+      {
+        "code": "CIS 252",
+        "title": "Elements of Computer Science",
+        "grade": "B",
+        "credits": "4",
+        "term": "Fall 2022"
+      },
+      {
+        "code": "CIS 321",
+        "title": "Intro to Probablty/Statis",
+        "grade": "A-",
+        "credits": "4",
+        "term": "Spring 2023"
+      },
+      {
+        "code": "CIS 341",
+        "title": "Cptr Organ&Progrmmng Syst",
+        "grade": "C",
+        "credits": "3",
+        "term": "Fall 2023"
+      },
+      {
+        "code": "CIS 351",
+        "title": "Data Structures",
+        "grade": "B-",
+        "credits": "3",
+        "term": "Spring 2023"
+      },
+      {
+        "code": "CIS 352",
+        "title": "Progrmng Lang:Thry&Prctic",
+        "grade": "B",
+        "credits": "3",
+        "term": "Fall 2023"
+      },
+      {
+        "code": "CIS 375",
+        "title": "Intro to Discrete Mathematics",
+        "grade": "A",
+        "credits": "3",
+        "term": "Spring 2023"
+      },
+      {
+        "code": "CIS 453",
+        "title": "Software Spec. and Design",
+        "grade": "A",
+        "credits": "3",
+        "term": "Fall 2024"
+      },
+      {
+        "code": "CIS 473",
+        "title": "Automata and Computability",
+        "grade": "B",
+        "credits": "3",
+        "term": "Spring 2024"
+      },
+      {
+        "code": "CIS 477",
+        "title": "Intro/Analysis of Algorithms",
+        "grade": "B",
+        "credits": "3",
+        "term": "Fall 2023"
+      },
+      {
+        "code": "CSE 384",
+        "title": "Systems & Network Programming",
+        "grade": "A-",
+        "credits": "3",
+        "term": "Spring 2024"
+      },
+      {
+        "code": "CSE 486",
+        "title": "Design Operating Systems",
+        "grade": "B",
+        "credits": "3",
+        "term": "Fall 2024"
+      },
+      {
+        "code": "ECS 101",
+        "title": "Introduction to Engr/Cmptr Sci",
+        "grade": "A",
+        "credits": "3",
+        "term": "Fall 2022"
+      },
+      {
+        "code": "ECS 102",
+        "title": "Introduction to Computing",
+        "grade": "A-",
+        "credits": "3",
+        "term": "Spring 2022"
+      },
+      {
+        "code": "ECS 392",
+        "title": "Ethical Aspects of ECS",
+        "grade": "A",
+        "credits": "3",
+        "term": "Fall 2024"
+      },
+      {
+        "code": "MAT 295",
+        "title": "Calculus I",
+        "grade": "A-",
+        "credits": "4",
+        "term": "Fall 2021"
+      },
+      {
+        "code": "MAT 296",
+        "title": "Calculus II",
+        "grade": "C-",
+        "credits": "4",
+        "term": "Spring 2022"
+      },
+      {
+        "code": "MAT 331",
+        "title": "1st Course in Linear Algebra",
+        "grade": "C-",
+        "credits": "3",
+        "term": "Fall 2023"
+      },
+      {
+        "code": "PHY 211",
+        "title": "General Physics I",
+        "grade": "B",
+        "credits": "3",
+        "term": "Fall 2021"
+      },
+      {
+        "code": "PHY 221",
+        "title": "General Physics I Laboratory",
+        "grade": "A",
+        "credits": "1",
+        "term": "Fall 2021"
+      }
+    ]
+  },
+  {
+    "title": "Courses Not Allocated",
+    "status": "Incomplete",
+    "courses": [
+      {
+        "code": "ENL 207",
+        "title": "Adv Skills for ESOL",
+        "grade": "B+",
+        "credits": "3",
+        "term": "Fall 2021"
+      }
+    ]
+  },
+  {
+    "title": "Insufficient",
+    "status": "Incomplete",
+    "courses": [
+      {
+        "code": "CIS 467",
+        "title": "Intro/Artfcl. Intellgence",
+        "grade": "WD",
+        "credits": "0",
+        "term": "Fall 2023"
+      },
+      {
+        "code": "CSE 400",
+        "title": "Intro to Computer Comm and Net",
+        "grade": "WD",
+        "credits": "0",
+        "term": "Spring 2024"
+      },
+      {
+        "code": "MAT 397",
+        "title": "Calculus III",
+        "grade": "WD",
+        "credits": "0",
+        "term": "Fall 2022"
+      }
+    ]
+  },
+  {
+    "title": "In-progress",
+    "status": "Incomplete",
+    "courses": [
+      {
+        "code": "CIS 400",
+        "title": "Data Science in Practice",
+        "grade": "IP",
+        "credits": "(3)",
+        "term": "Spring 2025"
+      },
+      {
+        "code": "CIS 428",
+        "title": "Introduction to Cryptography",
+        "grade": "IP",
+        "credits": "(3)",
+        "term": "Spring 2025"
+      },
+      {
+        "code": "CIS 454",
+        "title": "Software Implementation",
+        "grade": "IP",
+        "credits": "(3)",
+        "term": "Spring 2025"
+      },
+      {
+        "code": "CIS 487",
+        "title": "Access Control, Security&Trust",
+        "grade": "IP",
+        "credits": "(3)",
+        "term": "Spring 2025"
+      },
+      {
+        "code": "PHI 378",
+        "title": "Minds and Machines",
+        "grade": "IP",
+        "credits": "(3)",
+        "term": "Spring 2025"
+      },
+      {
+        "code": "WGS 101",
+        "title": "Intro to Women's & Gender Stds",
+        "grade": "IP",
+        "credits": "(3)",
+        "term": "Spring 2025"
+      }
+    ]
+  }
+]

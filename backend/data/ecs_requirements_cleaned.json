@@ -1,0 +1,1459 @@
+[
+  {
+    "program": "Aerospace Engineering",
+    "total_credits": "33 credits",
+    "categories": {
+      "First Year, Fall Semester": [
+        {
+          "code": "ECS 101",
+          "name": "Introduction to Engineering and Computer Science"
+        },
+        {
+          "code": "CIS 151",
+          "name": "Fundamentals of Computing and Programming"
+        },
+        {
+          "code": "MAT 295",
+          "name": "Calculus I"
+        },
+        {
+          "code": "CHE 106",
+          "name": "General Chemistry Lecture I"
+        },
+        {
+          "code": "CHE 107",
+          "name": "General Chemistry Laboratory I"
+        },
+        {
+          "code": "WRT 105",
+          "name": "WRT 105 - Studio 1: Practices of Academic Writing"
+        },
+        {
+          "code": "FYS 101",
+          "name": "First Year Seminar"
+        }
+      ],
+      "First Year, Spring Semester": [
+        {
+          "code": "CSE 283",
+          "name": "Introduction to Object-Oriented Design"
+        },
+        {
+          "code": "MAT 296",
+          "name": "Calculus II"
+        },
+        {
+          "code": "PHI 251",
+          "name": "Logic"
+        },
+        {
+          "code": "PHY 211",
+          "name": "General Physics I"
+        },
+        {
+          "code": "PHY 221",
+          "name": "General Physics Laboratory I"
+        }
+      ],
+      "Second Year, Fall Semester": [
+        {
+          "code": "CIS 375",
+          "name": "Introduction to Discrete Mathematics"
+        },
+        {
+          "code": "CIS 351",
+          "name": "Data Structures"
+        },
+        {
+          "code": "CSE 389",
+          "name": "Web System Architecture and Programming"
+        },
+        {
+          "code": "ELE 251",
+          "name": "Fundamentals of Linear Systems"
+        },
+        {
+          "code": "ELE 292",
+          "name": "Linear Systems Laboratory"
+        }
+      ],
+      "Second Year, Spring Semester": [
+        {
+          "code": "CSE 261",
+          "name": "Digital Logic Design"
+        },
+        {
+          "code": "CSE 262",
+          "name": "Digital Logic Design Laboratory"
+        },
+        {
+          "code": "CSE 384",
+          "name": "Systems and Network Programming"
+        },
+        {
+          "code": "PHY 212",
+          "name": "General Physics II"
+        },
+        {
+          "code": "PHY 222",
+          "name": "General Physics Laboratory II"
+        },
+        {
+          "code": "WRT 205",
+          "name": "WRT 205 - Studio 2: Critical Research and Writing"
+        },
+        {
+          "code": "MAT 331",
+          "name": "First Course in Linear Algebra"
+        }
+      ],
+      "Third Year, Fall Semester": [
+        {
+          "code": "CSE 381",
+          "name": "Computer Architecture"
+        },
+        {
+          "code": "CSE 397",
+          "name": "Microcontroller Laboratory"
+        },
+        {
+          "code": "CSE 484",
+          "name": "Introduction to Computer and Network Security"
+        },
+        {
+          "code": "CSE 464",
+          "name": "Introduction to VLSI Design"
+        },
+        {
+          "code": "ECS 392",
+          "name": "Ethical Aspects of Engineering and Computer Science"
+        }
+      ],
+      "Third Year, Spring Semester": [
+        {
+          "code": "CIS 321",
+          "name": "Introduction to Probability and Statistics"
+        },
+        {
+          "code": "CSE 398",
+          "name": "Embedded and Mobile Systems Laboratory"
+        },
+        {
+          "code": "CSE 486",
+          "name": "Design of Operating Systems"
+        },
+        {
+          "code": "WRT 307",
+          "name": "Advanced Writing Studio: Professional Writing"
+        }
+      ],
+      "Fourth Year, Fall Semester": [
+        {
+          "code": "CSE 491",
+          "name": "Senior Design Project I"
+        }
+      ],
+      "Fourth Year, Spring Semester": [
+        {
+          "code": "CSE 492",
+          "name": "Senior Design Project II"
+        }
+      ],
+      "Note:": [
+        {
+          "code": "CIS 321",
+          "name": ""
+        },
+        {
+          "code": "MAT 521",
+          "name": ""
+        },
+        {
+          "code": "MAT 525",
+          "name": ""
+        }
+      ],
+      "Social Sciences and Humanities Electives": [
+        {
+          "code": "ANT 131",
+          "name": ""
+        },
+        {
+          "code": "ANT 431",
+          "name": ""
+        },
+        {
+          "code": "ANT 433",
+          "name": ""
+        }
+      ]
+    }
+  },
+  {
+    "program": "Bioengineering",
+    "total_credits": null,
+    "categories": {
+      "The minor in computer engineering must include the following courses (10 credit hours):": [
+        {
+          "code": "CSE 283",
+          "name": "Introduction to Object-Oriented Design"
+        },
+        {
+          "code": "CSE 261",
+          "name": "Digital Logic Design"
+        },
+        {
+          "code": "CSE 262",
+          "name": "Digital Logic Design Laboratory"
+        },
+        {
+          "code": "CIS 351",
+          "name": "Data Structures"
+        }
+      ],
+      "The minor in computer engineering must also include 2 of the following 5 courses (6 credit hours):": [
+        {
+          "code": "CSE 381",
+          "name": "Computer Architecture"
+        },
+        {
+          "code": "CSE 384",
+          "name": "Systems and Network Programming"
+        },
+        {
+          "code": "CSE 397",
+          "name": "Microcontroller Laboratory"
+        },
+        {
+          "code": "CSE 464",
+          "name": "Introduction to VLSI Design"
+        },
+        {
+          "code": "CSE 486",
+          "name": "Design of Operating Systems"
+        }
+      ]
+    }
+  },
+  {
+    "program": "Chemical Engineering",
+    "total_credits": null,
+    "categories": {}
+  },
+  {
+    "program": "Civil Engineering",
+    "total_credits": null,
+    "categories": {
+      "First Year, Fall Semester": [
+        {
+          "code": "MAT 295",
+          "name": "Calculus I"
+        },
+        {
+          "code": "CHE 106",
+          "name": "General Chemistry Lecture I"
+        },
+        {
+          "code": "CHE 107",
+          "name": "General Chemistry Laboratory I"
+        },
+        {
+          "code": "ECS 101",
+          "name": "Introduction to Engineering and Computer Science"
+        },
+        {
+          "code": "WRT 105",
+          "name": "WRT 105 - Studio 1: Practices of Academic Writing"
+        },
+        {
+          "code": "FYS 101",
+          "name": "First Year Seminar"
+        }
+      ],
+      "First Year, Spring Semester": [
+        {
+          "code": "MAT 296",
+          "name": "Calculus II"
+        },
+        {
+          "code": "PHY 211",
+          "name": "General Physics I"
+        },
+        {
+          "code": "PHY 221",
+          "name": "General Physics Laboratory I"
+        },
+        {
+          "code": "CEE 198",
+          "name": "Computer-aided Drafting, Design, and Modeling"
+        }
+      ],
+      "Select one of the following courses:": [
+        {
+          "code": "EAR 203",
+          "name": ""
+        },
+        {
+          "code": "EAR 105",
+          "name": ""
+        },
+        {
+          "code": "EAR 104",
+          "name": ""
+        }
+      ],
+      "Second Year, Fall Semester": [
+        {
+          "code": "MAT 397",
+          "name": "Calculus III"
+        },
+        {
+          "code": "PHY 212",
+          "name": "General Physics II"
+        },
+        {
+          "code": "PHY 222",
+          "name": "General Physics Laboratory II"
+        },
+        {
+          "code": "ECS 104",
+          "name": "Engineering Computational Tools"
+        },
+        {
+          "code": "ECS 221",
+          "name": "Statics"
+        },
+        {
+          "code": "CEE 273",
+          "name": "Introduction to Geomatics and GIS"
+        }
+      ],
+      "Second Year, Spring Semester": [
+        {
+          "code": "MAT 485",
+          "name": "Differential Equations and Matrix Algebra for Engineers"
+        },
+        {
+          "code": "ECS 222",
+          "name": "Dynamics"
+        },
+        {
+          "code": "CEE 274",
+          "name": "Sustainability in Civil and Environmental Systems"
+        },
+        {
+          "code": "WRT 205",
+          "name": "WRT 205 - Studio 2: Critical Research and Writing"
+        },
+        {
+          "code": "CEE 325",
+          "name": "Mechanics of Materials"
+        }
+      ],
+      "Third Year, Fall Semester": [
+        {
+          "code": "CEE 331",
+          "name": "Analysis of Structures and Materials"
+        },
+        {
+          "code": "CEE 337",
+          "name": "Introduction to Geotechnical Engineering"
+        },
+        {
+          "code": "CEE 341",
+          "name": "Introduction to Environmental Engineering"
+        },
+        {
+          "code": "CEE 327",
+          "name": "Prin of Fluid Mechanics"
+        }
+      ],
+      "Third Year, Spring Semester": [
+        {
+          "code": "CEE 329",
+          "name": "Probability, Statistics and Risk for Civil and Environmental Engineering"
+        },
+        {
+          "code": "CEE 332",
+          "name": "Design of Concrete Structures"
+        },
+        {
+          "code": "CEE 338",
+          "name": "Foundation Engineering"
+        },
+        {
+          "code": "CEE 352",
+          "name": "Water Resources Engineering"
+        }
+      ],
+      "Fourth Year, Fall Semester": [
+        {
+          "code": "CEE 326",
+          "name": "Engineering Materials"
+        },
+        {
+          "code": "CEE 401",
+          "name": "Construction Engineering and Project Management"
+        },
+        {
+          "code": "CEE 443",
+          "name": "Transportation Engineering"
+        }
+      ],
+      "Fourth Year, Spring Semester": [
+        {
+          "code": "CEE 475",
+          "name": "Civil and Environmental Engineering Design"
+        }
+      ]
+    }
+  },
+  {
+    "program": "Computer Engineering",
+    "total_credits": "18 credits",
+    "categories": {
+      "Minor Requirements": [
+        {
+          "code": "CIS 151",
+          "name": "Fundamentals of Computing and Programming"
+        },
+        {
+          "code": "CIS 252",
+          "name": "Elements of Computer Science"
+        },
+        {
+          "code": "CIS 375",
+          "name": "Introduction to Discrete Mathematics"
+        },
+        {
+          "code": "CIS 351",
+          "name": "Data Structures"
+        }
+      ],
+      "At least one course chosen from:": [
+        {
+          "code": "CIS 352",
+          "name": "Programming Language: Theory & Practice"
+        },
+        {
+          "code": "CIS 473",
+          "name": "Automata and Computability"
+        },
+        {
+          "code": "CIS 477",
+          "name": "Introduction to Analysis of Algorithms"
+        }
+      ],
+      "Additional Information": [
+        {
+          "code": "CIS 321",
+          "name": ""
+        },
+        {
+          "code": "CPS 196",
+          "name": ""
+        },
+        {
+          "code": "CIS 151",
+          "name": ""
+        }
+      ]
+    }
+  },
+  {
+    "program": "Computer Science",
+    "total_credits": "120 credits",
+    "categories": {
+      "Core Requirements": [
+        {
+          "code": "CIS 252",
+          "name": "Elements of Computer Science"
+        },
+        {
+          "code": "CIS 341",
+          "name": "Computer Organization & Programming Systems"
+        },
+        {
+          "code": "CIS 351",
+          "name": "Data Structures"
+        },
+        {
+          "code": "CIS 352",
+          "name": "Programming Language: Theory & Practice"
+        },
+        {
+          "code": "CSE 384",
+          "name": "Systems and Network Programming"
+        },
+        {
+          "code": "CIS 375",
+          "name": "Introduction to Discrete Mathematics"
+        },
+        {
+          "code": "CIS 453",
+          "name": "Software Specification and Design"
+        },
+        {
+          "code": "CIS 454",
+          "name": "Software Implementation"
+        },
+        {
+          "code": "CIS 473",
+          "name": "Automata and Computability"
+        },
+        {
+          "code": "CIS 477",
+          "name": "Introduction to Analysis of Algorithms"
+        },
+        {
+          "code": "CSE 486",
+          "name": "Design of Operating Systems"
+        }
+      ],
+      "General Education Section": [
+        {
+          "code": "WRT 105",
+          "name": ""
+        },
+        {
+          "code": "WRT 205",
+          "name": ""
+        },
+        {
+          "code": "CRS 225",
+          "name": "Public Advocacy"
+        },
+        {
+          "code": "CRS 325",
+          "name": "Presentational Speaking"
+        },
+        {
+          "code": "IST 344",
+          "name": "Information Reporting and Presentation"
+        }
+      ],
+      "Natural Sciences": [
+        {
+          "code": "PHY 211",
+          "name": "General Physics I"
+        },
+        {
+          "code": "PHY 221",
+          "name": "General Physics Laboratory I"
+        },
+        {
+          "code": "PHY 212",
+          "name": ""
+        },
+        {
+          "code": "PHY 222",
+          "name": ""
+        },
+        {
+          "code": "CHE 106",
+          "name": ""
+        },
+        {
+          "code": "CHE 107",
+          "name": ""
+        },
+        {
+          "code": "BIO 121",
+          "name": ""
+        },
+        {
+          "code": "BIO 122",
+          "name": ""
+        }
+      ],
+      "Social Science and Humanities": [
+        {
+          "code": "PHI 251",
+          "name": "Logic"
+        },
+        {
+          "code": "ECS 392",
+          "name": "Ethical Aspects of Engineering and Computer Science"
+        }
+      ],
+      "Mathematics Section": [
+        {
+          "code": "MAT 295",
+          "name": "Calculus I"
+        },
+        {
+          "code": "MAT 296",
+          "name": "Calculus II"
+        },
+        {
+          "code": "MAT 397",
+          "name": "Calculus III"
+        },
+        {
+          "code": "MAT 331",
+          "name": "First Course in Linear Algebra"
+        },
+        {
+          "code": "CIS 321",
+          "name": "Introduction to Probability and Statistics"
+        }
+      ],
+      "Major Section": [
+        {
+          "code": "ECS 101",
+          "name": ""
+        },
+        {
+          "code": "CIS 151",
+          "name": ""
+        }
+      ],
+      "Arts and Sciences": [
+        {
+          "code": "MAT 521",
+          "name": ""
+        },
+        {
+          "code": "MAT 485",
+          "name": ""
+        },
+        {
+          "code": "PHI 378",
+          "name": "Minds and Machines"
+        },
+        {
+          "code": "PHI 451",
+          "name": "Logic and Language"
+        },
+        {
+          "code": "PHI 551",
+          "name": "Mathematical Logic"
+        },
+        {
+          "code": "PHI 552",
+          "name": "Modal Logic"
+        }
+      ],
+      "First Year, Fall Semester (17)": [
+        {
+          "code": "ECS 101",
+          "name": "Introduction to Engineering and Computer Science"
+        },
+        {
+          "code": "CIS 151",
+          "name": "Fundamentals of Computing and Programming"
+        },
+        {
+          "code": "MAT 295",
+          "name": "Calculus I"
+        },
+        {
+          "code": "WRT 105",
+          "name": "WRT 105 - Studio 1: Practices of Academic Writing"
+        },
+        {
+          "code": "FYS 101",
+          "name": "First Year Seminar"
+        }
+      ],
+      "First Year, Spring Semester (15)": [
+        {
+          "code": "CIS 252",
+          "name": "Elements of Computer Science"
+        },
+        {
+          "code": "MAT 296",
+          "name": "Calculus II"
+        },
+        {
+          "code": "PHI 251",
+          "name": "Logic"
+        },
+        {
+          "code": "PHY 211",
+          "name": "General Physics I"
+        },
+        {
+          "code": "PHY 221",
+          "name": "General Physics Laboratory I"
+        }
+      ],
+      "Second Year, Fall Semester (13-14)": [
+        {
+          "code": "CIS 375",
+          "name": "Introduction to Discrete Mathematics"
+        },
+        {
+          "code": "CIS 351",
+          "name": "Data Structures"
+        },
+        {
+          "code": "MAT 397",
+          "name": "Calculus III"
+        },
+        {
+          "code": "MAT 331",
+          "name": "First Course in Linear Algebra"
+        }
+      ],
+      "Second Year, Spring Semester (16)": [
+        {
+          "code": "CIS 321",
+          "name": "Introduction to Probability and Statistics"
+        },
+        {
+          "code": "CIS 341",
+          "name": "Computer Organization & Programming Systems"
+        },
+        {
+          "code": "CIS 352",
+          "name": "Programming Language: Theory & Practice"
+        },
+        {
+          "code": "CSE 384",
+          "name": "Systems and Network Programming"
+        },
+        {
+          "code": "WRT 205",
+          "name": "WRT 205 - Studio 2: Critical Research and Writing"
+        }
+      ],
+      "Third Year, Fall Semester (15)": [
+        {
+          "code": "CIS 453",
+          "name": "Software Specification and Design"
+        },
+        {
+          "code": "CIS 477",
+          "name": "Introduction to Analysis of Algorithms"
+        },
+        {
+          "code": "CSE 486",
+          "name": "Design of Operating Systems"
+        }
+      ],
+      "Third Year, Spring Semester (15)": [
+        {
+          "code": "CIS 473",
+          "name": "Automata and Computability"
+        },
+        {
+          "code": "CIS 454",
+          "name": "Software Implementation"
+        }
+      ],
+      "Fourth Year, Fall Semester (15)": [
+        {
+          "code": "ECS 392",
+          "name": "Ethical Aspects of Engineering and Computer Science"
+        }
+      ]
+    }
+  },
+  {
+    "program": "Electrical Engineering",
+    "total_credits": "21 credits",
+    "categories": {
+      "First Year, Fall Semester (18)": [
+        {
+          "code": "ECS 101",
+          "name": "Introduction to Engineering and Computer Science"
+        },
+        {
+          "code": "CIS 151",
+          "name": "Fundamentals of Computing and Programming"
+        },
+        {
+          "code": "CHE 106",
+          "name": "General Chemistry Lecture I"
+        },
+        {
+          "code": "CHE 107",
+          "name": "General Chemistry Laboratory I"
+        },
+        {
+          "code": "MAT 295",
+          "name": "Calculus I"
+        },
+        {
+          "code": "WRT 105",
+          "name": "WRT 105 - Studio 1: Practices of Academic Writing"
+        },
+        {
+          "code": "FYS 101",
+          "name": "First Year Seminar"
+        }
+      ],
+      "First Year, Spring Semester (15)": [
+        {
+          "code": "MAT 296",
+          "name": "Calculus II"
+        },
+        {
+          "code": "PHY 211",
+          "name": "General Physics I"
+        },
+        {
+          "code": "PHY 221",
+          "name": "General Physics Laboratory I"
+        },
+        {
+          "code": "ELE 231",
+          "name": "Electrical Engineering Fundamentals"
+        },
+        {
+          "code": "ELE 291",
+          "name": "Electrical Engineering Laboratory I"
+        }
+      ],
+      "Second Year, Fall Semester (15)": [
+        {
+          "code": "PHY 212",
+          "name": "General Physics II"
+        },
+        {
+          "code": "PHY 222",
+          "name": "General Physics Laboratory II"
+        },
+        {
+          "code": "MAT 397",
+          "name": "Calculus III"
+        },
+        {
+          "code": "ELE 251",
+          "name": "Fundamentals of Linear Systems"
+        },
+        {
+          "code": "ELE 292",
+          "name": "Linear Systems Laboratory"
+        },
+        {
+          "code": "CSE 283",
+          "name": "Introduction to Object-Oriented Design"
+        }
+      ],
+      "Second Year, Spring Semester (16)": [
+        {
+          "code": "MAT 485",
+          "name": "Differential Equations and Matrix Algebra for Engineers"
+        },
+        {
+          "code": "WRT 205",
+          "name": "WRT 205 - Studio 2: Critical Research and Writing"
+        },
+        {
+          "code": "CSE 261",
+          "name": "Digital Logic Design"
+        },
+        {
+          "code": "CSE 262",
+          "name": "Digital Logic Design Laboratory"
+        },
+        {
+          "code": "CSE 384",
+          "name": "Systems and Network Programming"
+        }
+      ],
+      "Third Year, Fall Semester (17)": [
+        {
+          "code": "ELE 314",
+          "name": "Power Engineering"
+        },
+        {
+          "code": "ELE 324",
+          "name": "Electromagnetics"
+        },
+        {
+          "code": "ELE 351",
+          "name": "System and Signal Analysis"
+        },
+        {
+          "code": "CSE 397",
+          "name": "Microcontroller Laboratory"
+        },
+        {
+          "code": "CIS 321",
+          "name": "Introduction to Probability and Statistics"
+        }
+      ],
+      "Third Year, Spring Semester (18)": [
+        {
+          "code": "ELE 333",
+          "name": "Analog Electronics"
+        },
+        {
+          "code": "ELE 354",
+          "name": "Communication Systems"
+        },
+        {
+          "code": "ELE 392",
+          "name": "Digital Signal Processing and Control Systems Laboratory"
+        },
+        {
+          "code": "WRT 307",
+          "name": "Advanced Writing Studio: Professional Writing"
+        }
+      ],
+      "Fourth Year, Fall Semester (15)": [
+        {
+          "code": "ELE 491",
+          "name": "Senior Design Project I"
+        },
+        {
+          "code": "ECS 392",
+          "name": "Ethical Aspects of Engineering and Computer Science"
+        }
+      ],
+      "Fourth Year, Spring Semester (15)": [
+        {
+          "code": "ELE 492",
+          "name": "Senior Design Project II"
+        }
+      ]
+    }
+  },
+  {
+    "program": "Environmental Engineering",
+    "total_credits": null,
+    "categories": {
+      "Technical Electives": [
+        {
+          "code": "ELE 231",
+          "name": ""
+        },
+        {
+          "code": "CEE 326",
+          "name": ""
+        },
+        {
+          "code": "CHE 346",
+          "name": ""
+        },
+        {
+          "code": "ECS 222",
+          "name": ""
+        },
+        {
+          "code": "ELE 231",
+          "name": ""
+        },
+        {
+          "code": "MAE 251",
+          "name": ""
+        }
+      ],
+      "First Year, Fall Semester": [
+        {
+          "code": "MAT 295",
+          "name": "Calculus I"
+        },
+        {
+          "code": "CHE 106",
+          "name": "General Chemistry Lecture I"
+        },
+        {
+          "code": "CHE 107",
+          "name": "General Chemistry Laboratory I"
+        },
+        {
+          "code": "ECS 101",
+          "name": "Introduction to Engineering and Computer Science"
+        },
+        {
+          "code": "WRT 105",
+          "name": "WRT 105 - Studio 1: Practices of Academic Writing"
+        },
+        {
+          "code": "FYS 101",
+          "name": "First Year Seminar"
+        }
+      ],
+      "First Year, Spring Semester": [
+        {
+          "code": "MAT 296",
+          "name": "Calculus II"
+        },
+        {
+          "code": "CHE 116",
+          "name": "General Chemistry Lecture II"
+        },
+        {
+          "code": "CHE 117",
+          "name": "General Chemistry Laboratory II"
+        },
+        {
+          "code": "PHY 211",
+          "name": "General Physics I"
+        },
+        {
+          "code": "PHY 221",
+          "name": "General Physics Laboratory I"
+        },
+        {
+          "code": "CEE 198",
+          "name": "Computer-aided Drafting, Design, and Modeling"
+        }
+      ],
+      "Second Year, Fall Semester": [
+        {
+          "code": "MAT 397",
+          "name": "Calculus III"
+        },
+        {
+          "code": "ECS 104",
+          "name": "Engineering Computational Tools"
+        },
+        {
+          "code": "ECS 221",
+          "name": "Statics"
+        },
+        {
+          "code": "CEE 273",
+          "name": "Introduction to Geomatics and GIS"
+        }
+      ],
+      "Second Year, Spring Semester": [
+        {
+          "code": "MAT 485",
+          "name": "Differential Equations and Matrix Algebra for Engineers"
+        },
+        {
+          "code": "CEE 274",
+          "name": "Sustainability in Civil and Environmental Systems"
+        },
+        {
+          "code": "WRT 205",
+          "name": "WRT 205 - Studio 2: Critical Research and Writing"
+        },
+        {
+          "code": "CEE 325",
+          "name": "Mechanics of Materials"
+        },
+        {
+          "code": "EAR 203",
+          "name": ""
+        },
+        {
+          "code": "REAR 104",
+          "name": ""
+        },
+        {
+          "code": "DEAR 105",
+          "name": ""
+        },
+        {
+          "code": "EAR 104",
+          "name": ""
+        },
+        {
+          "code": "EAR 105",
+          "name": ""
+        }
+      ],
+      "Third Year, Fall Semester": [
+        {
+          "code": "CEE 327",
+          "name": "Prin of Fluid Mechanics"
+        },
+        {
+          "code": "CEE 337",
+          "name": "Introduction to Geotechnical Engineering"
+        },
+        {
+          "code": "CEE 341",
+          "name": "Introduction to Environmental Engineering"
+        }
+      ],
+      "Third Year, Spring Semester": [
+        {
+          "code": "CEE 329",
+          "name": "Probability, Statistics and Risk for Civil and Environmental Engineering"
+        },
+        {
+          "code": "CEE 352",
+          "name": "Water Resources Engineering"
+        },
+        {
+          "code": "CEE 472",
+          "name": "Applied Env Microbiology"
+        },
+        {
+          "code": "GEO 383",
+          "name": "Geographic Information Systems"
+        }
+      ],
+      "Fourth Year, Fall Semester": [
+        {
+          "code": "CEE 442",
+          "name": "Treatment Processes in Environmental Engineering"
+        },
+        {
+          "code": "CEE 562",
+          "name": "Air Resources"
+        }
+      ],
+      "Fourth Year, Spring Semester": [
+        {
+          "code": "CEE 471",
+          "name": "Environmental Chemistry and Analysis"
+        },
+        {
+          "code": "CEE 475",
+          "name": "Civil and Environmental Engineering Design"
+        }
+      ],
+      "Total Credits Required 129": [
+        {
+          "code": "CHE 346",
+          "name": ""
+        },
+        {
+          "code": "CEE 326",
+          "name": ""
+        },
+        {
+          "code": "ECS 222",
+          "name": ""
+        },
+        {
+          "code": "ELE 231",
+          "name": ""
+        },
+        {
+          "code": "MAE 251",
+          "name": ""
+        }
+      ]
+    }
+  },
+  {
+    "program": "Mechanical Engineering",
+    "total_credits": null,
+    "categories": {
+      "Technical Electives": [
+        {
+          "code": "AEE 342",
+          "name": "Aerodynamics"
+        },
+        {
+          "code": "AEE 343",
+          "name": "Compressible Flow"
+        },
+        {
+          "code": "AEE 427",
+          "name": "Aircraft Performance and Dynamics"
+        },
+        {
+          "code": "AEE 446",
+          "name": "Air-breathing and Rocket Propulsion"
+        },
+        {
+          "code": "AEE 577",
+          "name": "Introduction to Space Flight"
+        },
+        {
+          "code": "ECS 511",
+          "name": "Sustainable Manufacturing"
+        },
+        {
+          "code": "ECS 526",
+          "name": "Statistics for Engineers"
+        },
+        {
+          "code": "MAE 457",
+          "name": "Automotive Engineering for ECS Students"
+        },
+        {
+          "code": "MAE 486",
+          "name": "Fuel Cell Science and Technology"
+        },
+        {
+          "code": "MAE 536",
+          "name": "Composite Materials"
+        },
+        {
+          "code": "MAE 545",
+          "name": "Applications of Fluid Mechanics"
+        },
+        {
+          "code": "MAE 548",
+          "name": "Engineering Economics and Technology Valuation"
+        },
+        {
+          "code": "MAE 551",
+          "name": "Energy Conversion"
+        },
+        {
+          "code": "MAE 553",
+          "name": "HVAC Systems Analysis and Design"
+        },
+        {
+          "code": "MAE 554",
+          "name": "Principles of Refrigeration"
+        },
+        {
+          "code": "MAE 571",
+          "name": "Applications of Computational Fluid Dynamics"
+        },
+        {
+          "code": "MAE 573",
+          "name": "Application of Finite Element Analysis"
+        },
+        {
+          "code": "MAE 585",
+          "name": "Principles of Turbomachines"
+        },
+        {
+          "code": "MAE 587",
+          "name": "Design of Solar Energy System"
+        },
+        {
+          "code": "MAE 588",
+          "name": "Principles of Wind Turbines"
+        },
+        {
+          "code": "MEE 571",
+          "name": "Computer Aided Design"
+        },
+        {
+          "code": "MFE 326",
+          "name": "Probability and Statistical Methods for Engineers"
+        },
+        {
+          "code": "NUC 301",
+          "name": "Introduction to Nuclear Engineering and Reactor Safety"
+        },
+        {
+          "code": "NUC 510",
+          "name": "Nuclear Reactor Design, Operation and Safety"
+        }
+      ],
+      "First Year, Fall Semester": [
+        {
+          "code": "ECS 101",
+          "name": "Introduction to Engineering and Computer Science"
+        },
+        {
+          "code": "MAT 295",
+          "name": "Calculus I"
+        },
+        {
+          "code": "CHE 106",
+          "name": "General Chemistry Lecture I"
+        },
+        {
+          "code": "CHE 107",
+          "name": "General Chemistry Laboratory I"
+        },
+        {
+          "code": "WRT 105",
+          "name": "WRT 105 - Studio 1: Practices of Academic Writing"
+        },
+        {
+          "code": "FYS 101",
+          "name": "First Year Seminar"
+        },
+        {
+          "code": "ECN 101",
+          "name": ""
+        },
+        {
+          "code": "ECN 102",
+          "name": ""
+        },
+        {
+          "code": "ECN 203",
+          "name": ""
+        }
+      ],
+      "First Year, Spring Semester": [
+        {
+          "code": "ECS 104",
+          "name": "Engineering Computational Tools"
+        },
+        {
+          "code": "MAT 296",
+          "name": "Calculus II"
+        },
+        {
+          "code": "PHY 211",
+          "name": "General Physics I"
+        },
+        {
+          "code": "PHY 221",
+          "name": "General Physics Laboratory I"
+        },
+        {
+          "code": "WRT 205",
+          "name": "WRT 205 - Studio 2: Critical Research and Writing"
+        }
+      ],
+      "Second Year, Fall Semester": [
+        {
+          "code": "ECS 326",
+          "name": "Engineering Materials, Properties, and Processing"
+        },
+        {
+          "code": "MAT 397",
+          "name": "Calculus III"
+        },
+        {
+          "code": "PHY 212",
+          "name": "General Physics II"
+        },
+        {
+          "code": "PHY 222",
+          "name": "General Physics Laboratory II"
+        },
+        {
+          "code": "ECS 221",
+          "name": "Statics"
+        }
+      ],
+      "Second Year, Spring Semester": [
+        {
+          "code": "MAT 485",
+          "name": "Differential Equations and Matrix Algebra for Engineers"
+        },
+        {
+          "code": "ECS 222",
+          "name": "Dynamics"
+        },
+        {
+          "code": "ECS 325",
+          "name": "Mechanics of Solids"
+        },
+        {
+          "code": "MAE 251",
+          "name": "Thermodynamics"
+        },
+        {
+          "code": "MAE 284",
+          "name": "Introduction to CAD"
+        }
+      ],
+      "Third Year, Fall Semester": [
+        {
+          "code": "ELE 231",
+          "name": "Electrical Engineering Fundamentals"
+        },
+        {
+          "code": "ELE 291",
+          "name": "Electrical Engineering Laboratory I"
+        },
+        {
+          "code": "MAE 315",
+          "name": "Mechanical and Aerospace Engineering Laboratory"
+        },
+        {
+          "code": "MAE 341",
+          "name": "Fluid Mechanics"
+        },
+        {
+          "code": "MAE 312",
+          "name": "Engineering Analysis"
+        },
+        {
+          "code": "MAE 333",
+          "name": "Data Analysis for Engineers"
+        }
+      ],
+      "Third Year, Spring Semester": [
+        {
+          "code": "MAE 321",
+          "name": "Dynamics of Mechanical Systems"
+        },
+        {
+          "code": "MAE 322",
+          "name": "Control Systems for MAE"
+        },
+        {
+          "code": "MAE 355",
+          "name": "Fundamentals of Heat Transfer"
+        },
+        {
+          "code": "MEE 332",
+          "name": "Machine Design"
+        }
+      ],
+      "Fourth Year, Fall Semester": [
+        {
+          "code": "MEE 416",
+          "name": "Mechanical Engineering Laboratory"
+        },
+        {
+          "code": "MEE 431",
+          "name": "Manufacturing Processes"
+        },
+        {
+          "code": "MEE 471",
+          "name": "Design Practice"
+        },
+        {
+          "code": "MAE 530",
+          "name": ""
+        },
+        {
+          "code": "MAE 571",
+          "name": ""
+        },
+        {
+          "code": "MAE 573",
+          "name": ""
+        }
+      ],
+      "Fourth Year, Spring Semester": [
+        {
+          "code": "MEE 472",
+          "name": "Synthesis of Mechanical Systems"
+        }
+      ]
+    }
+  },
+  {
+    "program": "Systems & Information Science",
+    "total_credits": null,
+    "categories": {
+      "The minor in electrical engineering must include the following courses (10 credit hours):": [
+        {
+          "code": "ELE 231",
+          "name": "Electrical Engineering Fundamentals"
+        },
+        {
+          "code": "ELE 251",
+          "name": "Fundamentals of Linear Systems"
+        },
+        {
+          "code": "ELE 292",
+          "name": "Linear Systems Laboratory"
+        },
+        {
+          "code": "ELE 351",
+          "name": "System and Signal Analysis"
+        }
+      ],
+      "The minor in electrical engineering must include 2 of the following 5 courses (6 or 7 credit hours):": [
+        {
+          "code": "ELE 314",
+          "name": "Power Engineering"
+        },
+        {
+          "code": "ELE 324",
+          "name": "Electromagnetics"
+        },
+        {
+          "code": "ELE 333",
+          "name": "Analog Electronics"
+        },
+        {
+          "code": "ELE 354",
+          "name": "Communication Systems"
+        },
+        {
+          "code": "ELE 392",
+          "name": "Digital Signal Processing and Control Systems Laboratory"
+        }
+      ]
+    }
+  }
+]

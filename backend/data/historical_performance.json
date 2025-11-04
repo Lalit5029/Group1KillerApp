@@ -1,0 +1,125 @@
+[
+  {
+    "id": "S001",
+    "gpa": 3.8,
+    "completedCourses": [
+      {
+        "code": "CS101",
+        "grade": "A",
+        "department": "CS",
+        "credits": 3
+      },
+      {
+        "code": "MATH101",
+        "grade": "A-",
+        "department": "MATH",
+        "credits": 4
+      }
+    ],
+    "currentWorkload": 12,
+    "historicalPerformance": [
+      {
+        "code": "CS101",
+        "grade": "A",
+        "department": "CS"
+      },
+      {
+        "code": "MATH101",
+        "grade": "A-",
+        "department": "MATH"
+      }
+    ],
+    "courses": [
+      {
+        "code": "CS102",
+        "grade": "A",
+        "department": "CS",
+        "credits": 3,
+        "difficulty": 0.6,
+        "prerequisites": ["CS101"]
+      }
+    ]
+  },
+  {
+    "id": "S002",
+    "gpa": 3.2,
+    "completedCourses": [
+      {
+        "code": "CS101",
+        "grade": "B+",
+        "department": "CS",
+        "credits": 3
+      },
+      {
+        "code": "MATH101",
+        "grade": "B",
+        "department": "MATH",
+        "credits": 4
+      }
+    ],
+    "currentWorkload": 15,
+    "historicalPerformance": [
+      {
+        "code": "CS101",
+        "grade": "B+",
+        "department": "CS"
+      },
+      {
+        "code": "MATH101",
+        "grade": "B",
+        "department": "MATH"
+      }
+    ],
+    "courses": [
+      {
+        "code": "CS102",
+        "grade": "B",
+        "department": "CS",
+        "credits": 3,
+        "difficulty": 0.6,
+        "prerequisites": ["CS101"]
+      }
+    ]
+  },
+  {
+    "id": "S003",
+    "gpa": 2.8,
+    "completedCourses": [
+      {
+        "code": "CS101",
+        "grade": "C+",
+        "department": "CS",
+        "credits": 3
+      },
+      {
+        "code": "MATH101",
+        "grade": "C",
+        "department": "MATH",
+        "credits": 4
+      }
+    ],
+    "currentWorkload": 18,
+    "historicalPerformance": [
+      {
+        "code": "CS101",
+        "grade": "C+",
+        "department": "CS"
+      },
+      {
+        "code": "MATH101",
+        "grade": "C",
+        "department": "MATH"
+      }
+    ],
+    "courses": [
+      {
+        "code": "CS102",
+        "grade": "C",
+        "department": "CS",
+        "credits": 3,
+        "difficulty": 0.6,
+        "prerequisites": ["CS101"]
+      }
+    ]
+  }
+] 

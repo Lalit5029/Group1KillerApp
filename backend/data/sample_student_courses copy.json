@@ -1,0 +1,346 @@
+// {
+  
+// }
+
+// // {
+// //   "student": {
+// //     "name": "Alex Johnson",
+// //     "id": "900123456",
+// //     "major": "Computer Science",
+// //     "graduation_year": 2026,
+// //     "academic_year": "Junior",
+// //     "advisor": "Dr. Sarah Chen",
+// //     "college": "College of Engineering and Computer Science"
+// //   },
+// //   "courses": [
+// //     {
+// //       "code": "ECS 101",
+// //       "name": "Introduction to Engineering and Computer Science",
+// //       "grade": "A-",
+// //       "credits": "1",
+// //       "term": "Fall 2022"
+// //     },
+// //     {
+// //       "code": "CIS 151",
+// //       "name": "Fundamentals of Computing and Programming",
+// //       "grade": "A",
+// //       "credits": "3",
+// //       "term": "Fall 2022"
+// //     },
+// //     {
+// //       "code": "MAT 295",
+// //       "name": "Calculus I",
+// //       "grade": "B+",
+// //       "credits": "4",
+// //       "term": "Fall 2022"
+// //     },
+// //     {
+// //       "code": "WRT 105",
+// //       "name": "Studio 1: Practices of Academic Writing",
+// //       "grade": "A",
+// //       "credits": "3",
+// //       "term": "Fall 2022"
+// //     },
+// //     {
+// //       "code": "FYS 101",
+// //       "name": "First Year Seminar",
+// //       "grade": "P",
+// //       "credits": "1",
+// //       "term": "Fall 2022"
+// //     },
+// //     {
+// //       "code": "CIS 252",
+// //       "name": "Elements of Computer Science",
+// //       "grade": "A",
+// //       "credits": "3",
+// //       "term": "Spring 2023"
+// //     },
+// //     {
+// //       "code": "MAT 296",
+// //       "name": "Calculus II",
+// //       "grade": "B",
+// //       "credits": "4",
+// //       "term": "Spring 2023"
+// //     },
+// //     {
+// //       "code": "PHI 251",
+// //       "name": "Logic",
+// //       "grade": "A-",
+// //       "credits": "3",
+// //       "term": "Spring 2023"
+// //     },
+// //     {
+// //       "code": "PHY 211",
+// //       "name": "General Physics I",
+// //       "grade": "B+",
+// //       "credits": "3",
+// //       "term": "Spring 2023"
+// //     },
+// //     {
+// //       "code": "PHY 221",
+// //       "name": "General Physics Laboratory I",
+// //       "grade": "A",
+// //       "credits": "1",
+// //       "term": "Spring 2023"
+// //     },
+// //     {
+// //       "code": "CIS 375",
+// //       "name": "Introduction to Discrete Mathematics",
+// //       "grade": "B+",
+// //       "credits": "3",
+// //       "term": "Fall 2023"
+// //     },
+// //     {
+// //       "code": "CIS 351",
+// //       "name": "Data Structures",
+// //       "grade": "A-",
+// //       "credits": "3",
+// //       "term": "Fall 2023"
+// //     },
+// //     {
+// //       "code": "MAT 397",
+// //       "name": "Calculus III",
+// //       "grade": "B-",
+// //       "credits": "2",
+// //       "term": "Fall 2023"
+// //     },
+// //     {
+// //       "code": "MAT 331",
+// //       "name": "First Course in Linear Algebra",
+// //       "grade": "B",
+// //       "credits": "3",
+// //       "term": "Fall 2023"
+// //     },
+// //     {
+// //       "code": "SOC 101",
+// //       "name": "Introduction to Sociology",
+// //       "grade": "A",
+// //       "credits": "3",
+// //       "term": "Fall 2023"
+// //     },
+// //     {
+// //       "code": "CIS 321",
+// //       "name": "Introduction to Probability and Statistics",
+// //       "grade": "IP",
+// //       "credits": "3",
+// //       "term": "Spring 2024"
+// //     },
+// //     {
+// //       "code": "CIS 341",
+// //       "name": "Computer Organization & Programming Systems",
+// //       "grade": "IP",
+// //       "credits": "3",
+// //       "term": "Spring 2024"
+// //     },
+// //     {
+// //       "code": "CIS 352",
+// //       "name": "Programming Language: Theory & Practice",
+// //       "grade": "IP",
+// //       "credits": "3",
+// //       "term": "Spring 2024"
+// //     },
+// //     {
+// //       "code": "CSE 384",
+// //       "name": "Systems and Network Programming",
+// //       "grade": "IP",
+// //       "credits": "4",
+// //       "term": "Spring 2024"
+// //     },
+// //     {
+// //       "code": "WRT 205",
+// //       "name": "Studio 2: Critical Research and Writing",
+// //       "grade": "IP",
+// //       "credits": "3",
+// //       "term": "Spring 2024"
+// //     }
+// //   ],
+// //   "recommended_next_courses": [
+// //     {
+// //       "code": "CIS 453",
+// //       "name": "Software Specification and Design",
+// //       "credits": "3",
+// //       "term": "Fall 2024",
+// //       "prerequisite_codes": ["CIS 351"],
+// //       "professor": "Dr. Emily Rodriguez",
+// //       "professor_rating": 4.8,
+// //       "course_difficulty": "Moderate",
+// //       "average_grade": "B+",
+// //       "match_reason": "Strong performance in Data Structures (A-)",
+// //       "sections": [
+// //         {
+// //           "section": "001",
+// //           "days": "MW",
+// //           "time": "11:00 AM - 12:20 PM",
+// //           "location": "Hinds Hall 021",
+// //           "professor": "Dr. Emily Rodriguez",
+// //           "professor_rating": 4.8,
+// //           "seats_available": 12
+// //         },
+// //         {
+// //           "section": "002",
+// //           "days": "TR",
+// //           "time": "2:00 PM - 3:20 PM",
+// //           "location": "Hinds Hall 017",
+// //           "professor": "Dr. Thomas Kim",
+// //           "professor_rating": 3.9,
+// //           "seats_available": 8
+// //         }
+// //       ],
+// //       "student_feedback": [
+// //         "This course is very practical and prepares you well for industry work.",
+// //         "Professor Rodriguez explains complex concepts clearly and is always available for help."
+// //       ]
+// //     },
+// //     {
+// //       "code": "CIS 486",
+// //       "name": "Design of Operating Systems",
+// //       "credits": "3",
+// //       "term": "Fall 2024",
+// //       "prerequisite_codes": ["CIS 341"],
+// //       "professor": "Dr. James Chen",
+// //       "professor_rating": 4.2,
+// //       "course_difficulty": "Challenging",
+// //       "average_grade": "B-",
+// //       "match_reason": "Currently taking the prerequisite CIS 341",
+// //       "difficulty_warning": true,
+// //       "sections": [
+// //         {
+// //           "section": "001",
+// //           "days": "MW",
+// //           "time": "9:30 AM - 10:50 AM",
+// //           "location": "Hinds Hall 018",
+// //           "professor": "Dr. James Chen",
+// //           "professor_rating": 4.2,
+// //           "seats_available": 5
+// //         }
+// //       ],
+// //       "student_feedback": [
+// //         "Demanding course with challenging projects, but you learn a lot.",
+// //         "Prior experience with C programming is very helpful."
+// //       ]
+// //     },
+// //     {
+// //       "code": "CIS 400",
+// //       "name": "Selected Topics: Machine Learning",
+// //       "credits": "3",
+// //       "term": "Fall 2024",
+// //       "prerequisite_codes": ["CIS 321", "MAT 331"],
+// //       "professor": "Dr. Sophia Patel",
+// //       "professor_rating": 4.7,
+// //       "course_difficulty": "Moderate",
+// //       "average_grade": "B+",
+// //       "match_reason": "Strong foundation in math (B in Linear Algebra)",
+// //       "highly_recommended": true,
+// //       "sections": [
+// //         {
+// //           "section": "001",
+// //           "days": "TR",
+// //           "time": "12:30 PM - 1:50 PM",
+// //           "location": "Lyman Hall C-104",
+// //           "professor": "Dr. Sophia Patel",
+// //           "professor_rating": 4.7,
+// //           "seats_available": 15
+// //         }
+// //       ],
+// //       "student_feedback": [
+// //         "Excellent introduction to machine learning concepts with practical applications.",
+// //         "Professor Patel brings real-world AI experience to the classroom."
+// //       ]
+// //     },
+// //     {
+// //       "code": "CIS 467",
+// //       "name": "Introduction to Artificial Intelligence",
+// //       "credits": "3",
+// //       "term": "Fall 2024",
+// //       "prerequisite_codes": ["CIS 351"],
+// //       "professor": "Dr. Michael Lee",
+// //       "professor_rating": 3.5,
+// //       "course_difficulty": "Challenging",
+// //       "average_grade": "C+",
+// //       "match_reason": "Good fit based on your interest in programming languages",
+// //       "difficulty_warning": true,
+// //       "sections": [
+// //         {
+// //           "section": "001",
+// //           "days": "MW",
+// //           "time": "3:45 PM - 5:05 PM",
+// //           "location": "Life Sciences 001",
+// //           "professor": "Dr. Michael Lee",
+// //           "professor_rating": 3.5,
+// //           "seats_available": 18
+// //         }
+// //       ],
+// //       "student_feedback": [
+// //         "Very theoretical with challenging problem sets.",
+// //         "The course covers a lot of material quickly."
+// //       ]
+// //     },
+// //     {
+// //       "code": "PSY 205",
+// //       "name": "Foundations of Human Behavior",
+// //       "credits": "3",
+// //       "term": "Fall 2024",
+// //       "prerequisite_codes": [],
+// //       "professor": "Dr. Rebecca Taylor",
+// //       "professor_rating": 4.9,
+// //       "course_difficulty": "Easy",
+// //       "average_grade": "A-",
+// //       "match_reason": "Good fit for your strong performance in social sciences (A in SOC 101)",
+// //       "highly_recommended": true,
+// //       "sections": [
+// //         {
+// //           "section": "001",
+// //           "days": "MWF",
+// //           "time": "10:35 AM - 11:30 AM",
+// //           "location": "Hall of Languages 207",
+// //           "professor": "Dr. Rebecca Taylor",
+// //           "professor_rating": 4.9,
+// //           "seats_available": 22
+// //         },
+// //         {
+// //           "section": "002",
+// //           "days": "TR",
+// //           "time": "9:30 AM - 10:50 AM",
+// //           "location": "Hall of Languages 214",
+// //           "professor": "Dr. William Johnson",
+// //           "professor_rating": 4.1,
+// //           "seats_available": 15
+// //         }
+// //       ],
+// //       "student_feedback": [
+// //         "One of the best professors at SU. Engaging lectures and fair assessments.",
+// //         "Interesting material that provides a good break from technical courses."
+// //       ]
+// //     }
+// //   ],
+// //   "future_requirements": [
+// //     {
+// //       "code": "CIS 454",
+// //       "name": "Software Implementation",
+// //       "credits": "3",
+// //       "term": "Spring 2025",
+// //       "prerequisite_codes": ["CIS 453"]
+// //     },
+// //     {
+// //       "code": "CIS 425",
+// //       "name": "Introduction to Computer Networks",
+// //       "credits": "3",
+// //       "term": "Spring 2025",
+// //       "prerequisite_codes": ["CIS 341"]
+// //     },
+// //     {
+// //       "code": "CIS 470",
+// //       "name": "Experience Credit - Senior Project I",
+// //       "credits": "3",
+// //       "term": "Fall 2025",
+// //       "prerequisite_codes": ["CIS 453", "CIS 454"]
+// //     },
+// //     {
+// //       "code": "CIS 471",
+// //       "name": "Experience Credit - Senior Project II",
+// //       "credits": "3",
+// //       "term": "Spring 2026",
+// //       "prerequisite_codes": ["CIS 470"]
+// //     }
+// //   ]
+// // } 

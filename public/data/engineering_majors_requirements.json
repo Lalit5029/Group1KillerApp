@@ -1,0 +1,452 @@
+{
+    "Aerospace Engineering, BS": {
+        "Freshman": [
+            "ECS 101",
+            "CHE 106",
+            "CHE 107",
+            "WRT 105",
+            "FYS 101",
+            "ECS 104"
+        ],
+        "Sophomore": [
+            "MAT 295",
+            "MAT 296",
+            "PHY 211",
+            "PHY 221",
+            "WRT 205",
+            "ECS 221",
+            "PHY 212",
+            "PHY 222",
+            "MAE 251",
+            "MAE 284",
+            "ECS 222",
+            "ELE 231",
+            "ELE 291"
+        ],
+        "Junior": [
+            "ECS 326",
+            "MAT 397",
+            "ECS 325",
+            "MAE 315",
+            "MAE 341",
+            "MAE 312",
+            "MAE 333",
+            "AEE 342",
+            "AEE 343",
+            "MAE 321",
+            "MAE 322",
+            "MAE 355"
+        ],
+        "Senior": [
+            "MAT 485",
+            "AEE 471",
+            "AEE 427",
+            "AEE 446",
+            "AEE 577",
+            "AEE 472",
+            "AEE 490",
+            "AEE 527",
+            "MAE 536",
+            "MAE 545",
+            "MAE 571",
+            "MAE 573",
+            "MAE 585",
+            "MAE 587",
+            "MAE 588"
+        ]
+    },
+    "Biomedical Engineering, BS": {
+        "Freshman": [
+            "CHE 106",
+            "CHE 107",
+            "ECS 101",
+            "WRT 105",
+            "FYS 101",
+            "CHE 116",
+            "CHE 117",
+            "ECS 104"
+        ],
+        "Sophomore": [
+            "MAT 295",
+            "MAT 296",
+            "PHY 211",
+            "PHY 221",
+            "BEN 201",
+            "BEN 231",
+            "CHE 275",
+            "CHE 276",
+            "PHY 212",
+            "PHY 222",
+            "BEN 212",
+            "ECS 221",
+            "ELE 231",
+            "WRT 205",
+            "ELE 251",
+            "ELE 292"
+        ],
+        "Junior": [
+            "MAT 397",
+            "BEN 333",
+            "ECS 326",
+            "BEN 341",
+            "BEN 364",
+            "BEN 375",
+            "BEN 385"
+        ],
+        "Senior": [
+            "MAT 485",
+            "BEN 568",
+            "BEN 565",
+            "BEN 481",
+            "BEN 485",
+            "BEN 486",
+            "BEN 487"
+        ]
+    },
+    "Chemical Engineering, BS": {
+        "Freshman": [
+            "ECS 101",
+            "CHE 106",
+            "CHE 107",
+            "WRT 105",
+            "FYS 101",
+            "ECS 104",
+            "CHE 116",
+            "CHE 117"
+        ],
+        "Sophomore": [
+            "MAT 295",
+            "MAT 296",
+            "PHY 211",
+            "PHY 221",
+            "CEN 231",
+            "CHE 275",
+            "CHE 276",
+            "PHY 212",
+            "PHY 222",
+            "CEN 212",
+            "CEN 252",
+            "WRT 205"
+        ],
+        "Junior": [
+            "MAT 397",
+            "ECS 326",
+            "CEN 333",
+            "CEN 353",
+            "CHE 346",
+            "CHE 347",
+            "CEN 311",
+            "CEN 313",
+            "CEN 341",
+            "CHE 356"
+        ],
+        "Senior": [
+            "MAT 485",
+            "CEN 575",
+            "CEN 451",
+            "CEN 421",
+            "BEN 421",
+            "CEN 412",
+            "CEN 442",
+            "CEN 587",
+            "CEN 474"
+        ]
+    },
+    "Civil Engineering, BS": {
+        "Freshman": [
+            "CHE 106",
+            "CHE 107",
+            "ECS 101",
+            "WRT 105",
+            "FYS 101",
+            "CEE 198",
+            "ECS 104"
+        ],
+        "Sophomore": [
+            "MAT 295",
+            "MAT 296",
+            "PHY 211",
+            "PHY 221",
+            "PHY 212",
+            "PHY 222",
+            "ECS 221",
+            "CEE 273",
+            "ECS 222",
+            "CEE 274",
+            "WRT 205"
+        ],
+        "Junior": [
+            "MAT 397",
+            "CEE 325",
+            "CEE 331",
+            "CEE 337",
+            "CEE 341",
+            "CEE 327",
+            "CEE 329",
+            "CEE 332",
+            "CEE 338",
+            "CEE 352",
+            "CEE 326"
+        ],
+        "Senior": [
+            "MAT 485",
+            "CEE 401",
+            "CEE 443",
+            "CEE 475"
+        ]
+    },
+    "Computer Engineering, BS": {
+        "Freshman": [
+            "ECS 101",
+            "CIS 151",
+            "CHE 106",
+            "CHE 107",
+            "WRT 105",
+            "FYS 101",
+            "ANT 131"
+        ],
+        "Sophomore": [
+            "MAT 295",
+            "CSE 283",
+            "MAT 296",
+            "PHI 251",
+            "PHY 211",
+            "PHY 221",
+            "ELE 251",
+            "ELE 292",
+            "CSE 261",
+            "CSE 262",
+            "PHY 212",
+            "PHY 222",
+            "WRT 205"
+        ],
+        "Junior": [
+            "CIS 375",
+            "CIS 351",
+            "CSE 389",
+            "CSE 384",
+            "MAT 331",
+            "CSE 381",
+            "CSE 397",
+            "ECS 392",
+            "CIS 321",
+            "CSE 398",
+            "WRT 307"
+        ],
+        "Senior": [
+            "CSE 484",
+            "CSE 464",
+            "CSE 486",
+            "CSE 491",
+            "CSE 492",
+            "MAT 521",
+            "MAT 525",
+            "ANT 431",
+            "ANT 433"
+        ]
+    },
+    "Computer Science, BS": {
+        "Freshman": [
+            "ECS 101",
+            "CIS 151",
+            "WRT 105",
+            "FYS 101"
+        ],
+        "Sophomore": [
+            "CRS 225",
+            "MAT 295",
+            "MAT 296",
+            "CIS 252",
+            "PHI 251",
+            "PHY 211",
+            "PHY 221",
+            "WRT 205"
+        ],
+        "Junior": [
+            "CRS 325",
+            "IST 344",
+            "MAT 397",
+            "MAT 331",
+            "CIS 321",
+            "PHI 378",
+            "CIS 375",
+            "CIS 351",
+            "CIS 341",
+            "CIS 352",
+            "CSE 384",
+            "ECS 392"
+        ],
+        "Senior": [
+            "PHI 451",
+            "PHI 551",
+            "PHI 552",
+            "CIS 453",
+            "CIS 477",
+            "CSE 486",
+            "CIS 473",
+            "CIS 454"
+        ]
+    },
+    "Electrical Engineering, BS": {
+        "Freshman": [
+            "ECS 101",
+            "CIS 151",
+            "CHE 106",
+            "CHE 107",
+            "WRT 105",
+            "FYS 101"
+        ],
+        "Sophomore": [
+            "MAT 295",
+            "MAT 296",
+            "PHY 211",
+            "PHY 221",
+            "ELE 231",
+            "ELE 291",
+            "PHY 212",
+            "PHY 222",
+            "ELE 251",
+            "ELE 292",
+            "CSE 283",
+            "WRT 205",
+            "CSE 261",
+            "CSE 262"
+        ],
+        "Junior": [
+            "MAT 397",
+            "CSE 384",
+            "ELE 314",
+            "ELE 324",
+            "ELE 351",
+            "CSE 397",
+            "CIS 321",
+            "ELE 333",
+            "ELE 354",
+            "ELE 392",
+            "WRT 307",
+            "ECS 392"
+        ],
+        "Senior": [
+            "MAT 485",
+            "ELE 491",
+            "ELE 492"
+        ]
+    },
+    "Environmental Engineering, BS": {
+        "Freshman": [
+            "CHE 106",
+            "CHE 107",
+            "ECS 101",
+            "WRT 105",
+            "FYS 101",
+            "CHE 116",
+            "CHE 117",
+            "CEE 198",
+            "ECS 104",
+            "EAR 104",
+            "EAR 105"
+        ],
+        "Sophomore": [
+            "MAT 295",
+            "MAT 296",
+            "PHY 211",
+            "PHY 221",
+            "ECS 221",
+            "CEE 273",
+            "CEE 274",
+            "WRT 205",
+            "EAR 203"
+        ],
+        "Junior": [
+            "MAT 397",
+            "CEE 325",
+            "CEE 327",
+            "CEE 337",
+            "CEE 341",
+            "CEE 329",
+            "CEE 352",
+            "GEO 383"
+        ],
+        "Senior": [
+            "MAT 485",
+            "CEE 472",
+            "CEE 442",
+            "CEE 562",
+            "CEE 471",
+            "CEE 475"
+        ]
+    },
+    "Mechanical Engineering, BS": {
+        "Freshman": [
+            "ECS 101",
+            "CHE 106",
+            "CHE 107",
+            "WRT 105",
+            "FYS 101",
+            "ECN 101",
+            "ECN 102",
+            "ECS 104"
+        ],
+        "Sophomore": [
+            "MAT 295",
+            "ECN 203",
+            "MAT 296",
+            "PHY 211",
+            "PHY 221",
+            "WRT 205",
+            "PHY 212",
+            "PHY 222",
+            "ECS 221",
+            "ECS 222",
+            "MAE 251",
+            "MAE 284",
+            "ELE 231",
+            "ELE 291"
+        ],
+        "Junior": [
+            "ECS 326",
+            "MAT 397",
+            "ECS 325",
+            "MAE 315",
+            "MAE 341",
+            "MAE 312",
+            "MAE 333",
+            "MAE 321",
+            "MAE 322",
+            "MAE 355",
+            "MEE 332",
+            "AEE 342",
+            "AEE 343",
+            "MFE 326",
+            "NUC 301"
+        ],
+        "Senior": [
+            "MAT 485",
+            "MEE 416",
+            "MEE 431",
+            "MEE 471",
+            "MAE 530",
+            "MAE 571",
+            "MAE 573",
+            "MEE 472",
+            "AEE 427",
+            "AEE 446",
+            "AEE 577",
+            "ECS 511",
+            "ECS 526",
+            "MAE 457",
+            "MAE 486",
+            "MAE 536",
+            "MAE 545",
+            "MAE 548",
+            "MAE 551",
+            "MAE 553",
+            "MAE 554",
+            "MAE 585",
+            "MAE 587",
+            "MAE 588",
+            "MEE 571",
+            "NUC 510"
+        ]
+    }
+}

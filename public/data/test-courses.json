@@ -1,0 +1,92 @@
+[
+  {
+    "id": "course-1",
+    "Class": "ECS 101",
+    "Section": "M001-SEC",
+    "DaysTimes": "MoWe 10:00AM - 11:20AM",
+    "Room": "Link Hall 331",
+    "Instructor": "M. Blatchley",
+    "MeetingDates": "01/13/2025 - 04/28/2025"
+  },
+  {
+    "id": "course-2",
+    "Class": "CHE 106",
+    "Section": "M001-SEC",
+    "DaysTimes": "TuTh 2:00PM - 3:20PM",
+    "Room": "Link Hall 331",
+    "Instructor": "R. Sureshkumar",
+    "MeetingDates": "01/13/2025 - 04/28/2025"
+  },
+  {
+    "id": "course-3",
+    "Class": "CHE 107",
+    "Section": "M001-SEC",
+    "DaysTimes": "MoWe 1:00PM - 2:20PM",
+    "Room": "Link Hall 331",
+    "Instructor": "L. Lin",
+    "MeetingDates": "01/13/2025 - 04/28/2025"
+  },
+  {
+    "id": "course-4",
+    "Class": "WRT 105",
+    "Section": "M001-SEC",
+    "DaysTimes": "TuTh 9:30AM - 10:50AM",
+    "Room": "Link Hall 331",
+    "Instructor": "Z. Ma",
+    "MeetingDates": "01/13/2025 - 04/28/2025"
+  },
+  {
+    "id": "course-5",
+    "Class": "FYS 101",
+    "Section": "M001-SEC",
+    "DaysTimes": "MoWe 3:30PM - 4:50PM",
+    "Room": "Link Hall 331",
+    "Instructor": "Y. Zheng",
+    "MeetingDates": "01/13/2025 - 04/28/2025"
+  },
+  {
+    "id": "course-6",
+    "Class": "ECS 104",
+    "Section": "M001-SEC",
+    "DaysTimes": "TuTh 11:00AM - 12:20PM",
+    "Room": "Link Hall 331",
+    "Instructor": "Y. Zheng",
+    "MeetingDates": "01/13/2025 - 04/28/2025"
+  },
+  {
+    "id": "course-7",
+    "Class": "MAT 295",
+    "Section": "M001-SEC",
+    "DaysTimes": "MoWeFr 8:00AM - 9:20AM",
+    "Room": "ONLINE ASYNCHRONOUS",
+    "Instructor": "P. Yung",
+    "MeetingDates": "01/13/2025 - 04/28/2025"
+  },
+  {
+    "id": "course-8",
+    "Class": "MAT 296",
+    "Section": "M001-SEC",
+    "DaysTimes": "MoWeFr 9:30AM - 10:50AM",
+    "Room": "Bowne Hall 414",
+    "Instructor": "Y. Wu",
+    "MeetingDates": "01/13/2025 - 04/28/2025"
+  },
+  {
+    "id": "course-9",
+    "Class": "PHY 211",
+    "Section": "M001-SEC",
+    "DaysTimes": "TuTh 1:00PM - 2:20PM",
+    "Room": "Link Hall 373",
+    "Instructor": "C. Smith",
+    "MeetingDates": "01/13/2025 - 04/28/2025"
+  },
+  {
+    "id": "course-10",
+    "Class": "PHY 221",
+    "Section": "M001-SEC",
+    "DaysTimes": "Fr 2:00PM - 3:20PM",
+    "Room": "ONLINE SYNCHRONOUS",
+    "Instructor": "K. Tsokas",
+    "MeetingDates": "01/13/2025 - 04/28/2025"
+  }
+] 

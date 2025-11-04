@@ -1,0 +1,191 @@
+.progress-dashboard {
+  padding: 2rem;
+  background-color: #f8f9fa;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.dashboard-section {
+  margin-bottom: 2rem;
+  padding: 1.5rem;
+  background-color: white;
+  border-radius: 6px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.dashboard-section h2 {
+  color: #2c3e50;
+  margin-bottom: 1.5rem;
+  font-size: 1.5rem;
+}
+
+.progress-metrics {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1.5rem;
+}
+
+.metric {
+  padding: 1rem;
+  background-color: #f8f9fa;
+  border-radius: 6px;
+  text-align: center;
+}
+
+.metric h3 {
+  color: #6c757d;
+  font-size: 1rem;
+  margin-bottom: 0.5rem;
+}
+
+.metric p {
+  color: #2c3e50;
+  font-size: 1.5rem;
+  font-weight: bold;
+}
+
+.predictions-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 1rem;
+}
+
+.prediction-card {
+  padding: 1rem;
+  border-radius: 6px;
+  background-color: #f8f9fa;
+}
+
+.prediction-card.risk-high {
+  border-left: 4px solid #dc3545;
+}
+
+.prediction-card.risk-medium {
+  border-left: 4px solid #ffc107;
+}
+
+.prediction-card.risk-low {
+  border-left: 4px solid #28a745;
+}
+
+.prediction-card h3 {
+  color: #2c3e50;
+  margin-bottom: 0.5rem;
+}
+
+.prediction-card p {
+  color: #6c757d;
+  margin: 0.25rem 0;
+}
+
+.risk-level {
+  font-weight: bold;
+  margin-top: 0.5rem;
+}
+
+.risks-list {
+  display: grid;
+  gap: 1rem;
+}
+
+.risk-item {
+  padding: 1rem;
+  border-radius: 6px;
+  background-color: #f8f9fa;
+}
+
+.risk-item.severity-high {
+  border-left: 4px solid #dc3545;
+}
+
+.risk-item.severity-medium {
+  border-left: 4px solid #ffc107;
+}
+
+.risk-item.severity-low {
+  border-left: 4px solid #28a745;
+}
+
+.severity-badge {
+  display: inline-block;
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  font-weight: bold;
+  text-transform: uppercase;
+}
+
+.severity-badge.high {
+  background-color: #dc3545;
+  color: white;
+}
+
+.severity-badge.medium {
+  background-color: #ffc107;
+  color: #212529;
+}
+
+.severity-badge.low {
+  background-color: #28a745;
+  color: white;
+}
+
+.course-sequence {
+  display: grid;
+  gap: 1.5rem;
+}
+
+.semester-plan {
+  padding: 1rem;
+  background-color: #f8f9fa;
+  border-radius: 6px;
+}
+
+.semester-plan h3 {
+  color: #2c3e50;
+  margin-bottom: 1rem;
+}
+
+.semester-plan ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.semester-plan li {
+  padding: 0.5rem;
+  margin-bottom: 0.5rem;
+  background-color: white;
+  border-radius: 4px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.priority-badge {
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  font-weight: bold;
+}
+
+.priority-badge.priority-high {
+  background-color: #dc3545;
+  color: white;
+}
+
+.priority-badge.priority-medium {
+  background-color: #ffc107;
+  color: #212529;
+}
+
+.priority-badge.priority-low {
+  background-color: #28a745;
+  color: white;
+}
+
+.loading {
+  text-align: center;
+  padding: 2rem;
+  color: #6c757d;
+} 

@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+   <meta charset="UTF-8">
+   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+   <title>Academic Progress Tracker</title>
+   <link rel="stylesheet" href="style.css">
+   <link rel="stylesheet" href="academic-progress-styles.css">
+   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+   <link rel="preconnect" href="https://fonts.googleapis.com">
+   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+   <div class="app-container">
+       <header class="app-header">
+           <div class="logo">
+               <i class="fas fa-graduation-cap"></i>
+               <h1>Academic Progress</h1>
+           </div>
+           <div id="selection-display-area">
+               <p id="selection-display"><span id="major-display">Select Major</span> - <span id="year-display">Select Year</span></p>
+           </div>
+           <div class="nav-links">
+               <a href="index.html" class="nav-link">
+                   <i class="fas fa-calendar-alt"></i>
+                   Course Scheduler
+               </a>
+               <a href="academic-progress.html" class="nav-link active">
+                   <i class="fas fa-chart-line"></i>
+                   Academic Progress
+               </a>
+           </div>
+       </header>
+
+       <div class="main-controls">
+           <div id="main-action-buttons">
+               <button onclick="loadStudentData()" class="primary-button">
+                   <i class="fas fa-sync-alt"></i>
+                   Refresh Data
+               </button>
+               <button onclick="exportProgress('pdf')" class="primary-button">
+                   <i class="fas fa-file-export"></i>
+                   Export Report
+               </button>
+               <button onclick="showRequirementsModal()" class="secondary-button">
+                   <i class="fas fa-list-check"></i>
+                   View Degree Requirements
+               </button>
+               <button id="import-record-btn" onclick="startAcademicRecordImport()" class="secondary-button">
+                   <i class="fas fa-download"></i>
+                   Import from MySlice
+               </button>
+           </div>
+       </div>
+
+       <!-- New Importer Status Section -->
+       <div id="importer-status-section" class="importer-status" style="display: none;">
+           <h4><i class="fas fa-sync-alt spin-icon"></i> MySlice Import Status</h4>
+           <div id="importer-message" class="status-message">Starting importer...</div>
+           <div class="progress-bar-container">
+               <div id="importer-progress-bar" class="progress-bar" style="width: 0%;"></div>
+           </div>
+           <pre id="importer-log" class="importer-log"></pre> <!-- To show Python script output -->
+       </div>
+
+       <!-- New Imported Courses Display Area -->
+       <div id="imported-courses-section" class="imported-courses" style="display: none;">
+           <h3><i class="fas fa-check-circle"></i> Imported Courses</h3>
+           <div id="imported-courses-list" class="course-list">
+               <!-- Imported courses will be listed here -->
+           </div>
+           <div class="imported-courses-actions">
+               <button onclick="clearImportedCourses()" class="secondary-button">Clear</button>
+               <button onclick="useImportedCourses()" class="primary-button">Use These Courses</button>
+           </div>
+       </div>
+
+       <div class="dashboard">
+           <div class="dashboard-header">
+               <div class="calendar-title">
+                   <i class="fas fa-chart-line"></i>
+                   <h2>Academic Progress Summary</h2>
+               </div>
+               <div class="calendar-actions">
+                   <div class="filter-container">
+                       <select id="filter-term" onchange="applyFilters()">
+                           <option value="">All Terms</option>
+                           <option value="Fall 2021">Fall 2021</option>
+                           <option value="Spring 2022">Spring 2022</option>
+                           <option value="Fall 2022">Fall 2022</option>
+                           <option value="Spring 2023">Spring 2023</option>
+                           <option value="Fall 2023">Fall 2023</option>
+                           <option value="Spring 2024">Spring 2024</option>
+                           <option value="Fall 2024">Fall 2024</option>
+                           <option value="Spring 2025">Spring 2025</option>
+                       </select>
+                       <select id="filter-requirement" onchange="applyFilters()">
+                           <option value="">All Requirements</option>
+                           <option value="ECS/Math/Science GPA">ECS/Math/Science</option>
+                           <option value="CIS Core GPA">CIS Core</option>
+                           <option value="Upper Division">Upper Division</option>
+                       </select>
+                   </div>
+                   <div class="action-buttons">
+                       <button onclick="toggleView()" class="icon-button">
+                           <i class="fas fa-exchange-alt"></i>
+                           Toggle View
+                       </button>
+                   </div>
+               </div>
+           </div>
+
+           <div class="schedule-stats">
+               <div class="stat-item">
+                   <div class="stat-icon"><i class="fas fa-book"></i></div>
+                   <div class="stat-content">
+                       <div class="stat-value" id="stat-courses">0</div>
+                       <div class="stat-label">Courses Completed</div>
+                   </div>
+               </div>
+               <div class="stat-item">
+                   <div class="stat-icon"><i class="fas fa-graduation-cap"></i></div>
+                   <div class="stat-content">
+                       <div class="stat-value" id="stat-credits">0</div>
+                       <div class="stat-label">Credits Earned</div>
+                   </div>
+               </div>
+               <div class="stat-item">
+                   <div class="stat-icon"><i class="fas fa-star"></i></div>
+                   <div class="stat-content">
+                       <div class="stat-value" id="stat-gpa">0.00</div>
+                       <div class="stat-label">Overall GPA</div>
+                   </div>
+               </div>
+               <div class="stat-item">
+                   <div class="stat-icon"><i class="fas fa-check-circle"></i></div>
+                   <div class="stat-content">
+                       <div class="stat-value" id="stat-progress">0%</div>
+                       <div class="stat-label">Degree Progress</div>
+                   </div>
+               </div>
+           </div>
+
+           <!-- Timeline View -->
+           <div id="timeline-view" class="timeline-container">
+               <div class="timeline-header">
+                   <h3><i class="fas fa-history"></i> Academic Timeline</h3>
+               </div>
+               <div class="timeline">
+                   <!-- Timeline content will be added here by JavaScript -->
+               </div>
+           </div>
+
+           <!-- Table View -->
+           <div id="table-view" class="list-view-container" style="display: none;">
+               <h3><i class="fas fa-list"></i> Course List View</h3>
+               <table id="courses-table">
+                   <thead>
+                       <tr>
+                           <th>Course</th>
+                           <th>Title</th>
+                           <th>Term</th>
+                           <th>Credits</th>
+                           <th>Grade</th>
+                           <th>Requirement</th>
+                       </tr>
+                   </thead>
+                   <tbody id="courses-table-body">
+                       <!-- Courses will be added here -->
+                   </tbody>
+               </table>
+           </div>
+
+           <!-- Requirements Progress Section -->
+           <div class="requirements-progress">
+               <h3><i class="fas fa-tasks"></i> Degree Requirements Progress</h3>
+               <div class="progress-cards" id="requirements-cards">
+                   <!-- Requirement cards will be added here by JavaScript -->
+               </div>
+           </div>
+
+           <!-- Remaining Courses Section -->
+           <div class="remaining-courses">
+               <h3><i class="fas fa-clipboard-list"></i> Remaining Required Courses</h3>
+               <div id="remaining-courses-list">
+                   <!-- Remaining courses will be added here by JavaScript -->
+               </div>
+           </div>
+       </div>
+
+       <!-- Requirements Modal -->
+       <div id="requirements-modal" class="modal-overlay">
+           <div class="modal requirements-modal">
+               <div class="modal-header">
+                   <h3><i class="fas fa-list-check"></i> Degree Requirements</h3>
+                   <span class="close-btn" onclick="closeRequirementsModal()"><i class="fas fa-times"></i></span>
+               </div>
+               <div id="requirements-content">
+                   <!-- Requirements content will be added here by JavaScript -->
+               </div>
+               <div class="modal-buttons">
+                   <button onclick="closeRequirementsModal()" class="primary-button">Close</button>
+               </div>
+           </div>
+       </div>
+
+       <div id="notification-area"></div>
+   </div>
+   <script src="academic-progress.js"></script>
+</body>
+</html>

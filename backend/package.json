@@ -1,0 +1,20 @@
+{
+  "name": "academic-progress-scraper-backend",
+  "version": "1.0.0",
+  "description": "Backend services for the Academic Progress scraper",
+  "type": "module",
+  "main": "index.js",
+  "scripts": {
+    "start": "node src/api/academic_scraper_api.js",
+    "scraper": "node run_scraper.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "express": "^4.18.2",
+    "jsdom": "^26.1.0",
+    "node-fetch": "^3.3.2"
+  },
+  "author": "",
+  "license": "MIT"
+}
