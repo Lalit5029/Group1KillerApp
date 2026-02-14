@@ -53,14 +53,14 @@ export async function POST(request: Request) {
     console.log("POST - Received data:", data);
 
     // Delete existing degree requirements
-    await prisma.DegreeRequirement.deleteMany({
+    await prisma.degreeRequirement.deleteMany({
       where: {
         userId: user.id,
       },
     });
 
     // Create new degree requirements
-    const degreeRequirements = await prisma.DegreeRequirement.createMany({
+    const degreeRequirements = await prisma.degreeRequirement.createMany({
       data: data.map((block: any) => ({
         userId: user.id,
         title: block.title,

@@ -20,7 +20,7 @@ A modern course scheduling application built with Next.js for university student
 - **Styling:** Tailwind CSS, shadcn/ui components
 - **OCR Integration:** Tesseract.js for image text recognition
 - **State Management:** React hooks and context API
-- **Database:** Prisma ORM with SQLite
+- **Database:** Prisma ORM with MongoDB Atlas
 - **Authentication:** NextAuth.js
 - **API:** Next.js API Routes
 - **Browser Automation:** Puppeteer
@@ -29,67 +29,43 @@ A modern course scheduling application built with Next.js for university student
 
 ## Database Configuration
 
-### Prisma Schema
+The application uses **Prisma ORM with MongoDB Atlas**. The schema is in `prisma/schema.prisma`.
 
-The application uses Prisma ORM with SQLite for data persistence. The schema is defined in `prisma/schema.prisma`:
+### MongoDB Atlas Setup
 
-```prisma
-// User model
-model User {
-  id        String   @id @default(cuid())
-  name      String?
-  email     String   @unique
-  password  String
-  courses   SelectedCourse[]
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-}
+The app is configured for **MongoDB Atlas** so anyone can run it without installing MongoDB locally.
 
-// SelectedCourse model
-model SelectedCourse {
-  id          String   @id @default(cuid())
-  userId      String
-  courseClass String
-  section     String
-  instructor  String?
-  daysTimes   String?
-  room        String?
-  user        User     @relation(fields: [userId], references: [id])
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-}
-```
-
-### Database Setup
-
-1. Install Prisma CLI:
+1. Copy the example env file and add your Atlas connection string:
    ```bash
-   npm install -g prisma
+   cp .env.example .env
    ```
+   Edit `.env` and set `DATABASE_URL` to your [MongoDB Atlas](https://www.mongodb.com/cloud/atlas) connection string.
 
-2. Initialize the database:
+2. Full step-by-step instructions: **[docs/MONGODB_SETUP.md](docs/MONGODB_SETUP.md)**.
+
+3. Then from the project root:
    ```bash
    npx prisma generate
    npx prisma db push
+   npm run db:seed   # optional: demo user + sample data
+   npm run dev
    ```
-
-3. For development, the database is stored in `prisma/dev.db`
 
 ## Environment Configuration
 
-Create a `.env` file in the root directory with the following variables:
+Create a `.env` file in the root directory (see `.env.example`). Required:
 
 ```env
-# Database
-DATABASE_URL="file:./dev.db"
+# MongoDB Atlas (required)
+DATABASE_URL="mongodb+srv://USER:PASSWORD@cluster.xxxxx.mongodb.net/group1killerapp?retryWrites=true&w=majority"
 
 # NextAuth
 NEXTAUTH_URL="http://localhost:3000"
 NEXTAUTH_SECRET="your-secret-key"
 
-# Optional: Google OAuth (if using Google authentication)
-GOOGLE_CLIENT_ID="your-google-client-id"
-GOOGLE_CLIENT_SECRET="your-google-client-secret"
+# Optional: Google OAuth
+# GOOGLE_CLIENT_ID="..."
+# GOOGLE_CLIENT_SECRET="..."
 ```
 
 ## API Endpoints
@@ -129,8 +105,8 @@ Create a `.env` file in the root directory with the following configuration:
 # Environment
 NODE_ENV=development # Change to 'test' for testing mode
 
-# Database
-DATABASE_URL="file:./dev.db"
+# Database (MongoDB Atlas)
+DATABASE_URL="mongodb+srv://USER:PASSWORD@cluster.xxxxx.mongodb.net/group1killerapp?retryWrites=true&w=majority"
 
 # NextAuth
 NEXTAUTH_URL="http://localhost:3000"
@@ -300,7 +276,7 @@ browser = await puppeteer.launch({
 ### Prerequisites
 
 - Node.js 18+ and npm
-- SQLite (for database)
+- MongoDB Atlas account (free tier is enough)
 - Git
 
 ### Installation
@@ -316,16 +292,17 @@ browser = await puppeteer.launch({
    npm install
    ```
 
-3. Set up the database:
+3. Configure environment variables (required for MongoDB Atlas):
+   ```bash
+   cp .env.example .env
+   # Edit .env and set DATABASE_URL to your Atlas connection string (see docs/MONGODB_SETUP.md)
+   ```
+
+4. Set up the database:
    ```bash
    npx prisma generate
    npx prisma db push
-   ```
-
-4. Configure environment variables:
-   ```bash
-   cp .env.example .env
-   # Edit .env with your configuration
+   npm run db:seed   # optional: demo user + sample data
    ```
 
 5. Run the development server:

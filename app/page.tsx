@@ -272,6 +272,16 @@ export default function Home() {
       </nav>
 
       <div className="max-w-7xl mx-auto space-y-8">
+        {/* Test database (for teammates) */}
+        <div className="mb-4 p-4 bg-slate-50 rounded-lg border border-slate-200 text-sm text-slate-700">
+          <span className="font-medium">Test the database:</span>{" "}
+          <Link href="/dashboard" className="text-indigo-600 hover:underline">Dashboard</Link>
+          {" "}(data from MongoDB, no login) or log in with{" "}
+          <span className="font-mono text-slate-800">demo@group1.local</span> /{" "}
+          <span className="font-mono text-slate-800">demo123</span>.
+          {" "}Run <span className="font-mono text-slate-800">npm run db:seed</span> first if you see no data.
+        </div>
+
         {/* Academic Progress Section */}
         <div className="mb-8 p-6 bg-white rounded-lg shadow-md border border-gray-200 flex flex-col md:flex-row justify-between items-center">
           <div>

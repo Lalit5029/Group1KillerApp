@@ -12,7 +12,7 @@ import { NotificationArea } from "./notification-area"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { AcademicDataVisualizer } from "./academic-data-visualizer"
 import { DegreeRequirementsView } from "./degree-requirements-view"
-import { Calendar, GraduationCap, BookOpen } from "lucide-react"
+import { Calendar, GraduationCap, BookOpen, Download, Upload } from "lucide-react"
 import type { Course, SelectedCourse, Notification, Major, Requirements, CourseData } from "@/lib/types"
 import { fetchCourses, fetchRequirements } from "@/lib/data-utils"
 import { hasConflict } from "@/lib/schedule-utils"
@@ -132,97 +132,90 @@ export default function CourseScheduler() {
     initializeApp()
   }, [])
 
-  // Load saved courses when user is logged in
-  useEffect(() => {
-    const loadSavedCourses = async () => {
-      if (session?.user) {
-        try {
-          const response = await fetch('/api/courses')
-          if (response.ok) {
-            const savedCourses = await response.json()
-            if (savedCourses && savedCourses.length > 0) {
-            // Convert saved courses to the correct format
-            const formattedCourses = savedCourses.map((course: any) => ({
-              id: course.id,
-              Class: course.courseClass,
-              Section: course.section,
-              Instructor: course.instructor,
-              DaysTimes: course.daysTimes,
-              Room: course.room
-            }))
-            setSelectedCourses(formattedCourses)
-            showNotification("Loaded your saved courses", "success")
-              
-              // Convert SelectedCourse to CourseData
-              const convertedCourses: CourseData[] = formattedCourses.map((course: SelectedCourse) => ({
-                course: course.Class,
-                title: course.Class, // Using Class as title for now
-                grade: course.grade || "IP",
-                credits: course.credits || "0",
-                term: "Fall 2024", // Default term
-                catalogGroup: course.requirementGroup || "General", // Default catalog group
-                requirementGroup: course.requirementGroup || null,
-                status: "In Progress"
-              }))
-              
-              setCourseData(convertedCourses)
-              
-              // Update requirement groups completion
-              formattedCourses.forEach((course: SelectedCourse) => {
-                if (course.requirementGroup && requirementGroups[course.requirementGroup]) {
-                  if (course.grade !== "WD" && Number.parseFloat(course.credits || "0") > 0) {
-                    requirementGroups[course.requirementGroup].completed += Number.parseFloat(course.credits || "0")
-                  }
-                }
-              })
-            } else {
-              // If no saved courses, ensure the list is empty
-              setSelectedCourses([])
-              setCourseData([])
+  // Manual load/save to database (called by buttons when logged in)
+  const [isLoadingFromDb, setIsLoadingFromDb] = useState(false)
+  const [isSavingToDb, setIsSavingToDb] = useState(false)
+
+  const loadSavedCoursesFromDb = async () => {
+    if (!session?.user) {
+      showNotification("Please log in to load from database", "error")
+      return
+    }
+    setIsLoadingFromDb(true)
+    try {
+      const response = await fetch('/api/courses')
+      if (response.ok) {
+        const savedCourses = await response.json()
+        if (savedCourses && savedCourses.length > 0) {
+          const formattedCourses = savedCourses.map((course: any) => ({
+            id: course.id,
+            Class: course.courseClass,
+            Section: course.section,
+            Instructor: course.instructor,
+            DaysTimes: course.daysTimes,
+            Room: course.room
+          }))
+          setSelectedCourses(formattedCourses)
+          const convertedCourses: CourseData[] = formattedCourses.map((course: SelectedCourse) => ({
+            course: course.Class,
+            title: course.Class,
+            grade: course.grade || "IP",
+            credits: course.credits || "0",
+            term: "Fall 2024",
+            catalogGroup: course.requirementGroup || "General",
+            requirementGroup: course.requirementGroup || null,
+            status: "In Progress"
+          }))
+          setCourseData(convertedCourses)
+          formattedCourses.forEach((course: SelectedCourse) => {
+            if (course.requirementGroup && requirementGroups[course.requirementGroup]) {
+              if (course.grade !== "WD" && Number.parseFloat(course.credits || "0") > 0) {
+                requirementGroups[course.requirementGroup].completed += Number.parseFloat(course.credits || "0")
+              }
             }
-          }
-        } catch (error) {
-          console.error("Failed to load saved courses:", error)
-          showNotification("Failed to load your saved courses", "error")
-          // Ensure the list is empty if there's an error
+          })
+          showNotification("Loaded your saved courses from database", "success")
+        } else {
           setSelectedCourses([])
           setCourseData([])
+          showNotification("No saved courses in database", "default")
         }
       } else {
-        // If user is not logged in, ensure the list is empty
-        setSelectedCourses([])
-        setCourseData([])
+        showNotification("Failed to load courses", "error")
       }
+    } catch (error) {
+      console.error("Failed to load saved courses:", error)
+      showNotification("Failed to load your saved courses", "error")
+    } finally {
+      setIsLoadingFromDb(false)
     }
+  }
 
-    loadSavedCourses()
-  }, [session])
-
-  // Save courses when they change
-  useEffect(() => {
-    const saveCourses = async () => {
-      if (session?.user && selectedCourses.length > 0) {
-        try {
-          const response = await fetch('/api/courses', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify(selectedCourses)
-          })
-          
-          if (!response.ok) {
-            throw new Error('Failed to save courses')
-          }
-        } catch (error) {
-          console.error("Failed to save courses:", error)
-          showNotification("Failed to save your course selection", "error")
-        }
-      }
+  const saveCoursesToDb = async () => {
+    if (!session?.user) {
+      showNotification("Please log in to save to database", "error")
+      return
     }
-
-    saveCourses()
-  }, [selectedCourses, session])
+    if (selectedCourses.length === 0) {
+      showNotification("No courses to save", "default")
+      return
+    }
+    setIsSavingToDb(true)
+    try {
+      const response = await fetch('/api/courses', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(selectedCourses)
+      })
+      if (!response.ok) throw new Error('Failed to save courses')
+      showNotification("Courses saved to database", "success")
+    } catch (error) {
+      console.error("Failed to save courses:", error)
+      showNotification("Failed to save your course selection", "error")
+    } finally {
+      setIsSavingToDb(false)
+    }
+  }
 
   // Only generate schedule after major and year selection
   useEffect(() => {
@@ -1249,6 +1242,32 @@ export default function CourseScheduler() {
                 onImportFromImage={handleImportFromImage}
                 disabled={!selectedMajor || !selectedYear || courses.length === 0}
               />
+
+              {session?.user && (
+                <div className="flex flex-wrap gap-2 items-center">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={loadSavedCoursesFromDb}
+                    disabled={isLoadingFromDb}
+                    className="gap-2"
+                  >
+                    <Download className="h-4 w-4" />
+                    {isLoadingFromDb ? "Loading…" : "Load from database"}
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={saveCoursesToDb}
+                    disabled={isSavingToDb || selectedCourses.length === 0}
+                    className="gap-2"
+                  >
+                    <Upload className="h-4 w-4" />
+                    {isSavingToDb ? "Saving…" : "Save to database"}
+                  </Button>
+                  <span className="text-xs text-muted-foreground">Logged in — load/save your schedule to MongoDB</span>
+                </div>
+              )}
 
               <Dashboard
                 selectedCourses={selectedCourses}
