@@ -110,6 +110,36 @@ export function CalendarView({
     return dayNames[day as keyof typeof dayNames] || day;
   };
 
+  const getStartTime = (daysTimes?: string): string | null => {
+    if (!daysTimes) return null;
+    const timeMatch = daysTimes.match(/(\d{1,2}:\d{2}[AP]M)\s*-\s*(\d{1,2}:\d{2}[AP]M)/i);
+    return timeMatch ? timeMatch[1].toUpperCase() : null;
+  };
+
+  const hasDayCode = (daysTimes: string, dayCode: string): boolean => {
+    const dayPart = (daysTimes.split(" ")[0] || "").toLowerCase().replace(/[^a-z]/g, "");
+    const parsedTokens = dayPart.match(/mo|tu|we|th|fr|m|t|w|r|f/g) || [];
+    const normalizedDays = parsedTokens.map((token) => {
+      const singleDayMap: Record<string, string> = {
+        m: "Mo",
+        t: "Tu",
+        w: "We",
+        r: "Th",
+        f: "Fr",
+      };
+      const twoDayMap: Record<string, string> = {
+        mo: "Mo",
+        tu: "Tu",
+        we: "We",
+        th: "Th",
+        fr: "Fr",
+      };
+      return twoDayMap[token] || singleDayMap[token] || "";
+    });
+
+    return normalizedDays.includes(dayCode);
+  };
+
   const handleDragEnd = (result: DropResult) => {
     if (!result.destination) return;
     
@@ -227,19 +257,20 @@ export function CalendarView({
                       <div className="h-8 border-b border-border bg-muted/50 text-sm font-medium flex items-center justify-center">
                         {getDayName(day)}
                       </div>
-                      {allTimeSlots.map((timeSlot) => (
-                        <div
-                          key={`${day}-${timeSlot}`}
-                          className="h-16 border-b border-border relative"
-                        >
-                          {courses
-                            .filter(
-                              (course) =>
-                                course.DaysTimes &&
-                                course.DaysTimes.split(' ')[0] === day &&
-                                course.DaysTimes.match(/(\d{1,2}:\d{2}[AP]M)\s*-\s*(\d{1,2}:\d{2}[AP]M)/i)
-                            )
-                            .map((course, index) => (
+                      {allTimeSlots.map((timeSlot) => {
+                        const slotTime = timeSlot.toUpperCase();
+                        const slotCourses = courses.filter((course) => {
+                          if (!course.DaysTimes) return false;
+                          const courseStartTime = getStartTime(course.DaysTimes);
+                          return !!courseStartTime && hasDayCode(course.DaysTimes, day) && courseStartTime === slotTime;
+                        });
+
+                        return (
+                          <div
+                            key={`${day}-${timeSlot}`}
+                            className="h-16 border-b border-border relative"
+                          >
+                            {slotCourses.map((course, index) => (
                               <Draggable
                                 key={course.id}
                                 draggableId={course.id}
@@ -264,8 +295,9 @@ export function CalendarView({
                                 )}
                               </Draggable>
                             ))}
-                        </div>
-                      ))}
+                          </div>
+                        );
+                      })}
                       {provided.placeholder}
                     </div>
                   )}
