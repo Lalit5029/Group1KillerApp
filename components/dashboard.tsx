@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
@@ -31,6 +31,11 @@ export function Dashboard({
 }: DashboardProps) {
   const [departmentFilter, setDepartmentFilter] = useState("")
   const [timeFilter, setTimeFilter] = useState("")
+  const [mounted, setMounted] = useState(false)
+
+  useEffect(() => {
+    setMounted(true)
+  }, [])
 
   const exportSchedule = () => {
     window.print()
@@ -81,36 +86,45 @@ export function Dashboard({
 
         <div className="flex flex-wrap gap-4 items-center">
           <div className="flex gap-2">
-            <Select value={departmentFilter} onValueChange={setDepartmentFilter}>
-              <SelectTrigger className="w-[180px] border-primary-200">
-                <SelectValue placeholder="All Departments" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Departments</SelectItem>
-                <SelectItem value="BEN">BEN - Biomedical</SelectItem>
-                <SelectItem value="CSE">CSE - Computer Science</SelectItem>
-                <SelectItem value="MAE">MAE - Mechanical</SelectItem>
-                <SelectItem value="CEN">CEN - Chemical</SelectItem>
-                <SelectItem value="CEE">CEE - Civil</SelectItem>
-                <SelectItem value="ELE">ELE - Electrical</SelectItem>
-                <SelectItem value="MAT">MAT - Mathematics</SelectItem>
-                <SelectItem value="PHY">PHY - Physics</SelectItem>
-                <SelectItem value="CHE">CHE - Chemistry</SelectItem>
-                <SelectItem value="ECS">ECS - Engineering</SelectItem>
-              </SelectContent>
-            </Select>
+            {mounted ? (
+              <>
+                <Select value={departmentFilter} onValueChange={setDepartmentFilter}>
+                  <SelectTrigger className="w-[180px] border-primary-200">
+                    <SelectValue placeholder="All Departments" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Departments</SelectItem>
+                    <SelectItem value="BEN">BEN - Biomedical</SelectItem>
+                    <SelectItem value="CSE">CSE - Computer Science</SelectItem>
+                    <SelectItem value="MAE">MAE - Mechanical</SelectItem>
+                    <SelectItem value="CEN">CEN - Chemical</SelectItem>
+                    <SelectItem value="CEE">CEE - Civil</SelectItem>
+                    <SelectItem value="ELE">ELE - Electrical</SelectItem>
+                    <SelectItem value="MAT">MAT - Mathematics</SelectItem>
+                    <SelectItem value="PHY">PHY - Physics</SelectItem>
+                    <SelectItem value="CHE">CHE - Chemistry</SelectItem>
+                    <SelectItem value="ECS">ECS - Engineering</SelectItem>
+                  </SelectContent>
+                </Select>
 
-            <Select value={timeFilter} onValueChange={setTimeFilter}>
-              <SelectTrigger className="w-[180px] border-primary-200">
-                <SelectValue placeholder="All Times" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Times</SelectItem>
-                <SelectItem value="morning">Morning (8AM-12PM)</SelectItem>
-                <SelectItem value="afternoon">Afternoon (12PM-5PM)</SelectItem>
-                <SelectItem value="evening">Evening (5PM+)</SelectItem>
-              </SelectContent>
-            </Select>
+                <Select value={timeFilter} onValueChange={setTimeFilter}>
+                  <SelectTrigger className="w-[180px] border-primary-200">
+                    <SelectValue placeholder="All Times" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Times</SelectItem>
+                    <SelectItem value="morning">Morning (8AM-12PM)</SelectItem>
+                    <SelectItem value="afternoon">Afternoon (12PM-5PM)</SelectItem>
+                    <SelectItem value="evening">Evening (5PM+)</SelectItem>
+                  </SelectContent>
+                </Select>
+              </>
+            ) : (
+              <>
+                <div className="w-[180px] h-9 rounded-md border border-primary-200 bg-muted/50" aria-hidden />
+                <div className="w-[180px] h-9 rounded-md border border-primary-200 bg-muted/50" aria-hidden />
+              </>
+            )}
           </div>
 
           <div className="flex gap-2">
