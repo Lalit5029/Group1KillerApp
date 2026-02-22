@@ -35,7 +35,7 @@ export function CourseListView({ selectedCourses, onShowDetails, onOpenNotes, on
           {selectedCourses.length === 0 ? (
             <TableRow>
               <TableCell colSpan={6} className="text-center py-4 text-muted-foreground">
-                No courses added yet.
+                No courses yet — add some above.
               </TableCell>
             </TableRow>
           ) : (

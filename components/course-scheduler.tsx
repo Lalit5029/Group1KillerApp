@@ -135,12 +135,15 @@ export default function CourseScheduler() {
   // Manual load/save to database (called by buttons when logged in)
   const [isLoadingFromDb, setIsLoadingFromDb] = useState(false)
   const [isSavingToDb, setIsSavingToDb] = useState(false)
+  const [dbLoadError, setDbLoadError] = useState<string | null>(null)
+  const [dbSaveError, setDbSaveError] = useState<string | null>(null)
 
   const loadSavedCoursesFromDb = async () => {
     if (!session?.user) {
       showNotification("Please log in to load from database", "error")
       return
     }
+    setDbLoadError(null)
     setIsLoadingFromDb(true)
     try {
       const response = await fetch('/api/courses')
@@ -181,11 +184,15 @@ export default function CourseScheduler() {
           showNotification("No saved courses in database", "default")
         }
       } else {
-        showNotification("Failed to load courses", "error")
+        const msg = "Couldn’t load schedule from database. Check your connection and try again."
+        setDbLoadError(msg)
+        showNotification(msg, "error")
       }
     } catch (error) {
       console.error("Failed to load saved courses:", error)
-      showNotification("Failed to load your saved courses", "error")
+      const msg = "Couldn’t load schedule. Please try again."
+      setDbLoadError(msg)
+      showNotification(msg, "error")
     } finally {
       setIsLoadingFromDb(false)
     }
@@ -200,6 +207,7 @@ export default function CourseScheduler() {
       showNotification("No courses to save", "default")
       return
     }
+    setDbSaveError(null)
     setIsSavingToDb(true)
     try {
       const response = await fetch('/api/courses', {
@@ -211,7 +219,9 @@ export default function CourseScheduler() {
       showNotification("Courses saved to database", "success")
     } catch (error) {
       console.error("Failed to save courses:", error)
-      showNotification("Failed to save your course selection", "error")
+      const msg = "Couldn’t save schedule to database. Check your connection and try again."
+      setDbSaveError(msg)
+      showNotification(msg, "error")
     } finally {
       setIsSavingToDb(false)
     }
@@ -1267,6 +1277,11 @@ export default function CourseScheduler() {
                   </Button>
                   <span className="text-xs text-muted-foreground">Logged in — load/save your schedule to MongoDB</span>
                 </div>
+              )}
+              {(dbLoadError || dbSaveError) && (
+                <p className="text-sm text-destructive mt-2" role="alert">
+                  {dbLoadError ?? dbSaveError}
+                </p>
               )}
 
               <Dashboard
