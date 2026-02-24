@@ -1,0 +1,50 @@
+{
+  "baseUrl": "https://myslice.ps.syr.edu/psp/PTL9PROD/EMPLOYEE/SA/c/SA_LEARNER_SERVICES.CLASS_SEARCH.GBL?_gl=1*1wk83wp*_gcl_au*MTM1NzA5MjkxMi4xNzY3MDQ4Mjk2*_ga*MzQ4NjAxMzg2LjE3MDQ0OTg3NzE.*_ga_QT13NN6N9S*czE3NzE5NjUwNzUkbzI3JGcxJHQxNzcxOTY1MjQwJGo1OSRsMCRoMA..*_ga_SRVN5YVLB5*czE3NzE5NjUwNzUkbzUkZzEkdDE3NzE5NjUyNDEkajU4JGwwJGgw",
+  "termValue": "2026 Fall",
+  "chromeExecutablePath": "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome",
+  "defaultTimeoutMs": 30000,
+  "resultTimeoutMs": 15000,
+  "waitAfterSearchMs": 1200,
+  "preNavigationClicks": [
+    {
+      "query": "<PUT_SELECTOR_THAT_OPENS_REAL_CLASS_SEARCH_FORM>",
+      "waitAfterMs": 1500,
+      "timeoutMs": 30000
+    }
+  ],
+  "frame": {
+    "name": "",
+    "urlIncludes": ""
+  },
+  "selectors": {
+    "term": {
+      "type": "select",
+      "query": "#term",
+      "submitAfterSet": false,
+      "optional": false
+    },
+    "subject": {
+      "type": "input",
+      "query": "#subject"
+    },
+    "catalog": {
+      "type": "input",
+      "query": "#catalogNumber"
+    },
+    "searchButton": "#searchButton",
+    "clearButton": "#clearButton",
+    "resultsRow": "table.results tbody tr",
+    "noResults": ".no-results",
+    "columns": {
+      "subject": ".col-subject",
+      "catalog": ".col-catalog",
+      "section": ".col-section",
+      "daysTimes": ".col-days-times",
+      "room": ".col-room",
+      "instructor": ".col-instructor",
+      "status": ".col-status",
+      "classNbr": ".col-classnbr",
+      "meetingDates": ".col-meeting-dates"
+    }
+  }
+}
