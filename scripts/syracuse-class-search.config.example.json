@@ -1,6 +1,9 @@
 {
   "baseUrl": "https://myslice.ps.syr.edu/psp/PTL9PROD/EMPLOYEE/SA/c/SA_LEARNER_SERVICES.CLASS_SEARCH.GBL?_gl=1*1wk83wp*_gcl_au*MTM1NzA5MjkxMi4xNzY3MDQ4Mjk2*_ga*MzQ4NjAxMzg2LjE3MDQ0OTg3NzE.*_ga_QT13NN6N9S*czE3NzE5NjUwNzUkbzI3JGcxJHQxNzcxOTY1MjQwJGo1OSRsMCRoMA..*_ga_SRVN5YVLB5*czE3NzE5NjUwNzUkbzUkZzEkdDE3NzE5NjUyNDEkajU4JGwwJGgw",
-  "termValue": "2026 Fall",
+  "termValues": [
+    "Spring 2026",
+    "Fall 2026"
+  ],
   "chromeExecutablePath": "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome",
   "defaultTimeoutMs": 30000,
   "resultTimeoutMs": 15000,
@@ -26,6 +29,10 @@
     "subject": {
       "type": "input",
       "query": "#subject"
+    },
+    "subjectCode": {
+      "type": "input",
+      "query": "#subjectCode"
     },
     "catalog": {
       "type": "input",

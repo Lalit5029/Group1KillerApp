@@ -168,7 +168,34 @@ async function setField(context, fieldConfig, value) {
 
   await context.waitForSelector(selector, { timeout: fieldConfig.timeoutMs || 15000 });
   if (type === "select") {
-    await context.select(selector, value);
+    const selected = await context.select(selector, value);
+    if (selected.length === 0) {
+      // Fallback for PeopleSoft dropdowns where config uses visible label instead of option value.
+      const selectedByLabel = await context.$eval(
+        selector,
+        (el, targetLabel) => {
+          const selectEl = el;
+          const normalizedTarget = (targetLabel || "").toString().trim().toLowerCase();
+          const compactTarget = normalizedTarget.replace(/[^a-z0-9]/g, "");
+          const match = Array.from(selectEl.options).find(
+            (opt) =>
+              (opt.text || "").trim().toLowerCase() === normalizedTarget ||
+              (opt.text || "").trim().toLowerCase().includes(normalizedTarget) ||
+              (opt.value || "").trim().toLowerCase() === normalizedTarget ||
+              (opt.value || "").trim().toLowerCase().includes(normalizedTarget) ||
+              (opt.text || "").toLowerCase().replace(/[^a-z0-9]/g, "").startsWith(compactTarget),
+          );
+          if (!match) return false;
+          selectEl.value = match.value;
+          selectEl.dispatchEvent(new Event("change", { bubbles: true }));
+          return true;
+        },
+        value,
+      );
+      if (!selectedByLabel) {
+        throw new Error(`Could not set select ${selector} with value/label "${value}"`);
+      }
+    }
     return;
   }
 
@@ -178,10 +205,16 @@ async function setField(context, fieldConfig, value) {
 
 async function clickIfPresent(context, selector) {
   if (!selector) return false;
-  const el = await context.$(selector);
-  if (!el) return false;
-  await el.click();
-  return true;
+  try {
+    const el = await context.$(selector);
+    if (!el) return false;
+    await el.click();
+    return true;
+  } catch (error) {
+    const msg = String(error && error.message ? error.message : error);
+    if (msg.toLowerCase().includes("detached")) return false;
+    throw error;
+  }
 }
 
 async function clickByVisibleText(context, text) {
@@ -242,6 +275,24 @@ async function ensureSearchFormVisible(context, selectors) {
   }
 
   await context.waitForSelector(subjectSelector, { timeout: shortTimeoutMs });
+}
+
+async function clickWithRetry(context, selector, attempts = 3) {
+  let lastError = null;
+  for (let i = 0; i < attempts; i++) {
+    try {
+      await context.click(selector);
+      return;
+    } catch (error) {
+      lastError = error;
+      const msg = String(error && error.message ? error.message : error).toLowerCase();
+      if (!msg.includes("detached") && !msg.includes("execution context was destroyed")) {
+        throw error;
+      }
+      await sleep(400);
+    }
+  }
+  throw lastError || new Error(`Failed to click selector: ${selector}`);
 }
 
 async function scrapeRows(context, selectors, term) {
@@ -422,75 +473,96 @@ async function main() {
   const page = await browser.newPage();
   page.setDefaultTimeout(config.defaultTimeoutMs || 30000);
 
-  const term = config.termValue || "";
+  const termValues = Array.isArray(config.termValues)
+    ? config.termValues.filter(Boolean)
+    : config.termValue
+      ? [config.termValue]
+      : [""];
   const scraped = [];
 
   try {
     await page.goto(config.baseUrl, { waitUntil: "networkidle2" });
     await runPreNavigationClicks(page, config);
-    const context = await resolveBestContext(page, config);
+    let context = await resolveBestContext(page, config);
 
     if (args.debugDom) {
       await printDebugDom(page, context);
     }
     await ensureSearchFormVisible(context, config.selectors);
 
-    if (term) {
-      try {
-        await setField(context, config.selectors.term, term);
-        if (config.selectors.term?.submitAfterSet && config.selectors.searchButton) {
-          await clickIfPresent(context, config.selectors.searchButton);
+    for (const term of termValues) {
+      context = await resolveBestContext(page, config);
+      await ensureSearchFormVisible(context, config.selectors);
+      if (term) {
+        try {
+          await setField(context, config.selectors.term, term);
+          if (config.selectors.term?.submitAfterSet && config.selectors.searchButton) {
+            await clickIfPresent(context, config.selectors.searchButton);
+          }
+          console.log(`Using term: ${term}`);
+        } catch (error) {
+          if (config.selectors.term?.optional) {
+            console.warn(`Optional term selector not found: ${config.selectors.term?.query}`);
+          } else {
+            throw error;
+          }
         }
-      } catch (error) {
-        if (config.selectors.term?.optional) {
-          console.warn(`Optional term selector not found: ${config.selectors.term?.query}`);
+      }
+
+      for (const code of targetCodes) {
+        context = await resolveBestContext(page, config);
+        await ensureSearchFormVisible(context, config.selectors);
+
+        const { subject, catalog, raw } = splitCode(code);
+        if (!subject || !catalog) {
+          console.warn(`Skipping invalid code format: ${code}`);
+          continue;
+        }
+
+        if (config.selectors.clearButton) {
+          await clickIfPresent(context, config.selectors.clearButton);
+        }
+
+        try {
+          await setField(context, config.selectors.subject, subject);
+        } catch (error) {
+          if (config.selectors.subjectCode) {
+            console.warn(`Subject dropdown did not accept "${subject}". Falling back to subjectCode input.`);
+            await setField(context, config.selectors.subjectCode, subject);
+          } else {
+            throw error;
+          }
+        }
+        await setField(context, config.selectors.catalog, catalog);
+
+        if (!config.selectors.searchButton) {
+          throw new Error("selectors.searchButton is required in config");
+        }
+        await clickWithRetry(context, config.selectors.searchButton, 3);
+
+        if (config.waitAfterSearchMs) await sleep(config.waitAfterSearchMs);
+
+        if (config.selectors.resultsRow) {
+          await context.waitForSelector("body", { timeout: config.resultTimeoutMs || 15000 });
+        }
+
+        const foundRows = (await scrapeRows(context, config.selectors, term)).map((row) => ({
+          ...row,
+          subject: row.subject || subject,
+          catalog: row.catalog || catalog,
+        }));
+        const matchingRows = foundRows.filter(
+          (r) => normalizeCode(`${r.subject} ${r.catalog}`) === normalizeCode(`${subject} ${catalog}`),
+        );
+
+        if (matchingRows.length === 0) {
+          console.log(`No rows found for ${subject} ${catalog}${term ? ` (${term})` : ""}`);
         } else {
-          throw error;
+          console.log(`Found ${matchingRows.length} section(s) for ${subject} ${catalog}${term ? ` (${term})` : ""}`);
         }
+
+        matchingRows.forEach((row) => scraped.push({ ...row, rawCode: raw }));
       }
-    }
-
-    for (const code of targetCodes) {
-      const { subject, catalog, raw } = splitCode(code);
-      if (!subject || !catalog) {
-        console.warn(`Skipping invalid code format: ${code}`);
-        continue;
-      }
-
-      if (config.selectors.clearButton) {
-        await clickIfPresent(context, config.selectors.clearButton);
-      }
-
-      await setField(context, config.selectors.subject, subject);
-      await setField(context, config.selectors.catalog, catalog);
-
-      if (!config.selectors.searchButton) {
-        throw new Error("selectors.searchButton is required in config");
-      }
-      await context.click(config.selectors.searchButton);
-
-      if (config.waitAfterSearchMs) await sleep(config.waitAfterSearchMs);
-
-      if (config.selectors.resultsRow) {
-        await context.waitForSelector("body", { timeout: config.resultTimeoutMs || 15000 });
-      }
-
-      const foundRows = (await scrapeRows(context, config.selectors, term)).map((row) => ({
-        ...row,
-        subject: row.subject || subject,
-        catalog: row.catalog || catalog,
-      }));
-      const matchingRows = foundRows.filter(
-        (r) => normalizeCode(`${r.subject} ${r.catalog}`) === normalizeCode(`${subject} ${catalog}`),
-      );
-
-      if (matchingRows.length === 0) {
-        console.log(`No rows found for ${subject} ${catalog}`);
-      } else {
-        console.log(`Found ${matchingRows.length} section(s) for ${subject} ${catalog}`);
-      }
-
-      matchingRows.forEach((row) => scraped.push({ ...row, rawCode: raw }));
     }
   } finally {
     await browser.close();
@@ -513,9 +585,9 @@ async function main() {
   const existingKeys = new Set(
     rows.map((r) =>
       [
-        (term || "").toUpperCase(),
         normalizeCode(r.Class || ""),
         (r.Section || "").toUpperCase(),
+        (r["Meeting Dates"] || "").toUpperCase(),
       ].join("|"),
     ),
   );
@@ -524,9 +596,9 @@ async function main() {
   deduped.forEach((record) => {
     const csvRow = toCourseCsvRow(record);
     const key = [
-      (record.term || term || "").toUpperCase(),
       normalizeCode(csvRow.Class || ""),
       (csvRow.Section || "").toUpperCase(),
+      (csvRow["Meeting Dates"] || "").toUpperCase(),
     ].join("|");
 
     if (existingKeys.has(key)) return;

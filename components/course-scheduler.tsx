@@ -12,8 +12,8 @@ import { NotificationArea } from "./notification-area"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { AcademicDataVisualizer } from "./academic-data-visualizer"
 import { DegreeRequirementsView } from "./degree-requirements-view"
-import { Calendar, GraduationCap, BookOpen, Download, Upload } from "lucide-react"
-import type { Course, SelectedCourse, Notification, Major, Requirements, CourseData } from "@/lib/types"
+import { Calendar, GraduationCap, BookOpen, Download, Upload, HelpCircle } from "lucide-react"
+import type { Course, SelectedCourse, Notification, Major, Requirements, CourseData, CourseSearchCriteria } from "@/lib/types"
 import { fetchCourses, fetchRequirements } from "@/lib/data-utils"
 import { hasConflict } from "@/lib/schedule-utils"
 import { useSession } from "next-auth/react"
@@ -58,6 +58,27 @@ interface BlockData {
   courses: RequirementCourse[];
 }
 
+const ACADEMIC_IMPORT_API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001"
+
+const getFriendlyAcademicImportError = (message: string) => {
+  if (
+    message.includes("AADSTS750054") ||
+    /SAMLRequest or SAMLResponse must be present/i.test(message)
+  ) {
+    return "MySlice sign-in session expired. Open myslice.ps.syr.edu, sign in once, then retry Import from MySlice."
+  }
+  if (/Invalid username or password/i.test(message)) {
+    return "MySlice login failed. Check your NetID and password and try again."
+  }
+  if (/timed out/i.test(message)) {
+    return "Login timed out. Retry import and approve the Duo/Microsoft prompt quickly."
+  }
+  if (/Failed to read import status/i.test(message)) {
+    return "Import started, but status polling failed. Please retry in a moment."
+  }
+  return message || "Failed to import academic records."
+}
+
 export default function CourseScheduler() {
   // State
   const [courses, setCourses] = useState<Course[]>([])
@@ -82,6 +103,7 @@ export default function CourseScheduler() {
   const { data: session } = useSession()
   const [username, setUsername] = useState("")
   const [password, setPassword] = useState("")
+  const [showImportHelp, setShowImportHelp] = useState(false)
   const [importLogs, setImportLogs] = useState<string[]>([])
   const { toast } = useToast()
   const [courseData, setCourseData] = useState<CourseData[]>([])
@@ -441,57 +463,79 @@ export default function CourseScheduler() {
   }
 
   // Search courses
-  const searchCourses = (query: string) => {
-    if (!query.trim()) {
+  const searchCourses = (criteria: CourseSearchCriteria) => {
+    const query = (criteria.query || "").trim()
+    const subject = (criteria.subject || "").trim()
+    const courseNumber = (criteria.courseNumber || "").trim()
+    const instructor = (criteria.instructor || "").trim()
+    const section = (criteria.section || "").trim()
+
+    if (!query && !subject && !courseNumber && !instructor && !section) {
       setCurrentSearchResults([])
       return
     }
 
     const queryLower = query.toLowerCase()
+    const subjectLower = subject.toLowerCase()
+    const courseNumberLower = courseNumber.toLowerCase()
+    const instructorLower = instructor.toLowerCase()
+    const sectionLower = section.toLowerCase()
+    const classPattern = [subjectLower, courseNumberLower].filter(Boolean).join(" ").trim()
 
-    // Improved search logic to match on multiple fields
+    // Match all provided structured fields, plus optional keyword query.
     const results = courses.filter((c) => {
-      // Search in course code
-      if (c.Class?.toLowerCase().includes(queryLower)) {
-        return true
-      }
+      const classValue = c.Class?.toLowerCase() || ""
+      const instructorValue = c.Instructor?.toLowerCase() || ""
+      const sectionValue = c.Section?.toLowerCase() || ""
+      const daysTimesValue = c.DaysTimes?.toLowerCase() || ""
+      const roomValue = c.Room?.toLowerCase() || ""
 
-      // Search in instructor name
-      if (c.Instructor?.toLowerCase().includes(queryLower)) {
-        return true
-      }
+      const matchesSubject = !subjectLower || classValue.startsWith(subjectLower)
+      const matchesCourseNumber =
+        !courseNumberLower ||
+        classValue.includes(` ${courseNumberLower}`) ||
+        classValue.includes(courseNumberLower)
+      const matchesInstructor = !instructorLower || instructorValue.includes(instructorLower)
+      const matchesSection = !sectionLower || sectionValue.includes(sectionLower)
 
-      // Search in section
-      if (c.Section?.toLowerCase().includes(queryLower)) {
-        return true
-      }
+      const matchesKeyword =
+        !queryLower ||
+        classValue.includes(queryLower) ||
+        instructorValue.includes(queryLower) ||
+        sectionValue.includes(queryLower) ||
+        daysTimesValue.includes(queryLower) ||
+        roomValue.includes(queryLower)
 
-      // Search in days/times
-      if (c.DaysTimes?.toLowerCase().includes(queryLower)) {
-        return true
-      }
-
-      // Search in room
-      if (c.Room?.toLowerCase().includes(queryLower)) {
-        return true
-      }
-
-      return false
+      return matchesSubject && matchesCourseNumber && matchesInstructor && matchesSection && matchesKeyword
     })
 
-    // Sort results to prioritize exact matches
+    // Sort results to prioritize exact class matches.
     results.sort((a, b) => {
-      const aClassMatch = a.Class?.toLowerCase() === queryLower ? 0 : 1
-      const bClassMatch = b.Class?.toLowerCase() === queryLower ? 0 : 1
+      const aClassMatch = classPattern && a.Class?.toLowerCase() === classPattern ? 0 : 1
+      const bClassMatch = classPattern && b.Class?.toLowerCase() === classPattern ? 0 : 1
       return aClassMatch - bClassMatch
     })
 
-    setCurrentSearchResults(results)
-
     if (results.length === 0) {
-      showNotification(`No courses found matching "${query}"`, "warning")
+      const requestedCode = [subject, courseNumber].filter(Boolean).join(" ").trim()
+      const fallbackLabel = requestedCode || query || "Requested Course"
+      const fallbackCourse: Course = {
+        id: `not-available-${Date.now()}`,
+        Class: fallbackLabel,
+        Section: "Not Available",
+        DaysTimes: "Not Available",
+        Room: "Not Available",
+        Instructor: "Not Available",
+        MeetingDates: "Not Available",
+        Reviews: [],
+        RMP_Rating: "N/A",
+      }
+      setCurrentSearchResults([fallbackCourse])
+      showNotification(`Course information is not available for "${fallbackLabel}"`, "warning")
     } else {
-      showNotification(`Found ${results.length} courses matching "${query}"`, "success")
+      const searchLabel = [subject, courseNumber, instructor, section, query].filter(Boolean).join(" ").trim()
+      setCurrentSearchResults(results)
+      showNotification(`Found ${results.length} courses matching "${searchLabel || "criteria"}"`, "success")
     }
   }
 
@@ -877,7 +921,7 @@ export default function CourseScheduler() {
     setImportLogs([])
     try {
       // Make the actual API call to start import
-      const response = await fetch("http://localhost:3001/api/scrape-academic-record", {
+      const response = await fetch(`${ACADEMIC_IMPORT_API_BASE_URL}/api/scrape-academic-record`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -890,10 +934,13 @@ export default function CourseScheduler() {
       }
 
       const { jobId } = await response.json()
-      
+
       // Poll for job status
       const checkStatus = async () => {
-        const statusResponse = await fetch(`http://localhost:3001/api/scrape-status/${jobId}`)
+        const statusResponse = await fetch(`${ACADEMIC_IMPORT_API_BASE_URL}/api/scrape-status/${jobId}`)
+        if (!statusResponse.ok) {
+          throw new Error("Failed to read import status")
+        }
         const statusData = await statusResponse.json()
 
         // Update logs with the detailed log message from the backend
@@ -903,23 +950,47 @@ export default function CourseScheduler() {
         }
 
         if (statusData.status === "completed") {
-          // Set imported course data to academic courses
-          if (statusData.result) {
-            setAcademicCourses(statusData.result.courses)
-            // Set degree requirements data
-            if (statusData.result.blocks) {
-              setDegreeCourses(statusData.result.blocks)
-              // Save degree requirements after import
-              await saveDegreeRequirements()
-            }
+          const importedCourses = Array.isArray(statusData.result?.courses) ? statusData.result.courses : []
+          const normalizedCourses: CourseData[] = importedCourses.map((course: any) => ({
+            code: course?.code || "Not available",
+            name: course?.name || course?.title || "Not available",
+            title: course?.title || course?.name || "Not available",
+            term: course?.term || "Not available",
+            grade: course?.grade || "Not available",
+            credits: String(course?.credits ?? "Not available"),
+            requirementGroup: course?.requirementGroup || "General",
+            catalogGroup: course?.catalogGroup || "Not available",
+            status: course?.status || "Not available"
+          }))
+          setAcademicCourses(normalizedCourses)
+
+          const importedBlocks = Array.isArray(statusData.result?.blocks) ? statusData.result.blocks : []
+          const normalizedBlocks: BlockData[] = importedBlocks.map((block: any) => ({
+            title: block?.title || "Not available",
+            status: block?.status || "Not available",
+            courses: Array.isArray(block?.courses)
+              ? block.courses.map((course: any) => ({
+                  code: course?.code || "Not available",
+                  title: course?.title || course?.name || "Not available",
+                  grade: course?.grade || "Not available",
+                  credits: String(course?.credits ?? "Not available"),
+                  term: course?.term || "Not available"
+                }))
+              : []
+          }))
+          setDegreeCourses(normalizedBlocks)
+
+          if (normalizedCourses.length === 0) {
+            showNotification("Import completed, but no courses were found for this account", "warning")
+          } else {
+            showNotification(`Successfully imported ${normalizedCourses.length} courses from MySlice`, "success")
           }
-          showNotification("Successfully imported courses from MySlice", "success")
           setUsername("")
           setPassword("")
           setIsLoading(false)
         } else if (statusData.status === "failed") {
           setIsLoading(false)
-          throw new Error(statusData.message || "Import failed")
+          throw new Error(getFriendlyAcademicImportError(statusData.message || "Import failed"))
         } else {
           // Job is still running, check again in 2 seconds
           setTimeout(checkStatus, 2000)
@@ -930,7 +1001,7 @@ export default function CourseScheduler() {
       checkStatus()
     } catch (error) {
       console.error("Failed to import courses:", error)
-      showNotification((error as Error).message || "Failed to import courses", "error")
+      showNotification(getFriendlyAcademicImportError((error as Error).message || "Failed to import courses"), "error", 6000)
       setIsLoading(false)
     }
   }
@@ -1325,16 +1396,38 @@ export default function CourseScheduler() {
                           />
                         </div>
                       </div>
-                      <p className="text-sm text-gray-500">
-                        Your credentials will only be used to access your MySlice account and will not be stored.
-                      </p>
-                      <Button
-                        className="w-full"
-                        onClick={handleImport}
-                        disabled={isLoading}
-                      >
-                        {isLoading ? "Importing..." : "Import from MySlice"}
-                      </Button>
+                      <div className="text-sm text-gray-500 space-y-1">
+                        <p>Your credentials are used only for this import session and are not stored.</p>
+                        <p>For the smoothest login flow:</p>
+                        <p>1. If prompted, complete Microsoft/Duo approval quickly.</p>
+                        <p>2. If sign-in fails with a session error, open `myslice.ps.syr.edu`, sign in once, then retry.</p>
+                      </div>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                        <Button
+                          className="w-full"
+                          onClick={handleImport}
+                          disabled={isLoading}
+                        >
+                          {isLoading ? "Importing..." : "Import from MySlice"}
+                        </Button>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          className="w-full"
+                          onClick={() => setShowImportHelp((prev) => !prev)}
+                        >
+                          <HelpCircle className="h-4 w-4 mr-2" />
+                          {showImportHelp ? "Hide Help" : "Import Help"}
+                        </Button>
+                      </div>
+                      {showImportHelp && (
+                        <div className="text-sm bg-blue-50 border border-blue-200 rounded-md p-3 text-blue-900">
+                          <p className="font-medium mb-1">Quick import checklist</p>
+                          <p>1. Verify your NetID and password.</p>
+                          <p>2. Complete Duo/Microsoft approval immediately when prompted.</p>
+                          <p>3. If you see a session/sign-in error, open `https://myslice.ps.syr.edu`, sign in once, then retry import.</p>
+                        </div>
+                      )}
                       {importLogs.length > 0 && (
                         <div className="mt-4 p-4 bg-gray-50 rounded-md">
                           <h4 className="text-sm font-medium mb-2">Import Log:</h4>
@@ -1412,4 +1505,3 @@ export default function CourseScheduler() {
     </div>
   )
 }
-

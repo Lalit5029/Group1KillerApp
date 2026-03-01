@@ -1,8 +1,24 @@
 import React, { useState, useEffect } from 'react';
 import { Button, Card, Alert, Spinner, List, Tag, Progress, Typography, Input, Label } from '@/components/ui';
-import { Clock, CheckCircle, AlertCircle, BookOpen, Download } from 'lucide-react';
+import { Clock, CheckCircle, AlertCircle, BookOpen, Download, HelpCircle } from 'lucide-react';
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
+
+const getFriendlyAcademicImportError = (message = '') => {
+  if (
+    message.includes('AADSTS750054') ||
+    /SAMLRequest or SAMLResponse must be present/i.test(message)
+  ) {
+    return 'MySlice sign-in session expired. Open myslice.ps.syr.edu, sign in once, then retry Import from MySlice.';
+  }
+  if (/Invalid username or password/i.test(message)) {
+    return 'MySlice login failed. Check your NetID and password and try again.';
+  }
+  if (/timed out/i.test(message)) {
+    return 'Login timed out. Retry import and approve the Duo/Microsoft prompt quickly.';
+  }
+  return message || 'Failed to import academic records.';
+};
 
 export default function AcademicRecordImporter({ onImportComplete }) {
   const [isImporting, setIsImporting] = useState(false);
@@ -11,6 +27,7 @@ export default function AcademicRecordImporter({ onImportComplete }) {
   const [courses, setCourses] = useState([]);
   const [error, setError] = useState(null);
   const [showLoginForm, setShowLoginForm] = useState(false);
+  const [showImportHelp, setShowImportHelp] = useState(false);
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
 
@@ -45,7 +62,7 @@ export default function AcademicRecordImporter({ onImportComplete }) {
       const data = await response.json();
       setJobId(data.jobId);
     } catch (err) {
-      setError(err.message);
+      setError(getFriendlyAcademicImportError(err.message));
       setIsImporting(false);
     }
   };
@@ -75,17 +92,18 @@ export default function AcademicRecordImporter({ onImportComplete }) {
             clearInterval(intervalId);
 
             if (data.status === 'completed' && data.result) {
-              setCourses(data.result);
+              const importedCourses = Array.isArray(data.result.courses) ? data.result.courses : [];
+              setCourses(importedCourses);
               if (onImportComplete) {
-                onImportComplete(data.result);
+                onImportComplete(importedCourses);
               }
             } else if (data.status === 'failed') {
-              setError(data.message);
+              setError(getFriendlyAcademicImportError(data.message));
             }
           }
         } catch (err) {
           console.error("Polling error:", err);
-          setError(err.message);
+          setError(getFriendlyAcademicImportError(err.message));
           setIsImporting(false);
           clearInterval(intervalId);
         }
@@ -183,6 +201,25 @@ export default function AcademicRecordImporter({ onImportComplete }) {
           )}
         </Button>
       </div>
+      <div className="mb-4">
+        <Button
+          type="button"
+          variant="outline"
+          onClick={() => setShowImportHelp((prev) => !prev)}
+          className="flex items-center"
+        >
+          <HelpCircle className="h-4 w-4 mr-2" />
+          {showImportHelp ? 'Hide Help' : 'Import Help'}
+        </Button>
+      </div>
+      {showImportHelp && (
+        <div className="text-sm bg-blue-50 border border-blue-200 rounded-md p-3 text-blue-900 mb-4">
+          <div className="font-medium mb-1">Quick import checklist</div>
+          <div>1. Verify your NetID and password.</div>
+          <div>2. Complete Duo/Microsoft approval immediately when prompted.</div>
+          <div>3. If you see a session/sign-in error, open `https://myslice.ps.syr.edu`, sign in once, then retry import.</div>
+        </div>
+      )}
 
       {error && (
         <Alert variant="destructive" className="mb-4">
@@ -215,8 +252,11 @@ export default function AcademicRecordImporter({ onImportComplete }) {
               className="mt-1"
             />
           </div>
-          <div className="text-sm text-gray-500">
-            Your credentials will only be used to access your MySlice account and will not be stored.
+          <div className="text-sm text-gray-500 space-y-1">
+            <div>Your credentials are used only for this import session and are not stored.</div>
+            <div>For the smoothest login flow:</div>
+            <div>1. If prompted, complete Microsoft/Duo approval quickly.</div>
+            <div>2. If sign-in fails with a session error, open `myslice.ps.syr.edu`, sign in once, then retry.</div>
           </div>
         </div>
       )}

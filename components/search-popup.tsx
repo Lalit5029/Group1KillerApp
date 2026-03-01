@@ -129,31 +129,43 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { Search, Plus } from "lucide-react"
-import type { Course } from "@/lib/types"
+import type { Course, CourseSearchCriteria } from "@/lib/types"
 import { getDepartmentCode } from "@/lib/utils"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
-import { get } from "http"
 
 interface SearchPopupProps {
   onClose: () => void
-  onSearch: (query: string) => void
+  onSearch: (criteria: CourseSearchCriteria) => void
   searchResults: Course[]
   onAddCourse: (course: Course) => void
 }
 
 export function SearchPopup({ onClose, onSearch, searchResults, onAddCourse }: SearchPopupProps) {
-  const [searchQuery, setSearchQuery] = useState("")
+  const [criteria, setCriteria] = useState<CourseSearchCriteria>({
+    query: "",
+    subject: "",
+    courseNumber: "",
+    instructor: "",
+    section: "",
+  })
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault()
-    onSearch(searchQuery)
+    onSearch(criteria)
   }
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === "Enter") {
-      onSearch(searchQuery)
+      onSearch(criteria)
     }
   }
+
+  const requestedCourseLabel = [criteria.subject, criteria.courseNumber]
+    .filter(Boolean)
+    .join(" ")
+    .trim()
+
+  const hasInput = Object.values(criteria).some((value) => (value || "").trim().length > 0)
 
   return (
     <Dialog open={true} onOpenChange={onClose}>
@@ -166,19 +178,40 @@ export function SearchPopup({ onClose, onSearch, searchResults, onAddCourse }: S
         </DialogHeader>
 
         <form onSubmit={handleSearch} className="mt-4">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <Input
-              placeholder="Search by Course Code or Instructor Name and press Enter..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              onKeyDown={handleKeyDown}
-              className="pl-10 bg-white border-2 border-primary-200 focus:border-primary focus:ring-2 focus:ring-primary-100"
+              placeholder="Subject (e.g., CIS)"
+              value={criteria.subject}
+              onChange={(e) => setCriteria((prev) => ({ ...prev, subject: e.target.value }))}
             />
-            <Button
-              type="submit"
-              className="absolute right-1 top-1/2 transform -translate-y-1/2 bg-primary hover:bg-primary-600"
-            >
+            <Input
+              placeholder="Course Number (e.g., 454)"
+              value={criteria.courseNumber}
+              onChange={(e) => setCriteria((prev) => ({ ...prev, courseNumber: e.target.value }))}
+            />
+            <Input
+              placeholder="Instructor"
+              value={criteria.instructor}
+              onChange={(e) => setCriteria((prev) => ({ ...prev, instructor: e.target.value }))}
+            />
+            <Input
+              placeholder="Section"
+              value={criteria.section}
+              onChange={(e) => setCriteria((prev) => ({ ...prev, section: e.target.value }))}
+            />
+            <div className="sm:col-span-2 relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+              <Input
+                placeholder="Keyword (course code, room, days/times)"
+                value={criteria.query}
+                onChange={(e) => setCriteria((prev) => ({ ...prev, query: e.target.value }))}
+                onKeyDown={handleKeyDown}
+                className="pl-10 bg-white border-2 border-primary-200 focus:border-primary focus:ring-2 focus:ring-primary-100"
+              />
+            </div>
+          </div>
+          <div className="mt-3 flex justify-end">
+            <Button type="submit" className="bg-primary hover:bg-primary-600">
               Search
             </Button>
           </div>
@@ -187,18 +220,20 @@ export function SearchPopup({ onClose, onSearch, searchResults, onAddCourse }: S
         <div className="mt-4 max-h-[350px] overflow-y-auto border rounded-md border-gray-200">
           {searchResults.length === 0 ? (
             <p className="text-center text-muted-foreground py-8 bg-gray-50">
-              {searchQuery ? "No courses found matching your search." : "Enter a search term to find courses."}
+              {hasInput ? "No courses found matching your search." : "Enter course details to search."}
             </p>
           ) : (
             <div className="space-y-2 p-2">
-              {searchResults.map((course, index) => (
+              {searchResults.map((course, index) => {
+                const isNotAvailable = course.Section === "Not Available"
+                return (
                 <div
                   key={`${course.Class}-${course.Section}-${index}`}
                   className={`flex justify-between items-center p-3 rounded-md ${getDepartmentCode(course.Class)} hover:shadow-md transition-shadow`}
                 >
                   <div>
                     <div className="font-medium">
-                      {course.Class} {course.Section}
+                      {course.Class || requestedCourseLabel || "Requested Course"} {course.Section}
                     </div>
                     <div className="text-sm text-muted-foreground">
                       {course.DaysTimes || "TBA"} - 
@@ -235,13 +270,15 @@ export function SearchPopup({ onClose, onSearch, searchResults, onAddCourse }: S
                   <Button
                     size="sm"
                     onClick={() => onAddCourse(course)}
+                    disabled={isNotAvailable}
                     className="flex items-center gap-1 bg-primary hover:bg-primary-600"
                   >
                     <Plus className="h-4 w-4" />
-                    Add
+                    {isNotAvailable ? "Not Available" : "Add"}
                   </Button>
                 </div>
-              ))}
+                )
+              })}
             </div>
           )}
         </div>

@@ -35,6 +35,7 @@ scrapingJobs[jobId] = {
 // MySlice URLs
 const MYSLICE_HOME_URL =
   "https://myslice.ps.syr.edu/psc/PTL9PROD/EMPLOYEE/EMPL/c/NUI_FRAMEWORK.PT_LANDINGPAGE.GBL";
+const MYSLICE_PORTAL_ROOT_URL = "https://myslice.ps.syr.edu/";
 const COURSE_HISTORY_URL =
   "https://cs92prod.ps.syr.edu/psc/CS92PROD/EMPLOYEE/SA/c/SA_LEARNER_SERVICES.SSS_MY_CRSEHIST.GBL";
 const DEGREE_REQUIREMENTS_URL = "https://degreeworks.syr.edu/worksheets/WEB31";
@@ -120,6 +121,50 @@ async function updateJobLog(jobId, message) {
   }
 }
 
+async function getPageText(page) {
+  return page.evaluate(() => document.body?.innerText || "");
+}
+
+async function hasSamlBindingError(page) {
+  const pageText = await getPageText(page);
+  return (
+    pageText.includes("AADSTS750054") ||
+    /SAMLRequest or SAMLResponse must be present/i.test(pageText)
+  );
+}
+
+async function navigateToMySliceStart(page, jobId) {
+  const startUrls = [MYSLICE_HOME_URL, MYSLICE_PORTAL_ROOT_URL];
+
+  for (let attempt = 0; attempt < startUrls.length; attempt++) {
+    const targetUrl = startUrls[attempt];
+    await updateJobLog(
+      jobId,
+      `Opening MySlice sign-in entry point (${attempt + 1}/${startUrls.length})`
+    );
+    await page.goto(targetUrl, {
+      waitUntil: "networkidle0",
+      timeout: 60000,
+    });
+
+    // Give redirects a short chance to settle before checking the page text.
+    await new Promise((resolve) => setTimeout(resolve, 1500));
+
+    if (!(await hasSamlBindingError(page))) {
+      return;
+    }
+
+    await updateJobLog(
+      jobId,
+      "Detected invalid SAML redirect response. Retrying with a clean MySlice entry URL..."
+    );
+  }
+
+  throw new Error(
+    "MySlice sign-in session is invalid (AADSTS750054). Please open https://myslice.ps.syr.edu in your browser, sign in once, then retry import."
+  );
+}
+
 // Login to MySlice and get course history
 export async function login(username, password, jobId) {
   let browser = null;
@@ -175,12 +220,9 @@ export async function login(username, password, jobId) {
     await updateJobLog(jobId, "Starting login process...");
     console.log("Starting login process...");
 
-    // Navigate to MySlice
+    // Navigate to MySlice with retry handling for broken SAML handoff pages.
     console.log("Navigating to MySlice homepage...");
-    await page.goto(MYSLICE_HOME_URL, {
-      waitUntil: "networkidle0",
-      timeout: 60000,
-    });
+    await navigateToMySliceStart(page, jobId);
     console.log("✅ Navigated to MySlice homepage");
     await updateJobLog(jobId, "Navigated to MySlice homepage");
 
@@ -279,6 +321,12 @@ export async function login(username, password, jobId) {
       await loginButton.click();
       console.log("✅ Login button clicked");
       await updateJobLog(jobId, "Clicked login button");
+
+      if (await hasSamlBindingError(page)) {
+        throw new Error(
+          "MySlice sign-in session is invalid (AADSTS750054). Please open https://myslice.ps.syr.edu in your browser, sign in once, then retry import."
+        );
+      }
 
       // Check for password error
       console.log("Checking for password errors...");

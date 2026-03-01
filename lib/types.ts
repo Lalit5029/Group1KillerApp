@@ -54,3 +54,11 @@ export interface CourseData {
   isRecommended?: boolean;
   isFuture?: boolean;
 }
+
+export interface CourseSearchCriteria {
+  query?: string;
+  subject?: string;
+  courseNumber?: string;
+  instructor?: string;
+  section?: string;
+}

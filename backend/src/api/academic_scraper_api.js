@@ -5,6 +5,22 @@ import { login } from "../myslice_scraper.js";
 const app = express();
 const PORT = process.env.PORT || 3001;
 
+function toUserFriendlyErrorMessage(message = "") {
+  if (
+    message.includes("AADSTS750054") ||
+    /SAMLRequest or SAMLResponse must be present/i.test(message)
+  ) {
+    return "MySlice sign-in expired before authentication completed. Open https://myslice.ps.syr.edu, sign in once, then run Import from MySlice again.";
+  }
+  if (/Invalid username or password/i.test(message)) {
+    return "MySlice credentials were rejected. Confirm your NetID and password, then try again.";
+  }
+  if (/timed out/i.test(message)) {
+    return "The MySlice login session timed out. Please retry and approve any Duo/Microsoft prompt quickly.";
+  }
+  return message || "Import failed. Please try again.";
+}
+
 // Middleware
 app.use(cors());
 app.use(express.json());
@@ -69,16 +85,20 @@ app.post("/api/scrape-academic-record", async (req, res) => {
         scrapingJobs[jobId].result = { courses, blocks };
       } catch (error) {
         scrapingJobs[jobId].status = "failed";
-        scrapingJobs[jobId].message = error.message;
+        scrapingJobs[jobId].message = toUserFriendlyErrorMessage(error.message);
         scrapingJobs[jobId].completed = new Date();
-        scrapingJobs[jobId].log += `Login failed: ${error.message}\n`;
+        scrapingJobs[jobId].log += `Login failed: ${toUserFriendlyErrorMessage(
+          error.message
+        )}\n`;
       }
     } catch (error) {
       console.error("Scraping error:", error);
       scrapingJobs[jobId].status = "failed";
-      scrapingJobs[jobId].message = error.message;
+      scrapingJobs[jobId].message = toUserFriendlyErrorMessage(error.message);
       scrapingJobs[jobId].completed = new Date();
-      scrapingJobs[jobId].log += `Error: ${error.message}\n`;
+      scrapingJobs[jobId].log += `Error: ${toUserFriendlyErrorMessage(
+        error.message
+      )}\n`;
     }
   })();
 });
