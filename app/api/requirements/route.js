@@ -2,34 +2,90 @@ import { NextResponse } from 'next/server';
 import fs from 'fs';
 import path from 'path';
 
+/** Map scraper category key to Freshman/Sophomore/Junior/Senior */
+function categoryToYear(categoryKey) {
+  const k = (categoryKey || '').toLowerCase();
+  if (k.startsWith('first year')) return 'Freshman';
+  if (k.startsWith('second year')) return 'Sophomore';
+  if (k.startsWith('third year')) return 'Junior';
+  if (k.startsWith('fourth year')) return 'Senior';
+  return null;
+}
+
+/**
+ * Transform scraper output (array of { program, categories: { "First Year, Fall Semester": [{ code, name }], ... } })
+ * into scheduler format: { "Major Name, BS": { Freshman: ["CODE1", ...], Sophomore: [...], ... }, ... }
+ */
+function transformScraperToSchedulerFormat(reqData) {
+  const result = {};
+  const years = ['Freshman', 'Sophomore', 'Junior', 'Senior'];
+
+  reqData.forEach((program) => {
+    if (!program.program || !program.categories) return;
+
+    const majorKey = program.program.includes(',') ? program.program : `${program.program}, BS`;
+    result[majorKey] = { Freshman: [], Sophomore: [], Junior: [], Senior: [] };
+
+    const seenByYear = { Freshman: new Set(), Sophomore: new Set(), Junior: new Set(), Senior: new Set() };
+
+    Object.entries(program.categories).forEach(([categoryKey, courses]) => {
+      const year = categoryToYear(categoryKey);
+      const list = Array.isArray(courses) ? courses : [];
+      const codes = list.map((c) => (typeof c === 'string' ? c : c?.code).trim()).filter(Boolean);
+
+      if (year && result[majorKey][year]) {
+        codes.forEach((code) => {
+          if (!seenByYear[year].has(code)) {
+            seenByYear[year].add(code);
+            result[majorKey][year].push(code);
+          }
+        });
+      } else if (codes.length > 0) {
+        // Categories that don't map to a year (electives, etc.): add to all years so they're still suggested
+        years.forEach((y) => {
+          codes.forEach((code) => {
+            if (!seenByYear[y].has(code)) {
+              seenByYear[y].add(code);
+              result[majorKey][y].push(code);
+            }
+          });
+        });
+      }
+    });
+
+    // If no courses in any year, drop this major so we don't show empty options
+    const hasAny = years.some((y) => result[majorKey][y].length > 0);
+    if (!hasAny) delete result[majorKey];
+  });
+
+  return result;
+}
+
 export async function GET() {
   try {
-    // Read the requirements data from the backend/data directory
     const filePath = path.join(process.cwd(), 'backend', 'data', 'ecs_requirements_cleaned.json');
-    
+
     if (!fs.existsSync(filePath)) {
-      console.error(`File does not exist: ${filePath}`);
       return NextResponse.json(
-        { error: 'Requirements data file not found' },
+        { error: 'Requirements data file not found. Run the scraper: cd backend && python3 src/scrapers/ecs_requirements_scraper.py' },
         { status: 404 }
       );
     }
-    
+
     const fileData = fs.readFileSync(filePath, 'utf8');
     const reqData = JSON.parse(fileData);
-    
-    // Create a map of requirements by major (reqData is an array of programs)
-    const requirementsByMajor = {};
-    reqData.forEach(program => {
-      if (program.program) {
-        requirementsByMajor[program.program] = program;
-      }
-    });
-    
-    console.log(`Loaded requirements for ${Object.keys(requirementsByMajor).length} majors`);
-    
-    // Return the structured data
-    return NextResponse.json(requirementsByMajor);
+
+    if (!Array.isArray(reqData)) {
+      return NextResponse.json(
+        { error: 'Invalid requirements data format' },
+        { status: 500 }
+      );
+    }
+
+    const schedulerFormat = transformScraperToSchedulerFormat(reqData);
+    console.log(`Loaded scraper requirements for ${Object.keys(schedulerFormat).length} majors`);
+
+    return NextResponse.json(schedulerFormat);
   } catch (error) {
     console.error('Error loading requirements data:', error);
     return NextResponse.json(
@@ -37,4 +93,4 @@ export async function GET() {
       { status: 500 }
     );
   }
-} 
+}
