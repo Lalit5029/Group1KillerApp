@@ -168,6 +168,7 @@ async function setField(context, fieldConfig, value) {
 
   await context.waitForSelector(selector, { timeout: fieldConfig.timeoutMs || 15000 });
   if (type === "select") {
+<<<<<<< HEAD
     const selected = await context.select(selector, value);
     if (selected.length === 0) {
       // Fallback for PeopleSoft dropdowns where config uses visible label instead of option value.
@@ -196,6 +197,9 @@ async function setField(context, fieldConfig, value) {
         throw new Error(`Could not set select ${selector} with value/label "${value}"`);
       }
     }
+=======
+    await context.select(selector, value);
+>>>>>>> origin/Lalit-Dev
     return;
   }
 
@@ -205,6 +209,7 @@ async function setField(context, fieldConfig, value) {
 
 async function clickIfPresent(context, selector) {
   if (!selector) return false;
+<<<<<<< HEAD
   try {
     const el = await context.$(selector);
     if (!el) return false;
@@ -215,6 +220,12 @@ async function clickIfPresent(context, selector) {
     if (msg.toLowerCase().includes("detached")) return false;
     throw error;
   }
+=======
+  const el = await context.$(selector);
+  if (!el) return false;
+  await el.click();
+  return true;
+>>>>>>> origin/Lalit-Dev
 }
 
 async function clickByVisibleText(context, text) {
@@ -277,6 +288,7 @@ async function ensureSearchFormVisible(context, selectors) {
   await context.waitForSelector(subjectSelector, { timeout: shortTimeoutMs });
 }
 
+<<<<<<< HEAD
 async function clickWithRetry(context, selector, attempts = 3) {
   let lastError = null;
   for (let i = 0; i < attempts; i++) {
@@ -295,6 +307,8 @@ async function clickWithRetry(context, selector, attempts = 3) {
   throw lastError || new Error(`Failed to click selector: ${selector}`);
 }
 
+=======
+>>>>>>> origin/Lalit-Dev
 async function scrapeRows(context, selectors, term) {
   const rowSelector = selectors.resultsRow;
   if (!rowSelector) {
@@ -473,23 +487,32 @@ async function main() {
   const page = await browser.newPage();
   page.setDefaultTimeout(config.defaultTimeoutMs || 30000);
 
+<<<<<<< HEAD
   const termValues = Array.isArray(config.termValues)
     ? config.termValues.filter(Boolean)
     : config.termValue
       ? [config.termValue]
       : [""];
+=======
+  const term = config.termValue || "";
+>>>>>>> origin/Lalit-Dev
   const scraped = [];
 
   try {
     await page.goto(config.baseUrl, { waitUntil: "networkidle2" });
     await runPreNavigationClicks(page, config);
+<<<<<<< HEAD
     let context = await resolveBestContext(page, config);
+=======
+    const context = await resolveBestContext(page, config);
+>>>>>>> origin/Lalit-Dev
 
     if (args.debugDom) {
       await printDebugDom(page, context);
     }
     await ensureSearchFormVisible(context, config.selectors);
 
+<<<<<<< HEAD
     for (const term of termValues) {
       context = await resolveBestContext(page, config);
       await ensureSearchFormVisible(context, config.selectors);
@@ -564,6 +587,65 @@ async function main() {
         matchingRows.forEach((row) => scraped.push({ ...row, rawCode: raw }));
       }
     }
+=======
+    if (term) {
+      try {
+        await setField(context, config.selectors.term, term);
+        if (config.selectors.term?.submitAfterSet && config.selectors.searchButton) {
+          await clickIfPresent(context, config.selectors.searchButton);
+        }
+      } catch (error) {
+        if (config.selectors.term?.optional) {
+          console.warn(`Optional term selector not found: ${config.selectors.term?.query}`);
+        } else {
+          throw error;
+        }
+      }
+    }
+
+    for (const code of targetCodes) {
+      const { subject, catalog, raw } = splitCode(code);
+      if (!subject || !catalog) {
+        console.warn(`Skipping invalid code format: ${code}`);
+        continue;
+      }
+
+      if (config.selectors.clearButton) {
+        await clickIfPresent(context, config.selectors.clearButton);
+      }
+
+      await setField(context, config.selectors.subject, subject);
+      await setField(context, config.selectors.catalog, catalog);
+
+      if (!config.selectors.searchButton) {
+        throw new Error("selectors.searchButton is required in config");
+      }
+      await context.click(config.selectors.searchButton);
+
+      if (config.waitAfterSearchMs) await sleep(config.waitAfterSearchMs);
+
+      if (config.selectors.resultsRow) {
+        await context.waitForSelector("body", { timeout: config.resultTimeoutMs || 15000 });
+      }
+
+      const foundRows = (await scrapeRows(context, config.selectors, term)).map((row) => ({
+        ...row,
+        subject: row.subject || subject,
+        catalog: row.catalog || catalog,
+      }));
+      const matchingRows = foundRows.filter(
+        (r) => normalizeCode(`${r.subject} ${r.catalog}`) === normalizeCode(`${subject} ${catalog}`),
+      );
+
+      if (matchingRows.length === 0) {
+        console.log(`No rows found for ${subject} ${catalog}`);
+      } else {
+        console.log(`Found ${matchingRows.length} section(s) for ${subject} ${catalog}`);
+      }
+
+      matchingRows.forEach((row) => scraped.push({ ...row, rawCode: raw }));
+    }
+>>>>>>> origin/Lalit-Dev
   } finally {
     await browser.close();
   }
@@ -585,9 +667,15 @@ async function main() {
   const existingKeys = new Set(
     rows.map((r) =>
       [
+<<<<<<< HEAD
         normalizeCode(r.Class || ""),
         (r.Section || "").toUpperCase(),
         (r["Meeting Dates"] || "").toUpperCase(),
+=======
+        (term || "").toUpperCase(),
+        normalizeCode(r.Class || ""),
+        (r.Section || "").toUpperCase(),
+>>>>>>> origin/Lalit-Dev
       ].join("|"),
     ),
   );
@@ -596,9 +684,15 @@ async function main() {
   deduped.forEach((record) => {
     const csvRow = toCourseCsvRow(record);
     const key = [
+<<<<<<< HEAD
       normalizeCode(csvRow.Class || ""),
       (csvRow.Section || "").toUpperCase(),
       (csvRow["Meeting Dates"] || "").toUpperCase(),
+=======
+      (record.term || term || "").toUpperCase(),
+      normalizeCode(csvRow.Class || ""),
+      (csvRow.Section || "").toUpperCase(),
+>>>>>>> origin/Lalit-Dev
     ].join("|");
 
     if (existingKeys.has(key)) return;

@@ -94,7 +94,7 @@ export default function CourseScheduler() {
   const [isSearchPopupOpen, setIsSearchPopupOpen] = useState<boolean>(false)
   const [isCourseDetailsModalOpen, setIsCourseDetailsModalOpen] = useState<boolean>(false)
   const [isNotesModalOpen, setIsNotesModalOpen] = useState<boolean>(false)
-  const [isInitialModalOpen, setIsInitialModalOpen] = useState<boolean>(true)
+  const [isInitialModalOpen, setIsInitialModalOpen] = useState<boolean>(false)
   const [currentCourseDetails, setCurrentCourseDetails] = useState<Course | null>(null)
   const [notifications, setNotifications] = useState<Notification[]>([])
   const [majors, setMajors] = useState<Major[]>([])
@@ -324,31 +324,31 @@ export default function CourseScheduler() {
       const code = yearRequirements[i];
       if (!code) continue;
 
-      // Handle both formats - with or without spaces
-      const normalizedCode = code.trim();
+      // Handle both formats - with or without spaces (e.g. "ECS 104" or "ECS104")
+      const normalizedCode = code.trim().toLowerCase();
       const codeWithoutSpace = normalizedCode.replace(/\s+/g, '');
       
-      // Find all possible sections of this course - more flexible matching
+      // Find all possible sections of this course - flexible matching
       const possibleSections = courses.filter((c) => {
         if (!c.Class) return false;
-        
-        const courseClass = c.Class.trim();
-        const courseClassNoSpace = courseClass.replace(/\s+/g, '');
-        
-        // Try multiple matching strategies
+        const courseClass = (c.Class || '').trim();
+        const courseNorm = courseClass.toLowerCase();
+        const courseNoSpace = courseNorm.replace(/\s+/g, '');
         return (
-          courseClass.toLowerCase() === normalizedCode.toLowerCase() || // Exact match with spaces
-          courseClassNoSpace.toLowerCase() === codeWithoutSpace.toLowerCase() || // Match without spaces
-          courseClass.toLowerCase().includes(normalizedCode.toLowerCase()) // Partial match
+          courseNorm === normalizedCode ||
+          courseNoSpace === codeWithoutSpace ||
+          courseNoSpace === normalizedCode.replace(/\s+/g, '') ||
+          courseNorm.includes(normalizedCode) ||
+          courseNoSpace.includes(codeWithoutSpace)
         );
       });
 
       console.log(`Looking for course ${code}: found ${possibleSections.length} possible sections`);
       
       if (possibleSections.length === 0) {
-        // Try a more lenient search if no matches found
+        // Try a more lenient search if no matches found (e.g. prefix match)
         const lenientSections = courses.filter(c => 
-          c.Class && c.Class.replace(/\s+/g, '').toLowerCase().includes(codeWithoutSpace.toLowerCase())
+          c.Class && c.Class.replace(/\s+/g, '').toLowerCase().includes(codeWithoutSpace)
         );
         
         if (lenientSections.length > 0) {
@@ -1317,6 +1317,7 @@ export default function CourseScheduler() {
           <div className="p-6">
             <TabsContent value="schedule" className="space-y-6 mt-0">
               <MainControls
+                onOpenMajorYear={() => setIsInitialModalOpen(true)}
                 onGenerateSchedule={generateBestSchedule}
                 onToggleSearch={toggleSearchPopup}
                 onResetSchedule={resetSchedule}

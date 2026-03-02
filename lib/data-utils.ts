@@ -1,5 +1,25 @@
 import type { Course, Requirements } from "./types";
 
+/** Parse one CSV line respecting double-quoted fields (commas inside quotes stay) */
+function parseCSVLine(line: string): string[] {
+  const result: string[] = [];
+  let current = "";
+  let inQuotes = false;
+  for (let i = 0; i < line.length; i++) {
+    const c = line[i];
+    if (c === '"') {
+      inQuotes = !inQuotes;
+    } else if (c === "," && !inQuotes) {
+      result.push(current.trim().replace(/^"|"$/g, ""));
+      current = "";
+    } else {
+      current += c;
+    }
+  }
+  result.push(current.trim().replace(/^"|"$/g, ""));
+  return result;
+}
+
 // Function to parse reviews CSV including RMP_Rating
 async function parseReviewsCsv(
   filePath: string
@@ -60,11 +80,11 @@ async function parseCoursesCsv(coursesFilePath: string, reviewsFilePath: string)
 
     const courses: Course[] = [];
 
-    // Process data rows
+    // Process data rows (use quote-aware CSV parse so commas inside fields don't break columns)
     for (let i = 1; i < lines.length; i++) {
       if (!lines[i].trim()) continue;
 
-      const values = lines[i].split(",");
+      const values = parseCSVLine(lines[i]);
       if (values.length < 6) {
         console.warn(`Skipping malformed course line: ${lines[i]}`);
         continue;
@@ -98,16 +118,24 @@ async function parseCoursesCsv(coursesFilePath: string, reviewsFilePath: string)
   }
 }
 
-// Function to fetch requirements
+// Function to fetch requirements (uses scraper data from API when available, else static JSON)
 export async function fetchRequirements(): Promise<Requirements> {
   try {
     console.log("Fetching requirements data...");
-    const response = await fetch("/data/engineering_majors_requirements.json");
-    if (!response.ok) {
-      throw new Error(`Failed to fetch requirements: ${response.status}`);
+    // Prefer scraper-backed API (backend/data/ecs_requirements_cleaned.json) for actual course codes
+    const apiResponse = await fetch("/api/requirements");
+    if (apiResponse.ok) {
+      const data = await apiResponse.json();
+      console.log("Requirements from scraper API:", Object.keys(data).length, "majors");
+      return data;
     }
-    const data = await response.json();
-    console.log("Requirements data fetched successfully:", Object.keys(data).length, "majors");
+    // Fallback to static engineering majors JSON
+    const staticResponse = await fetch("/data/engineering_majors_requirements.json");
+    if (!staticResponse.ok) {
+      throw new Error(`Failed to fetch requirements: ${staticResponse.status}`);
+    }
+    const data = await staticResponse.json();
+    console.log("Requirements from static file:", Object.keys(data).length, "majors");
     return data;
   } catch (error) {
     console.error("Error fetching requirements:", error);
