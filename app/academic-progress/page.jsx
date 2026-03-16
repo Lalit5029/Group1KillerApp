@@ -216,7 +216,21 @@ export default function AcademicProgressPage() {
 
   // Render Functions for UI parts
   const renderRequirementsProgress = () => {
-    if (!majorReqData || !majorReqData.categories) return <p>Select a major to view requirements.</p>;
+    if (!majorReqData || !majorReqData.categories) {
+      return (
+        <Card className="mb-4 border-dashed">
+          <CardContent className="py-6">
+            <p className="text-sm text-gray-700 font-medium mb-1">
+              No structured requirements found for <span className="font-semibold">{selectedMajor}</span>.
+            </p>
+            <p className="text-sm text-gray-500">
+              This usually means the scraper data isn’t available yet for this major. You can still use the planner,
+              but progress by category won’t be shown here.
+            </p>
+          </CardContent>
+        </Card>
+      );
+    }
 
     return Object.entries(majorReqData.categories).map(([categoryName, categoryCourses]) => {
       const requiredCount = categoryCourses.length;

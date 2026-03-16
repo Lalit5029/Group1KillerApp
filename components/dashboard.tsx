@@ -8,26 +8,31 @@ import { Calendar, RefreshCw, FileOutputIcon as FileExport } from "lucide-react"
 import { ScheduleStats } from "./schedule-stats"
 import { WeeklyCalendar } from "./weekly-calendar"
 import { CourseListView } from "./course-list-view"
-import type { SelectedCourse } from "@/lib/types"
+import type { SelectedCourse, Course } from "@/lib/types"
+import { findScheduleConflicts, hasConflict } from "@/lib/schedule-utils"
 
 interface DashboardProps {
   selectedCourses: SelectedCourse[]
+  allCourses: Course[]
   currentView: "calendar" | "list"
   onToggleView: () => void
   onShowDetails: (course: SelectedCourse) => void
   onOpenNotes: (courseId: string) => void
   onRemoveCourse: (courseId: string) => void
   courseNotes: Record<string, string>
+  onSwapCourse: (oldCourseId: string, newCourse: Course) => void
 }
 
 export function Dashboard({
   selectedCourses,
+  allCourses,
   currentView,
   onToggleView,
   onShowDetails,
   onOpenNotes,
   onRemoveCourse,
   courseNotes,
+  onSwapCourse,
 }: DashboardProps) {
   const [departmentFilter, setDepartmentFilter] = useState("")
   const [timeFilter, setTimeFilter] = useState("")
@@ -75,6 +80,16 @@ export function Dashboard({
 
     return passesFilter
   })
+
+  const conflicts = findScheduleConflicts(filteredCourses)
+
+  const getAlternativesForCourse = (course: SelectedCourse): Course[] => {
+    const sameClass = allCourses.filter(
+      (c) => c.Class === course.Class && c.Section !== course.Section,
+    )
+    const otherSelected = selectedCourses.filter((c) => c.id !== course.id)
+    return sameClass.filter((candidate) => !hasConflict(candidate, otherSelected))
+  }
 
   return (
     <Card className="shadow-soft rounded-xl overflow-hidden hover-card-effect">
@@ -151,19 +166,88 @@ export function Dashboard({
         </div>
       </CardHeader>
 
-      <CardContent className="p-6">
+      <CardContent className="p-6 space-y-6">
         <ScheduleStats selectedCourses={selectedCourses} />
 
-        {currentView === "calendar" ? (
-          <WeeklyCalendar selectedCourses={filteredCourses} onShowDetails={onShowDetails} courseNotes={courseNotes} />
-        ) : (
-          <CourseListView
-            selectedCourses={filteredCourses}
-            onShowDetails={onShowDetails}
-            onOpenNotes={onOpenNotes}
-            onRemoveCourse={onRemoveCourse}
-          />
-        )}
+        <div className="grid gap-6 lg:grid-cols-[2fr,1fr]">
+          <div>
+            {currentView === "calendar" ? (
+              <WeeklyCalendar
+                selectedCourses={filteredCourses}
+                onShowDetails={onShowDetails}
+                courseNotes={courseNotes}
+              />
+            ) : (
+              <CourseListView
+                selectedCourses={filteredCourses}
+                onShowDetails={onShowDetails}
+                onOpenNotes={onOpenNotes}
+                onRemoveCourse={onRemoveCourse}
+              />
+            )}
+          </div>
+
+          <aside className="border rounded-lg p-4 bg-muted/40 space-y-3">
+            <div>
+              <h3 className="font-semibold text-sm text-primary-900">Course Conflict Advisor</h3>
+              <p className="text-xs text-muted-foreground">
+                See overlapping courses and quickly swap to conflict-free sections.
+              </p>
+            </div>
+
+            {conflicts.length === 0 ? (
+              <p className="text-xs text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-md px-2 py-1">
+                No time conflicts detected in your current schedule.
+              </p>
+            ) : (
+              <div className="space-y-3 max-h-64 overflow-y-auto pr-1">
+                {conflicts.map((conflict) => {
+                  const { courseA, courseB, overlapLabel } = conflict
+                  const alternatives = getAlternativesForCourse(courseA)
+
+                  return (
+                    <div
+                      key={conflict.id}
+                      className="border border-destructive/30 bg-destructive/5 rounded-md px-2.5 py-2 space-y-1"
+                    >
+                      <p className="text-xs font-semibold text-destructive">
+                        Conflict: {courseA.Class} {courseA.Section} and {courseB.Class} {courseB.Section}
+                      </p>
+                      <p className="text-[11px] text-muted-foreground">
+                        Overlap around <span className="font-medium">{overlapLabel}</span>
+                      </p>
+
+                      {alternatives.length > 0 ? (
+                        <div className="pt-1 space-y-1">
+                          <p className="text-[11px] text-muted-foreground">
+                            Try a different section of {courseA.Class}:
+                          </p>
+                          <div className="flex flex-wrap gap-1.5">
+                            {alternatives.slice(0, 3).map((alt) => (
+                              <Button
+                                key={`${alt.Class}-${alt.Section}`}
+                                size="xs"
+                                variant="outline"
+                                className="h-6 px-2 text-[11px]"
+                                onClick={() => onSwapCourse(courseA.id, alt)}
+                              >
+                                Swap to {alt.Section} ({alt.DaysTimes || "TBA"})
+                              </Button>
+                            ))}
+                          </div>
+                        </div>
+                      ) : (
+                        <p className="text-[11px] text-muted-foreground italic">
+                          No conflict-free alternative sections of {courseA.Class} found in the catalog.
+                        </p>
+                      )}
+                    </div>
+                  )
+                })}
+              </div>
+            )}
+          </aside>
+        </div>
       </CardContent>
     </Card>
   )

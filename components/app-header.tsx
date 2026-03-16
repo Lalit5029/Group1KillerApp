@@ -19,10 +19,14 @@ export function AppHeader({ selectedMajor, selectedYear, isLoading }: AppHeaderP
       <div className="flex-grow text-center">
         {selectedMajor && selectedYear ? (
           <p className="text-lg font-medium bg-white/20 px-4 py-1 rounded-full inline-block backdrop-blur-sm">
-            {selectedMajor} - {selectedYear}
+            <span className="font-semibold">{selectedMajor}</span>
+            <span className="mx-2 opacity-80">•</span>
+            <span>{selectedYear}</span>
           </p>
         ) : (
-          <p className="text-lg italic opacity-80">Please make selection in popup.</p>
+          <p className="text-lg italic opacity-80">
+            Select <span className="font-semibold">Major &amp; Year</span> using the button below to personalize requirements.
+          </p>
         )}
       </div>
 

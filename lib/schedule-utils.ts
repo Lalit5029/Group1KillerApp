@@ -60,6 +60,60 @@ export function hasConflict(course: Course, selectedCourses: SelectedCourse[]): 
   return false;
 }
 
+export interface ScheduleConflict {
+  id: string;
+  courseA: SelectedCourse;
+  courseB: SelectedCourse;
+  overlapLabel: string;
+}
+
+/**
+ * Find all pairwise time conflicts between already-selected courses
+ */
+export function findScheduleConflicts(selectedCourses: SelectedCourse[]): ScheduleConflict[] {
+  const conflicts: ScheduleConflict[] = [];
+  const seenPairs = new Set<string>();
+
+  for (let i = 0; i < selectedCourses.length; i++) {
+    const a = selectedCourses[i];
+    if (!a.DaysTimes || a.DaysTimes.trim() === "") continue;
+    const infoA = parseDaysTimes(a.DaysTimes);
+    if (!infoA) continue;
+
+    for (let j = i + 1; j < selectedCourses.length; j++) {
+      const b = selectedCourses[j];
+      if (!b.DaysTimes || b.DaysTimes.trim() === "") continue;
+      const infoB = parseDaysTimes(b.DaysTimes);
+      if (!infoB) continue;
+
+      // Day overlap
+      const dayOverlap = infoA.days.some((day) => infoB.days.includes(day));
+      if (!dayOverlap) continue;
+
+      // Time overlap
+      const timeOverlap =
+        infoA.startMinutes <= infoB.endMinutes && infoA.endMinutes >= infoB.startMinutes;
+      if (!timeOverlap) continue;
+
+      const key = [a.id, b.id].sort().join("__");
+      if (seenPairs.has(key)) continue;
+      seenPairs.add(key);
+
+      const daysLabel = Array.from(new Set([...infoA.days, ...infoB.days])).join("");
+      const overlapLabel = `${daysLabel} ${a.DaysTimes || b.DaysTimes || ""}`.trim();
+
+      conflicts.push({
+        id: key,
+        courseA: a,
+        courseB: b,
+        overlapLabel,
+      });
+    }
+  }
+
+  return conflicts;
+}
+
 /**
  * Parses the days and times string into an object with days and start/end times
  * Format example: "MoWe 10:00AM - 11:20AM" or "TuTh 2:30PM - 3:50PM"

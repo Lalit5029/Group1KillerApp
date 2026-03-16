@@ -610,6 +610,23 @@ export default function CourseScheduler() {
     setCurrentNotesCourseId(null)
   }
 
+  const handleSwapCourse = (oldCourseId: string, newCourse: Course) => {
+    setSelectedCourses((prev) => {
+      const remaining = prev.filter((c) => c.id !== oldCourseId)
+      const replacement: SelectedCourse = {
+        id: `course-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+        Class: newCourse.Class,
+        Section: newCourse.Section,
+        DaysTimes: newCourse.DaysTimes,
+        Room: newCourse.Room,
+        Instructor: newCourse.Instructor,
+        MeetingDates: newCourse.MeetingDates,
+      }
+      return [...remaining, replacement]
+    })
+    showNotification("Swapped to a conflict-free section", "success")
+  }
+
   // Toggle view between calendar and list
   const toggleView = () => {
     setCurrentView(currentView === "calendar" ? "list" : "calendar")
@@ -1358,12 +1375,14 @@ export default function CourseScheduler() {
 
               <Dashboard
                 selectedCourses={selectedCourses}
+                allCourses={courses}
                 currentView={currentView}
                 onToggleView={toggleView}
                 onShowDetails={showCourseDetails}
                 onOpenNotes={openNotesModal}
                 onRemoveCourse={removeCourse}
                 courseNotes={courseNotes}
+                onSwapCourse={handleSwapCourse}
               />
             </TabsContent>
 
