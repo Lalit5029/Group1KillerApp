@@ -30,11 +30,11 @@ const scrapingJobs = {};
 
 // API Routes
 app.post("/api/scrape-academic-record", async (req, res) => {
-  const { username, password } = req.body;
+  const { username, password, manualLogin } = req.body;
 
-  if (!username || !password) {
+  if (!manualLogin && (!username || !password)) {
     return res.status(400).json({
-      error: "Username and password are required",
+      error: "Username and password are required unless manual login mode is used",
     });
   }
 
@@ -65,10 +65,16 @@ app.post("/api/scrape-academic-record", async (req, res) => {
   (async () => {
     try {
       // Login to MySlice and get course history
-      scrapingJobs[jobId].log += "Logging in to MySlice...\n";
+      scrapingJobs[jobId].log += manualLogin
+        ? "Opening MySlice for manual sign-in...\n"
+        : "Logging in to MySlice...\n";
       try {
-        const { courses, blocks } = await login(username, password, jobId);
-        scrapingJobs[jobId].log += "Login successful\n";
+        const { courses, blocks } = await login(username, password, jobId, {
+          manualLogin: Boolean(manualLogin),
+        });
+        scrapingJobs[jobId].log += manualLogin
+          ? "Manual MySlice sign-in completed\n"
+          : "Login successful\n";
         scrapingJobs[
           jobId
         ].log += `Successfully fetched ${courses.length} courses\n`;

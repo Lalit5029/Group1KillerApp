@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { Button, Card, Alert, Spinner, List, Tag, Progress, Typography, Input, Label } from '@/components/ui';
-import { Clock, CheckCircle, AlertCircle, BookOpen, Download, HelpCircle } from 'lucide-react';
+import { Button, Card, Alert, Spinner, List, Tag, Progress, Typography } from '@/components/ui';
+import { Clock, CheckCircle, AlertCircle, BookOpen, Download } from 'lucide-react';
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
 
@@ -26,25 +26,15 @@ export default function AcademicRecordImporter({ onImportComplete }) {
   const [jobStatus, setJobStatus] = useState(null);
   const [courses, setCourses] = useState([]);
   const [error, setError] = useState(null);
-  const [showLoginForm, setShowLoginForm] = useState(false);
-  const [showImportHelp, setShowImportHelp] = useState(false);
-  const [username, setUsername] = useState('');
-  const [password, setPassword] = useState('');
+  const [importStatus, setImportStatus] = useState('idle');
+  const [importStatusMessage, setImportStatusMessage] = useState('');
 
   // Start the scraping process
   const startImport = async () => {
-    if (!showLoginForm) {
-      setShowLoginForm(true);
-      return;
-    }
-
-    if (!username || !password) {
-      setError('Please enter both username and password');
-      return;
-    }
-
     setIsImporting(true);
     setError(null);
+    setImportStatus('running');
+    setImportStatusMessage('A browser window will open for MySlice. Sign in there and keep this page open while import runs.');
 
     try {
       const response = await fetch(`${API_BASE_URL}/api/scrape-academic-record`, {
@@ -52,7 +42,7 @@ export default function AcademicRecordImporter({ onImportComplete }) {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ username, password }),
+        body: JSON.stringify({ manualLogin: true }),
       });
 
       if (!response.ok) {
@@ -62,7 +52,9 @@ export default function AcademicRecordImporter({ onImportComplete }) {
       const data = await response.json();
       setJobId(data.jobId);
     } catch (err) {
-      setError(getFriendlyAcademicImportError(err.message));
+      setError(err.message);
+      setImportStatus('error');
+      setImportStatusMessage(err.message || 'Import failed. Review the log below for details.');
       setIsImporting(false);
     }
   };
@@ -92,18 +84,27 @@ export default function AcademicRecordImporter({ onImportComplete }) {
             clearInterval(intervalId);
 
             if (data.status === 'completed' && data.result) {
-              const importedCourses = Array.isArray(data.result.courses) ? data.result.courses : [];
+              const importedCourses = Array.isArray(data.result?.courses) ? data.result.courses : [];
               setCourses(importedCourses);
+              setImportStatus('success');
+              setImportStatusMessage(`Import successful. ${importedCourses.length} course(s) were imported from MySlice.`);
               if (onImportComplete) {
                 onImportComplete(importedCourses);
               }
             } else if (data.status === 'failed') {
-              setError(getFriendlyAcademicImportError(data.message));
+              setError(data.message);
+              setImportStatus('error');
+              setImportStatusMessage(data.message || 'Import failed. Review the log below for details.');
             }
+          } else if (data.status === 'running') {
+            setImportStatus('running');
+            setImportStatusMessage('Import in progress. Waiting for MySlice to finish responding.');
           }
         } catch (err) {
           console.error("Polling error:", err);
-          setError(getFriendlyAcademicImportError(err.message));
+          setError(err.message);
+          setImportStatus('error');
+          setImportStatusMessage(err.message || 'Import failed. Review the log below for details.');
           setIsImporting(false);
           clearInterval(intervalId);
         }
@@ -228,38 +229,16 @@ export default function AcademicRecordImporter({ onImportComplete }) {
         </Alert>
       )}
 
-      {showLoginForm && !isImporting && (
-        <div className="mb-6 space-y-4">
-          <div>
-            <Label htmlFor="username">MySlice Username (NetID)</Label>
-            <Input
-              id="username"
-              type="text"
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
-              placeholder="Enter your NetID"
-              className="mt-1"
-            />
-          </div>
-          <div>
-            <Label htmlFor="password">MySlice Password</Label>
-            <Input
-              id="password"
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              placeholder="Enter your password"
-              className="mt-1"
-            />
-          </div>
-          <div className="text-sm text-gray-500 space-y-1">
-            <div>Your credentials are used only for this import session and are not stored.</div>
-            <div>For the smoothest login flow:</div>
-            <div>1. If prompted, complete Microsoft/Duo approval quickly.</div>
-            <div>2. If sign-in fails with a session error, open `myslice.ps.syr.edu`, sign in once, then retry.</div>
-          </div>
+      <div className="mb-6 space-y-4">
+        <div className="rounded-md border border-blue-200 bg-blue-50 p-4 text-sm text-blue-900 space-y-2">
+          <div className="font-medium">Manual MySlice sign-in</div>
+          <div>When you start import, the scraper will open its own Chrome window.</div>
+          <div>Sign in to MySlice in that opened window, including 2FA, and leave it open while import continues.</div>
         </div>
-      )}
+        <div className="text-sm text-gray-500">
+          Your MySlice credentials stay in the browser sign-in flow and are not entered into this app.
+        </div>
+      </div>
 
       <div className="mb-6">
         <div className="flex items-center mb-2">
@@ -268,6 +247,27 @@ export default function AcademicRecordImporter({ onImportComplete }) {
             {getStatusMessage()}
           </Typography>
         </div>
+
+        {importStatus !== 'idle' && (
+          <div
+            className={`mt-3 rounded-md border p-4 text-sm ${
+              importStatus === 'success'
+                ? 'border-green-200 bg-green-50 text-green-900'
+                : importStatus === 'error'
+                ? 'border-red-200 bg-red-50 text-red-900'
+                : 'border-amber-200 bg-amber-50 text-amber-900'
+            }`}
+          >
+            <div className="font-medium">
+              {importStatus === 'success'
+                ? 'Import Successful'
+                : importStatus === 'error'
+                ? 'Import Failed'
+                : 'Import In Progress'}
+            </div>
+            <div className="mt-1">{importStatusMessage}</div>
+          </div>
+        )}
 
         {(isImporting || jobStatus) && (
           <>

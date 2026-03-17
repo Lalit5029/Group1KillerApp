@@ -12,8 +12,8 @@ import { NotificationArea } from "./notification-area"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { AcademicDataVisualizer } from "./academic-data-visualizer"
 import { DegreeRequirementsView } from "./degree-requirements-view"
-import { Calendar, GraduationCap, BookOpen, Download, Upload, HelpCircle } from "lucide-react"
-import type { Course, SelectedCourse, Notification, Major, Requirements, CourseData, CourseSearchCriteria } from "@/lib/types"
+import { Calendar, GraduationCap, BookOpen, Download, Upload } from "lucide-react"
+import type { Course, SelectedCourse, Notification, Major, Requirements, CourseData } from "@/lib/types"
 import { fetchCourses, fetchRequirements } from "@/lib/data-utils"
 import { hasConflict } from "@/lib/schedule-utils"
 import { useSession } from "next-auth/react"
@@ -58,25 +58,14 @@ interface BlockData {
   courses: RequirementCourse[];
 }
 
-const ACADEMIC_IMPORT_API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001"
+type WorkloadLevel = "low" | "medium" | "high"
 
-const getFriendlyAcademicImportError = (message: string) => {
-  if (
-    message.includes("AADSTS750054") ||
-    /SAMLRequest or SAMLResponse must be present/i.test(message)
-  ) {
-    return "MySlice sign-in session expired. Open myslice.ps.syr.edu, sign in once, then retry Import from MySlice."
-  }
-  if (/Invalid username or password/i.test(message)) {
-    return "MySlice login failed. Check your NetID and password and try again."
-  }
-  if (/timed out/i.test(message)) {
-    return "Login timed out. Retry import and approve the Duo/Microsoft prompt quickly."
-  }
-  if (/Failed to read import status/i.test(message)) {
-    return "Import started, but status polling failed. Please retry in a moment."
-  }
-  return message || "Failed to import academic records."
+const MIN_SEMESTER_CREDITS = 12
+const MAX_SEMESTER_CREDITS = 19
+const WORKLOAD_TARGETS: Record<WorkloadLevel, number> = {
+  low: 12,
+  medium: 15,
+  high: 18,
 }
 
 export default function CourseScheduler() {
@@ -94,17 +83,16 @@ export default function CourseScheduler() {
   const [isSearchPopupOpen, setIsSearchPopupOpen] = useState<boolean>(false)
   const [isCourseDetailsModalOpen, setIsCourseDetailsModalOpen] = useState<boolean>(false)
   const [isNotesModalOpen, setIsNotesModalOpen] = useState<boolean>(false)
-  const [isInitialModalOpen, setIsInitialModalOpen] = useState<boolean>(false)
+  const [isInitialModalOpen, setIsInitialModalOpen] = useState<boolean>(true)
   const [currentCourseDetails, setCurrentCourseDetails] = useState<Course | null>(null)
   const [notifications, setNotifications] = useState<Notification[]>([])
   const [majors, setMajors] = useState<Major[]>([])
   const [isDataReady, setIsDataReady] = useState<boolean>(false)
   const [activeTab, setActiveTab] = useState("schedule")
   const { data: session } = useSession()
-  const [username, setUsername] = useState("")
-  const [password, setPassword] = useState("")
-  const [showImportHelp, setShowImportHelp] = useState(false)
   const [importLogs, setImportLogs] = useState<string[]>([])
+  const [importStatus, setImportStatus] = useState<"idle" | "running" | "success" | "error">("idle")
+  const [importStatusMessage, setImportStatusMessage] = useState("")
   const { toast } = useToast()
   const [courseData, setCourseData] = useState<CourseData[]>([])
   const [calendarCourses, setCalendarCourses] = useState<SelectedCourse[]>([])
@@ -157,15 +145,12 @@ export default function CourseScheduler() {
   // Manual load/save to database (called by buttons when logged in)
   const [isLoadingFromDb, setIsLoadingFromDb] = useState(false)
   const [isSavingToDb, setIsSavingToDb] = useState(false)
-  const [dbLoadError, setDbLoadError] = useState<string | null>(null)
-  const [dbSaveError, setDbSaveError] = useState<string | null>(null)
 
   const loadSavedCoursesFromDb = async () => {
     if (!session?.user) {
       showNotification("Please log in to load from database", "error")
       return
     }
-    setDbLoadError(null)
     setIsLoadingFromDb(true)
     try {
       const response = await fetch('/api/courses')
@@ -206,15 +191,11 @@ export default function CourseScheduler() {
           showNotification("No saved courses in database", "default")
         }
       } else {
-        const msg = "Couldn’t load schedule from database. Check your connection and try again."
-        setDbLoadError(msg)
-        showNotification(msg, "error")
+        showNotification("Failed to load courses", "error")
       }
     } catch (error) {
       console.error("Failed to load saved courses:", error)
-      const msg = "Couldn’t load schedule. Please try again."
-      setDbLoadError(msg)
-      showNotification(msg, "error")
+      showNotification("Failed to load your saved courses", "error")
     } finally {
       setIsLoadingFromDb(false)
     }
@@ -229,7 +210,6 @@ export default function CourseScheduler() {
       showNotification("No courses to save", "default")
       return
     }
-    setDbSaveError(null)
     setIsSavingToDb(true)
     try {
       const response = await fetch('/api/courses', {
@@ -241,9 +221,7 @@ export default function CourseScheduler() {
       showNotification("Courses saved to database", "success")
     } catch (error) {
       console.error("Failed to save courses:", error)
-      const msg = "Couldn’t save schedule to database. Check your connection and try again."
-      setDbSaveError(msg)
-      showNotification(msg, "error")
+      showNotification("Failed to save your course selection", "error")
     } finally {
       setIsSavingToDb(false)
     }
@@ -272,8 +250,23 @@ export default function CourseScheduler() {
     }
   }
 
-  // Generate best schedule based on major and year
-  const generateBestSchedule = () => {
+  const estimateCourseCredits = (courseCode: string, section?: Course) => {
+    const explicitCredits = Number.parseFloat(((section as Course & { credits?: string } | undefined)?.credits) || "")
+    if (!Number.isNaN(explicitCredits) && explicitCredits > 0) {
+      return explicitCredits
+    }
+
+    const codeMatch = courseCode.match(/\b(\d{3})\b/)
+    const courseNumber = codeMatch ? Number.parseInt(codeMatch[1], 10) : NaN
+    if (Number.isNaN(courseNumber)) {
+      return 3
+    }
+
+    return courseNumber >= 400 ? 4 : 3
+  }
+
+  // Generate best schedule based on major, year, and selected workload.
+  const generateBestSchedule = (workload: WorkloadLevel) => {
     if (!selectedMajor || !selectedYear || Object.keys(requirements).length === 0) {
       showNotification("Please confirm selection or wait for data to load.", "error");
       return;
@@ -288,6 +281,7 @@ export default function CourseScheduler() {
     console.log("Generating schedule for major:", selectedMajor, "year:", selectedYear);
     console.log("Available courses:", courses.length);
     console.log("Requirements keys:", Object.keys(requirements));
+    console.log("Requested workload:", workload, "target credits:", WORKLOAD_TARGETS[workload]);
 
     // Reset current schedule
     setSelectedCourses([]);
@@ -316,39 +310,46 @@ export default function CourseScheduler() {
     });
 
     let coursesAddedCount = 0;
+    let totalScheduledCredits = 0;
     const newSelectedCourses: SelectedCourse[] = [];
     const notFoundCourses: string[] = [];
+    const skippedForCreditLimit: string[] = [];
+    const targetCredits = WORKLOAD_TARGETS[workload];
 
     // Loop through each course code
     for (let i = 0; i < yearRequirements.length; i++) {
+      if (totalScheduledCredits >= targetCredits) {
+        break;
+      }
+
       const code = yearRequirements[i];
       if (!code) continue;
 
-      // Handle both formats - with or without spaces (e.g. "ECS 104" or "ECS104")
-      const normalizedCode = code.trim().toLowerCase();
+      // Handle both formats - with or without spaces
+      const normalizedCode = code.trim();
       const codeWithoutSpace = normalizedCode.replace(/\s+/g, '');
       
-      // Find all possible sections of this course - flexible matching
+      // Find all possible sections of this course - more flexible matching
       const possibleSections = courses.filter((c) => {
         if (!c.Class) return false;
-        const courseClass = (c.Class || '').trim();
-        const courseNorm = courseClass.toLowerCase();
-        const courseNoSpace = courseNorm.replace(/\s+/g, '');
+        
+        const courseClass = c.Class.trim();
+        const courseClassNoSpace = courseClass.replace(/\s+/g, '');
+        
+        // Try multiple matching strategies
         return (
-          courseNorm === normalizedCode ||
-          courseNoSpace === codeWithoutSpace ||
-          courseNoSpace === normalizedCode.replace(/\s+/g, '') ||
-          courseNorm.includes(normalizedCode) ||
-          courseNoSpace.includes(codeWithoutSpace)
+          courseClass.toLowerCase() === normalizedCode.toLowerCase() || // Exact match with spaces
+          courseClassNoSpace.toLowerCase() === codeWithoutSpace.toLowerCase() || // Match without spaces
+          courseClass.toLowerCase().includes(normalizedCode.toLowerCase()) // Partial match
         );
       });
 
       console.log(`Looking for course ${code}: found ${possibleSections.length} possible sections`);
       
       if (possibleSections.length === 0) {
-        // Try a more lenient search if no matches found (e.g. prefix match)
+        // Try a more lenient search if no matches found
         const lenientSections = courses.filter(c => 
-          c.Class && c.Class.replace(/\s+/g, '').toLowerCase().includes(codeWithoutSpace)
+          c.Class && c.Class.replace(/\s+/g, '').toLowerCase().includes(codeWithoutSpace.toLowerCase())
         );
         
         if (lenientSections.length > 0) {
@@ -356,19 +357,33 @@ export default function CourseScheduler() {
           
           let added = false;
           for (const section of lenientSections) {
+            const estimatedCredits = estimateCourseCredits(normalizedCode, section);
+            if (totalScheduledCredits + estimatedCredits > MAX_SEMESTER_CREDITS) {
+              continue;
+            }
+
             if (!hasConflict(section, newSelectedCourses)) {
               newSelectedCourses.push({
                 ...section,
                 id: `course-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+                credits: estimatedCredits.toString(),
               });
               added = true;
               coursesAddedCount++;
+              totalScheduledCredits += estimatedCredits;
               break;
             }
           }
           
           if (!added) {
-            showNotification(`Could not add "${code}": All sections conflict.`, "warning");
+            const couldFitWithinCredits = lenientSections.some(
+              (section) => totalScheduledCredits + estimateCourseCredits(normalizedCode, section) <= MAX_SEMESTER_CREDITS
+            );
+            if (!couldFitWithinCredits) {
+              skippedForCreditLimit.push(code);
+            } else {
+              showNotification(`Could not add "${code}": All sections conflict.`, "warning");
+            }
           }
         } else {
           notFoundCourses.push(code);
@@ -378,28 +393,42 @@ export default function CourseScheduler() {
 
       let added = false;
       for (const section of possibleSections) {
+        const estimatedCredits = estimateCourseCredits(normalizedCode, section);
+        if (totalScheduledCredits + estimatedCredits > MAX_SEMESTER_CREDITS) {
+          continue;
+        }
+
         if (!hasConflict(section, newSelectedCourses)) {
           // Create a new SelectedCourse with a unique ID
           const newCourse: SelectedCourse = {
             ...section,
             id: `course-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+            credits: estimatedCredits.toString(),
           };
           
           newSelectedCourses.push(newCourse);
           added = true;
           coursesAddedCount++;
+          totalScheduledCredits += estimatedCredits;
           break;
         }
       }
 
       if (!added && possibleSections.length > 0) {
-        showNotification(`Could not add "${code}": All sections conflict.`, "warning");
+        const couldFitWithinCredits = possibleSections.some(
+          (section) => totalScheduledCredits + estimateCourseCredits(normalizedCode, section) <= MAX_SEMESTER_CREDITS
+        );
+        if (!couldFitWithinCredits) {
+          skippedForCreditLimit.push(code);
+        } else {
+          showNotification(`Could not add "${code}": All sections conflict.`, "warning");
+        }
       }
     }
 
     // Force a re-render by creating a new array
     setSelectedCourses([...newSelectedCourses]);
-    console.log(`Added ${coursesAddedCount} courses to schedule. Schedule now has ${newSelectedCourses.length} courses.`);
+    console.log(`Added ${coursesAddedCount} courses to schedule. Schedule now has ${newSelectedCourses.length} courses and ${totalScheduledCredits} credits.`);
 
     if (notFoundCourses.length > 0) {
       const message = notFoundCourses.length === 1 
@@ -410,8 +439,26 @@ export default function CourseScheduler() {
       console.warn("Courses not found:", notFoundCourses);
     }
 
+    if (skippedForCreditLimit.length > 0) {
+      showNotification(
+        `Stopped at ${totalScheduledCredits} credits to stay within the ${MAX_SEMESTER_CREDITS}-credit maximum.`,
+        "default"
+      );
+    }
+
     if (coursesAddedCount > 0) {
-      showNotification(`Added ${coursesAddedCount} course(s) to your schedule.`, "success");
+      const workloadLabel = workload.charAt(0).toUpperCase() + workload.slice(1)
+      if (totalScheduledCredits < MIN_SEMESTER_CREDITS) {
+        showNotification(
+          `${workloadLabel} workload scheduled ${totalScheduledCredits} credits, which is below the 12-credit minimum because no more non-conflicting courses fit.`,
+          "warning"
+        );
+      } else {
+        showNotification(
+          `${workloadLabel} workload scheduled ${coursesAddedCount} course(s) for ${totalScheduledCredits} credits.`,
+          "success"
+        );
+      }
     } else if (coursesAddedCount === 0 && notFoundCourses.length === 0) {
       showNotification("No courses could be added to your schedule.", "error");
     }
@@ -463,79 +510,57 @@ export default function CourseScheduler() {
   }
 
   // Search courses
-  const searchCourses = (criteria: CourseSearchCriteria) => {
-    const query = (criteria.query || "").trim()
-    const subject = (criteria.subject || "").trim()
-    const courseNumber = (criteria.courseNumber || "").trim()
-    const instructor = (criteria.instructor || "").trim()
-    const section = (criteria.section || "").trim()
-
-    if (!query && !subject && !courseNumber && !instructor && !section) {
+  const searchCourses = (query: string) => {
+    if (!query.trim()) {
       setCurrentSearchResults([])
       return
     }
 
     const queryLower = query.toLowerCase()
-    const subjectLower = subject.toLowerCase()
-    const courseNumberLower = courseNumber.toLowerCase()
-    const instructorLower = instructor.toLowerCase()
-    const sectionLower = section.toLowerCase()
-    const classPattern = [subjectLower, courseNumberLower].filter(Boolean).join(" ").trim()
 
-    // Match all provided structured fields, plus optional keyword query.
+    // Improved search logic to match on multiple fields
     const results = courses.filter((c) => {
-      const classValue = c.Class?.toLowerCase() || ""
-      const instructorValue = c.Instructor?.toLowerCase() || ""
-      const sectionValue = c.Section?.toLowerCase() || ""
-      const daysTimesValue = c.DaysTimes?.toLowerCase() || ""
-      const roomValue = c.Room?.toLowerCase() || ""
+      // Search in course code
+      if (c.Class?.toLowerCase().includes(queryLower)) {
+        return true
+      }
 
-      const matchesSubject = !subjectLower || classValue.startsWith(subjectLower)
-      const matchesCourseNumber =
-        !courseNumberLower ||
-        classValue.includes(` ${courseNumberLower}`) ||
-        classValue.includes(courseNumberLower)
-      const matchesInstructor = !instructorLower || instructorValue.includes(instructorLower)
-      const matchesSection = !sectionLower || sectionValue.includes(sectionLower)
+      // Search in instructor name
+      if (c.Instructor?.toLowerCase().includes(queryLower)) {
+        return true
+      }
 
-      const matchesKeyword =
-        !queryLower ||
-        classValue.includes(queryLower) ||
-        instructorValue.includes(queryLower) ||
-        sectionValue.includes(queryLower) ||
-        daysTimesValue.includes(queryLower) ||
-        roomValue.includes(queryLower)
+      // Search in section
+      if (c.Section?.toLowerCase().includes(queryLower)) {
+        return true
+      }
 
-      return matchesSubject && matchesCourseNumber && matchesInstructor && matchesSection && matchesKeyword
+      // Search in days/times
+      if (c.DaysTimes?.toLowerCase().includes(queryLower)) {
+        return true
+      }
+
+      // Search in room
+      if (c.Room?.toLowerCase().includes(queryLower)) {
+        return true
+      }
+
+      return false
     })
 
-    // Sort results to prioritize exact class matches.
+    // Sort results to prioritize exact matches
     results.sort((a, b) => {
-      const aClassMatch = classPattern && a.Class?.toLowerCase() === classPattern ? 0 : 1
-      const bClassMatch = classPattern && b.Class?.toLowerCase() === classPattern ? 0 : 1
+      const aClassMatch = a.Class?.toLowerCase() === queryLower ? 0 : 1
+      const bClassMatch = b.Class?.toLowerCase() === queryLower ? 0 : 1
       return aClassMatch - bClassMatch
     })
 
+    setCurrentSearchResults(results)
+
     if (results.length === 0) {
-      const requestedCode = [subject, courseNumber].filter(Boolean).join(" ").trim()
-      const fallbackLabel = requestedCode || query || "Requested Course"
-      const fallbackCourse: Course = {
-        id: `not-available-${Date.now()}`,
-        Class: fallbackLabel,
-        Section: "Not Available",
-        DaysTimes: "Not Available",
-        Room: "Not Available",
-        Instructor: "Not Available",
-        MeetingDates: "Not Available",
-        Reviews: [],
-        RMP_Rating: "N/A",
-      }
-      setCurrentSearchResults([fallbackCourse])
-      showNotification(`Course information is not available for "${fallbackLabel}"`, "warning")
+      showNotification(`No courses found matching "${query}"`, "warning")
     } else {
-      const searchLabel = [subject, courseNumber, instructor, section, query].filter(Boolean).join(" ").trim()
-      setCurrentSearchResults(results)
-      showNotification(`Found ${results.length} courses matching "${searchLabel || "criteria"}"`, "success")
+      showNotification(`Found ${results.length} courses matching "${query}"`, "success")
     }
   }
 
@@ -608,23 +633,6 @@ export default function CourseScheduler() {
     }
     setIsNotesModalOpen(false)
     setCurrentNotesCourseId(null)
-  }
-
-  const handleSwapCourse = (oldCourseId: string, newCourse: Course) => {
-    setSelectedCourses((prev) => {
-      const remaining = prev.filter((c) => c.id !== oldCourseId)
-      const replacement: SelectedCourse = {
-        id: `course-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
-        Class: newCourse.Class,
-        Section: newCourse.Section,
-        DaysTimes: newCourse.DaysTimes,
-        Room: newCourse.Room,
-        Instructor: newCourse.Instructor,
-        MeetingDates: newCourse.MeetingDates,
-      }
-      return [...remaining, replacement]
-    })
-    showNotification("Swapped to a conflict-free section", "success")
   }
 
   // Toggle view between calendar and list
@@ -929,21 +937,18 @@ export default function CourseScheduler() {
   }, [degreeCourses, session])
 
   const handleImport = async () => {
-    if (!username || !password) {
-      showNotification("Please fill in all fields", "error")
-      return
-    }
-
     setIsLoading(true)
     setImportLogs([])
+    setImportStatus("running")
+    setImportStatusMessage("A browser window will open for MySlice. Sign in there and keep this page open while import runs.")
     try {
       // Make the actual API call to start import
-      const response = await fetch(`${ACADEMIC_IMPORT_API_BASE_URL}/api/scrape-academic-record`, {
+      const response = await fetch("http://localhost:3001/api/scrape-academic-record", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ username, password }),
+        body: JSON.stringify({ manualLogin: true }),
       })
 
       if (!response.ok) {
@@ -951,13 +956,10 @@ export default function CourseScheduler() {
       }
 
       const { jobId } = await response.json()
-
+      
       // Poll for job status
       const checkStatus = async () => {
-        const statusResponse = await fetch(`${ACADEMIC_IMPORT_API_BASE_URL}/api/scrape-status/${jobId}`)
-        if (!statusResponse.ok) {
-          throw new Error("Failed to read import status")
-        }
+        const statusResponse = await fetch(`http://localhost:3001/api/scrape-status/${jobId}`)
         const statusData = await statusResponse.json()
 
         // Update logs with the detailed log message from the backend
@@ -967,49 +969,30 @@ export default function CourseScheduler() {
         }
 
         if (statusData.status === "completed") {
-          const importedCourses = Array.isArray(statusData.result?.courses) ? statusData.result.courses : []
-          const normalizedCourses: CourseData[] = importedCourses.map((course: any) => ({
-            code: course?.code || "Not available",
-            name: course?.name || course?.title || "Not available",
-            title: course?.title || course?.name || "Not available",
-            term: course?.term || "Not available",
-            grade: course?.grade || "Not available",
-            credits: String(course?.credits ?? "Not available"),
-            requirementGroup: course?.requirementGroup || "General",
-            catalogGroup: course?.catalogGroup || "Not available",
-            status: course?.status || "Not available"
-          }))
-          setAcademicCourses(normalizedCourses)
-
-          const importedBlocks = Array.isArray(statusData.result?.blocks) ? statusData.result.blocks : []
-          const normalizedBlocks: BlockData[] = importedBlocks.map((block: any) => ({
-            title: block?.title || "Not available",
-            status: block?.status || "Not available",
-            courses: Array.isArray(block?.courses)
-              ? block.courses.map((course: any) => ({
-                  code: course?.code || "Not available",
-                  title: course?.title || course?.name || "Not available",
-                  grade: course?.grade || "Not available",
-                  credits: String(course?.credits ?? "Not available"),
-                  term: course?.term || "Not available"
-                }))
-              : []
-          }))
-          setDegreeCourses(normalizedBlocks)
-
-          if (normalizedCourses.length === 0) {
-            showNotification("Import completed, but no courses were found for this account", "warning")
-          } else {
-            showNotification(`Successfully imported ${normalizedCourses.length} courses from MySlice`, "success")
+          // Set imported course data to academic courses
+          if (statusData.result) {
+            setAcademicCourses(statusData.result.courses)
+            // Set degree requirements data
+            if (statusData.result.blocks) {
+              setDegreeCourses(statusData.result.blocks)
+              // Save degree requirements after import
+              await saveDegreeRequirements()
+            }
           }
-          setUsername("")
-          setPassword("")
+          const importedCourseCount = Array.isArray(statusData.result?.courses) ? statusData.result.courses.length : 0
+          setImportStatus("success")
+          setImportStatusMessage(`Import successful. ${importedCourseCount} course(s) were imported from MySlice.`)
+          showNotification("Successfully imported courses from MySlice", "success")
           setIsLoading(false)
         } else if (statusData.status === "failed") {
           setIsLoading(false)
-          throw new Error(getFriendlyAcademicImportError(statusData.message || "Import failed"))
+          setImportStatus("error")
+          setImportStatusMessage(statusData.message || "Import failed. Review the log below for details.")
+          throw new Error(statusData.message || "Import failed")
         } else {
           // Job is still running, check again in 2 seconds
+          setImportStatus("running")
+          setImportStatusMessage("Import in progress. Waiting for MySlice to finish responding.")
           setTimeout(checkStatus, 2000)
         }
       }
@@ -1018,7 +1001,9 @@ export default function CourseScheduler() {
       checkStatus()
     } catch (error) {
       console.error("Failed to import courses:", error)
-      showNotification(getFriendlyAcademicImportError((error as Error).message || "Failed to import courses"), "error", 6000)
+      setImportStatus("error")
+      setImportStatusMessage((error as Error).message || "Import failed. Review the log below for details.")
+      showNotification((error as Error).message || "Failed to import courses", "error")
       setIsLoading(false)
     }
   }
@@ -1334,7 +1319,6 @@ export default function CourseScheduler() {
           <div className="p-6">
             <TabsContent value="schedule" className="space-y-6 mt-0">
               <MainControls
-                onOpenMajorYear={() => setIsInitialModalOpen(true)}
                 onGenerateSchedule={generateBestSchedule}
                 onToggleSearch={toggleSearchPopup}
                 onResetSchedule={resetSchedule}
@@ -1367,22 +1351,15 @@ export default function CourseScheduler() {
                   <span className="text-xs text-muted-foreground">Logged in — load/save your schedule to MongoDB</span>
                 </div>
               )}
-              {(dbLoadError || dbSaveError) && (
-                <p className="text-sm text-destructive mt-2" role="alert">
-                  {dbLoadError ?? dbSaveError}
-                </p>
-              )}
 
               <Dashboard
                 selectedCourses={selectedCourses}
-                allCourses={courses}
                 currentView={currentView}
                 onToggleView={toggleView}
                 onShowDetails={showCourseDetails}
                 onOpenNotes={openNotesModal}
                 onRemoveCourse={removeCourse}
                 courseNotes={courseNotes}
-                onSwapCourse={handleSwapCourse}
               />
             </TabsContent>
 
@@ -1397,55 +1374,39 @@ export default function CourseScheduler() {
                   </CardHeader>
                   <CardContent>
                     <div className="space-y-4">
-                      <div className="grid w-full items-center gap-4">
-                        <div className="flex flex-col space-y-1.5">
-                          <Label htmlFor="username">MySlice Username (NetID)</Label>
-                          <Input
-                            id="username"
-                            value={username}
-                            onChange={(e) => setUsername(e.target.value)}
-                          />
-                        </div>
-                        <div className="flex flex-col space-y-1.5">
-                          <Label htmlFor="password">MySlice Password</Label>
-                          <Input
-                            id="password"
-                            type="password"
-                            value={password}
-                            onChange={(e) => setPassword(e.target.value)}
-                          />
-                        </div>
+                      <div className="rounded-md border border-blue-200 bg-blue-50 p-4 text-sm text-blue-900 space-y-2">
+                        <p className="font-medium">Manual MySlice sign-in</p>
+                        <p>When you start import, the scraper will open its own Chrome window.</p>
+                        <p>Sign in to MySlice in that opened window, including 2FA, and leave it open while the scraper continues.</p>
                       </div>
-                      <div className="text-sm text-gray-500 space-y-1">
-                        <p>Your credentials are used only for this import session and are not stored.</p>
-                        <p>For the smoothest login flow:</p>
-                        <p>1. If prompted, complete Microsoft/Duo approval quickly.</p>
-                        <p>2. If sign-in fails with a session error, open `myslice.ps.syr.edu`, sign in once, then retry.</p>
-                      </div>
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                        <Button
-                          className="w-full"
-                          onClick={handleImport}
-                          disabled={isLoading}
+                      <p className="text-sm text-gray-500">
+                        Your MySlice credentials stay in the browser sign-in flow and are not entered into this app.
+                      </p>
+                      <Button
+                        className="w-full"
+                        onClick={handleImport}
+                        disabled={isLoading}
+                      >
+                        {isLoading ? "Importing..." : "Import from MySlice"}
+                      </Button>
+                      {importStatus !== "idle" && (
+                        <div
+                          className={`rounded-md border p-4 text-sm ${
+                            importStatus === "success"
+                              ? "border-green-200 bg-green-50 text-green-900"
+                              : importStatus === "error"
+                              ? "border-red-200 bg-red-50 text-red-900"
+                              : "border-amber-200 bg-amber-50 text-amber-900"
+                          }`}
                         >
-                          {isLoading ? "Importing..." : "Import from MySlice"}
-                        </Button>
-                        <Button
-                          type="button"
-                          variant="outline"
-                          className="w-full"
-                          onClick={() => setShowImportHelp((prev) => !prev)}
-                        >
-                          <HelpCircle className="h-4 w-4 mr-2" />
-                          {showImportHelp ? "Hide Help" : "Import Help"}
-                        </Button>
-                      </div>
-                      {showImportHelp && (
-                        <div className="text-sm bg-blue-50 border border-blue-200 rounded-md p-3 text-blue-900">
-                          <p className="font-medium mb-1">Quick import checklist</p>
-                          <p>1. Verify your NetID and password.</p>
-                          <p>2. Complete Duo/Microsoft approval immediately when prompted.</p>
-                          <p>3. If you see a session/sign-in error, open `https://myslice.ps.syr.edu`, sign in once, then retry import.</p>
+                          <p className="font-medium">
+                            {importStatus === "success"
+                              ? "Import Successful"
+                              : importStatus === "error"
+                              ? "Import Failed"
+                              : "Import In Progress"}
+                          </p>
+                          <p className="mt-1">{importStatusMessage}</p>
                         </div>
                       )}
                       {importLogs.length > 0 && (

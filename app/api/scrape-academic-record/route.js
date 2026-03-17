@@ -11,21 +11,23 @@ export async function POST(request) {
 
     // Ensure request body is valid JSON
     const body = await request.json();
-    const { username, password } = body;
+    const { username, password, manualLogin } = body;
 
-    console.log("Username received:", username ? "Yes" : "No");
+    console.log("Manual login mode:", manualLogin ? "Yes" : "No");
 
-    if (!username || !password) {
+    if (!manualLogin && (!username || !password)) {
       console.log("Missing credentials");
       return NextResponse.json(
-        { error: "Username and password are required" },
+        { error: "Username and password are required unless manual login mode is used" },
         { status: 400 }
       );
     }
 
     console.log("Attempting to login to MySlice...");
     // Login to MySlice
-    const result = await login(username, password, Date.now().toString());
+    const result = await login(username, password, Date.now().toString(), {
+      manualLogin: Boolean(manualLogin),
+    });
 
     console.log("Login successful, fetching course history...");
     // Get course history
