@@ -58,6 +58,16 @@ interface BlockData {
   courses: RequirementCourse[];
 }
 
+type WorkloadLevel = "low" | "medium" | "high"
+
+const MIN_SEMESTER_CREDITS = 12
+const MAX_SEMESTER_CREDITS = 19
+const WORKLOAD_TARGETS: Record<WorkloadLevel, number> = {
+  low: 12,
+  medium: 15,
+  high: 18,
+}
+
 export default function CourseScheduler() {
   // State
   const [courses, setCourses] = useState<Course[]>([])
@@ -80,9 +90,9 @@ export default function CourseScheduler() {
   const [isDataReady, setIsDataReady] = useState<boolean>(false)
   const [activeTab, setActiveTab] = useState("schedule")
   const { data: session } = useSession()
-  const [username, setUsername] = useState("")
-  const [password, setPassword] = useState("")
   const [importLogs, setImportLogs] = useState<string[]>([])
+  const [importStatus, setImportStatus] = useState<"idle" | "running" | "success" | "error">("idle")
+  const [importStatusMessage, setImportStatusMessage] = useState("")
   const { toast } = useToast()
   const [courseData, setCourseData] = useState<CourseData[]>([])
   const [calendarCourses, setCalendarCourses] = useState<SelectedCourse[]>([])
@@ -240,8 +250,23 @@ export default function CourseScheduler() {
     }
   }
 
-  // Generate best schedule based on major and year
-  const generateBestSchedule = () => {
+  const estimateCourseCredits = (courseCode: string, section?: Course) => {
+    const explicitCredits = Number.parseFloat(((section as Course & { credits?: string } | undefined)?.credits) || "")
+    if (!Number.isNaN(explicitCredits) && explicitCredits > 0) {
+      return explicitCredits
+    }
+
+    const codeMatch = courseCode.match(/\b(\d{3})\b/)
+    const courseNumber = codeMatch ? Number.parseInt(codeMatch[1], 10) : NaN
+    if (Number.isNaN(courseNumber)) {
+      return 3
+    }
+
+    return courseNumber >= 400 ? 4 : 3
+  }
+
+  // Generate best schedule based on major, year, and selected workload.
+  const generateBestSchedule = (workload: WorkloadLevel) => {
     if (!selectedMajor || !selectedYear || Object.keys(requirements).length === 0) {
       showNotification("Please confirm selection or wait for data to load.", "error");
       return;
@@ -256,6 +281,7 @@ export default function CourseScheduler() {
     console.log("Generating schedule for major:", selectedMajor, "year:", selectedYear);
     console.log("Available courses:", courses.length);
     console.log("Requirements keys:", Object.keys(requirements));
+    console.log("Requested workload:", workload, "target credits:", WORKLOAD_TARGETS[workload]);
 
     // Reset current schedule
     setSelectedCourses([]);
@@ -284,11 +310,18 @@ export default function CourseScheduler() {
     });
 
     let coursesAddedCount = 0;
+    let totalScheduledCredits = 0;
     const newSelectedCourses: SelectedCourse[] = [];
     const notFoundCourses: string[] = [];
+    const skippedForCreditLimit: string[] = [];
+    const targetCredits = WORKLOAD_TARGETS[workload];
 
     // Loop through each course code
     for (let i = 0; i < yearRequirements.length; i++) {
+      if (totalScheduledCredits >= targetCredits) {
+        break;
+      }
+
       const code = yearRequirements[i];
       if (!code) continue;
 
@@ -324,19 +357,33 @@ export default function CourseScheduler() {
           
           let added = false;
           for (const section of lenientSections) {
+            const estimatedCredits = estimateCourseCredits(normalizedCode, section);
+            if (totalScheduledCredits + estimatedCredits > MAX_SEMESTER_CREDITS) {
+              continue;
+            }
+
             if (!hasConflict(section, newSelectedCourses)) {
               newSelectedCourses.push({
                 ...section,
                 id: `course-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+                credits: estimatedCredits.toString(),
               });
               added = true;
               coursesAddedCount++;
+              totalScheduledCredits += estimatedCredits;
               break;
             }
           }
           
           if (!added) {
-            showNotification(`Could not add "${code}": All sections conflict.`, "warning");
+            const couldFitWithinCredits = lenientSections.some(
+              (section) => totalScheduledCredits + estimateCourseCredits(normalizedCode, section) <= MAX_SEMESTER_CREDITS
+            );
+            if (!couldFitWithinCredits) {
+              skippedForCreditLimit.push(code);
+            } else {
+              showNotification(`Could not add "${code}": All sections conflict.`, "warning");
+            }
           }
         } else {
           notFoundCourses.push(code);
@@ -346,28 +393,42 @@ export default function CourseScheduler() {
 
       let added = false;
       for (const section of possibleSections) {
+        const estimatedCredits = estimateCourseCredits(normalizedCode, section);
+        if (totalScheduledCredits + estimatedCredits > MAX_SEMESTER_CREDITS) {
+          continue;
+        }
+
         if (!hasConflict(section, newSelectedCourses)) {
           // Create a new SelectedCourse with a unique ID
           const newCourse: SelectedCourse = {
             ...section,
             id: `course-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+            credits: estimatedCredits.toString(),
           };
           
           newSelectedCourses.push(newCourse);
           added = true;
           coursesAddedCount++;
+          totalScheduledCredits += estimatedCredits;
           break;
         }
       }
 
       if (!added && possibleSections.length > 0) {
-        showNotification(`Could not add "${code}": All sections conflict.`, "warning");
+        const couldFitWithinCredits = possibleSections.some(
+          (section) => totalScheduledCredits + estimateCourseCredits(normalizedCode, section) <= MAX_SEMESTER_CREDITS
+        );
+        if (!couldFitWithinCredits) {
+          skippedForCreditLimit.push(code);
+        } else {
+          showNotification(`Could not add "${code}": All sections conflict.`, "warning");
+        }
       }
     }
 
     // Force a re-render by creating a new array
     setSelectedCourses([...newSelectedCourses]);
-    console.log(`Added ${coursesAddedCount} courses to schedule. Schedule now has ${newSelectedCourses.length} courses.`);
+    console.log(`Added ${coursesAddedCount} courses to schedule. Schedule now has ${newSelectedCourses.length} courses and ${totalScheduledCredits} credits.`);
 
     if (notFoundCourses.length > 0) {
       const message = notFoundCourses.length === 1 
@@ -378,8 +439,26 @@ export default function CourseScheduler() {
       console.warn("Courses not found:", notFoundCourses);
     }
 
+    if (skippedForCreditLimit.length > 0) {
+      showNotification(
+        `Stopped at ${totalScheduledCredits} credits to stay within the ${MAX_SEMESTER_CREDITS}-credit maximum.`,
+        "default"
+      );
+    }
+
     if (coursesAddedCount > 0) {
-      showNotification(`Added ${coursesAddedCount} course(s) to your schedule.`, "success");
+      const workloadLabel = workload.charAt(0).toUpperCase() + workload.slice(1)
+      if (totalScheduledCredits < MIN_SEMESTER_CREDITS) {
+        showNotification(
+          `${workloadLabel} workload scheduled ${totalScheduledCredits} credits, which is below the 12-credit minimum because no more non-conflicting courses fit.`,
+          "warning"
+        );
+      } else {
+        showNotification(
+          `${workloadLabel} workload scheduled ${coursesAddedCount} course(s) for ${totalScheduledCredits} credits.`,
+          "success"
+        );
+      }
     } else if (coursesAddedCount === 0 && notFoundCourses.length === 0) {
       showNotification("No courses could be added to your schedule.", "error");
     }
@@ -858,13 +937,10 @@ export default function CourseScheduler() {
   }, [degreeCourses, session])
 
   const handleImport = async () => {
-    if (!username || !password) {
-      showNotification("Please fill in all fields", "error")
-      return
-    }
-
     setIsLoading(true)
     setImportLogs([])
+    setImportStatus("running")
+    setImportStatusMessage("A browser window will open for MySlice. Sign in there and keep this page open while import runs.")
     try {
       // Make the actual API call to start import
       const response = await fetch("http://localhost:3001/api/scrape-academic-record", {
@@ -872,7 +948,7 @@ export default function CourseScheduler() {
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ username, password }),
+        body: JSON.stringify({ manualLogin: true }),
       })
 
       if (!response.ok) {
@@ -903,15 +979,20 @@ export default function CourseScheduler() {
               await saveDegreeRequirements()
             }
           }
+          const importedCourseCount = Array.isArray(statusData.result?.courses) ? statusData.result.courses.length : 0
+          setImportStatus("success")
+          setImportStatusMessage(`Import successful. ${importedCourseCount} course(s) were imported from MySlice.`)
           showNotification("Successfully imported courses from MySlice", "success")
-          setUsername("")
-          setPassword("")
           setIsLoading(false)
         } else if (statusData.status === "failed") {
           setIsLoading(false)
+          setImportStatus("error")
+          setImportStatusMessage(statusData.message || "Import failed. Review the log below for details.")
           throw new Error(statusData.message || "Import failed")
         } else {
           // Job is still running, check again in 2 seconds
+          setImportStatus("running")
+          setImportStatusMessage("Import in progress. Waiting for MySlice to finish responding.")
           setTimeout(checkStatus, 2000)
         }
       }
@@ -920,6 +1001,8 @@ export default function CourseScheduler() {
       checkStatus()
     } catch (error) {
       console.error("Failed to import courses:", error)
+      setImportStatus("error")
+      setImportStatusMessage((error as Error).message || "Import failed. Review the log below for details.")
       showNotification((error as Error).message || "Failed to import courses", "error")
       setIsLoading(false)
     }
@@ -1291,27 +1374,13 @@ export default function CourseScheduler() {
                   </CardHeader>
                   <CardContent>
                     <div className="space-y-4">
-                      <div className="grid w-full items-center gap-4">
-                        <div className="flex flex-col space-y-1.5">
-                          <Label htmlFor="username">MySlice Username (NetID)</Label>
-                          <Input
-                            id="username"
-                            value={username}
-                            onChange={(e) => setUsername(e.target.value)}
-                          />
-                        </div>
-                        <div className="flex flex-col space-y-1.5">
-                          <Label htmlFor="password">MySlice Password</Label>
-                          <Input
-                            id="password"
-                            type="password"
-                            value={password}
-                            onChange={(e) => setPassword(e.target.value)}
-                          />
-                        </div>
+                      <div className="rounded-md border border-blue-200 bg-blue-50 p-4 text-sm text-blue-900 space-y-2">
+                        <p className="font-medium">Manual MySlice sign-in</p>
+                        <p>When you start import, the scraper will open its own Chrome window.</p>
+                        <p>Sign in to MySlice in that opened window, including 2FA, and leave it open while the scraper continues.</p>
                       </div>
                       <p className="text-sm text-gray-500">
-                        Your credentials will only be used to access your MySlice account and will not be stored.
+                        Your MySlice credentials stay in the browser sign-in flow and are not entered into this app.
                       </p>
                       <Button
                         className="w-full"
@@ -1320,6 +1389,26 @@ export default function CourseScheduler() {
                       >
                         {isLoading ? "Importing..." : "Import from MySlice"}
                       </Button>
+                      {importStatus !== "idle" && (
+                        <div
+                          className={`rounded-md border p-4 text-sm ${
+                            importStatus === "success"
+                              ? "border-green-200 bg-green-50 text-green-900"
+                              : importStatus === "error"
+                              ? "border-red-200 bg-red-50 text-red-900"
+                              : "border-amber-200 bg-amber-50 text-amber-900"
+                          }`}
+                        >
+                          <p className="font-medium">
+                            {importStatus === "success"
+                              ? "Import Successful"
+                              : importStatus === "error"
+                              ? "Import Failed"
+                              : "Import In Progress"}
+                          </p>
+                          <p className="mt-1">{importStatusMessage}</p>
+                        </div>
+                      )}
                       {importLogs.length > 0 && (
                         <div className="mt-4 p-4 bg-gray-50 rounded-md">
                           <h4 className="text-sm font-medium mb-2">Import Log:</h4>
@@ -1397,4 +1486,3 @@ export default function CourseScheduler() {
     </div>
   )
 }
-
