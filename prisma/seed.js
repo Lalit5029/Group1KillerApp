@@ -4,52 +4,145 @@ import bcrypt from "bcryptjs";
 const prisma = new PrismaClient();
 
 async function main() {
-  const demoEmail = "demo@group1.local";
-  const demoPassword = "demo123";
+  const advisorEmail = "demo@group1.local";
+  const advisorPassword = "demo123";
 
-  const existing = await prisma.user.findUnique({ where: { email: demoEmail } });
-  if (existing) {
-    await prisma.academicCourse.deleteMany({ where: { userId: existing.id } });
-    await prisma.degreeRequirement.deleteMany({ where: { userId: existing.id } });
-    await prisma.user.delete({ where: { id: existing.id } });
+  const existingAdvisor = await prisma.user.findUnique({
+    where: { email: advisorEmail },
+    select: { id: true },
+  });
+
+  if (existingAdvisor) {
+    const students = await prisma.student.findMany({
+      where: { advisorId: existingAdvisor.id },
+      select: { id: true },
+    });
+    const studentIds = students.map((student) => student.id);
+
+    if (studentIds.length > 0) {
+      await prisma.selectedCourse.deleteMany({ where: { studentId: { in: studentIds } } });
+      await prisma.academicCourse.deleteMany({ where: { studentId: { in: studentIds } } });
+      await prisma.degreeRequirement.deleteMany({ where: { studentId: { in: studentIds } } });
+      await prisma.student.deleteMany({ where: { advisorId: existingAdvisor.id } });
+    }
+
+    await prisma.user.deleteMany({ where: { id: existingAdvisor.id } });
   }
 
-  const hashedPassword = await bcrypt.hash(demoPassword, 10);
+  const hashedPassword = await bcrypt.hash(advisorPassword, 10);
 
-  const user = await prisma.user.create({
+  const advisor = await prisma.user.create({
     data: {
-      email: demoEmail,
-      name: "Demo Student",
+      email: advisorEmail,
+      name: "Demo Advisor",
       password: hashedPassword,
+      role: "ADVISOR",
+    },
+  });
+
+  const student = await prisma.student.create({
+    data: {
+      advisorId: advisor.id,
+      name: "Alex Johnson",
+      externalStudentId: "900123456",
+      email: "alex.johnson@syr.edu",
+      major: "Computer Science, BS",
+      academicYear: "Junior",
     },
   });
 
   await prisma.academicCourse.createMany({
     data: [
-      { userId: user.id, code: "CIS 252", name: "Data Structures", term: "Fall 2024", grade: "A", credits: "3", course: "CIS 252", title: "Data Structures", requirementGroup: "Major" },
-      { userId: user.id, code: "CIS 275", name: "Software Design", term: "Fall 2024", grade: "B+", credits: "3", course: "CIS 275", title: "Software Design", requirementGroup: "Major" },
-      { userId: user.id, code: "MAT 295", name: "Calculus I", term: "Fall 2023", grade: "A-", credits: "4", course: "MAT 295", title: "Calculus I", requirementGroup: "Core" },
-      { userId: user.id, code: "WRT 105", name: "Studio 1", term: "Fall 2023", grade: "P", credits: "3", course: "WRT 105", title: "Studio 1", requirementGroup: "Core" },
-      { userId: user.id, code: "PHI 107", name: "Intro to Ethics", term: "Spring 2024", grade: "B", credits: "3", course: "PHI 107", title: "Intro to Ethics", requirementGroup: "Elective" },
+      {
+        studentId: student.id,
+        code: "CIS 252",
+        name: "Data Structures",
+        term: "Fall 2024",
+        grade: "A",
+        credits: "3",
+        course: "CIS 252",
+        title: "Data Structures",
+        requirementGroup: "Major",
+      },
+      {
+        studentId: student.id,
+        code: "CIS 275",
+        name: "Software Design",
+        term: "Fall 2024",
+        grade: "B+",
+        credits: "3",
+        course: "CIS 275",
+        title: "Software Design",
+        requirementGroup: "Major",
+      },
+      {
+        studentId: student.id,
+        code: "MAT 295",
+        name: "Calculus I",
+        term: "Fall 2023",
+        grade: "A-",
+        credits: "4",
+        course: "MAT 295",
+        title: "Calculus I",
+        requirementGroup: "Core",
+      },
+      {
+        studentId: student.id,
+        code: "WRT 105",
+        name: "Studio 1",
+        term: "Fall 2023",
+        grade: "P",
+        credits: "3",
+        course: "WRT 105",
+        title: "Studio 1",
+        requirementGroup: "Core",
+      },
+      {
+        studentId: student.id,
+        code: "PHI 107",
+        name: "Intro to Ethics",
+        term: "Spring 2024",
+        grade: "B",
+        credits: "3",
+        course: "PHI 107",
+        title: "Intro to Ethics",
+        requirementGroup: "Elective",
+      },
     ],
   });
 
   await prisma.degreeRequirement.createMany({
     data: [
-      { userId: user.id, title: "Core Requirements", status: "In Progress", courses: ["MAT 295", "WRT 105"] },
-      { userId: user.id, title: "Major Requirements", status: "In Progress", courses: ["CIS 252", "CIS 275"] },
-      { userId: user.id, title: "Electives", status: "In Progress", courses: ["PHI 107"] },
+      {
+        studentId: student.id,
+        title: "Core Requirements",
+        status: "In Progress",
+        courses: ["MAT 295", "WRT 105"],
+      },
+      {
+        studentId: student.id,
+        title: "Major Requirements",
+        status: "In Progress",
+        courses: ["CIS 252", "CIS 275"],
+      },
+      {
+        studentId: student.id,
+        title: "Electives",
+        status: "In Progress",
+        courses: ["PHI 107"],
+      },
     ],
   });
 
   console.log("Seed complete.");
-  console.log("Demo user:", demoEmail, "| Password:", demoPassword);
-  console.log("Log in at /login to see data from MongoDB.");
+  console.log("Demo advisor:", advisorEmail, "| Password:", advisorPassword);
+  console.log("Demo student:", student.name, "| Student ID:", student.externalStudentId);
+  console.log("Sign in at /login and then choose a student at /students.");
 }
 
 main()
-  .catch((e) => {
-    console.error(e);
+  .catch((error) => {
+    console.error(error);
     process.exit(1);
   })
   .finally(async () => {

@@ -8,31 +8,52 @@ import prisma from "@/lib/prisma";
  */
 export async function GET() {
   try {
-    const demoUser = await prisma.user.findUnique({
+    const demoAdvisor = await prisma.user.findUnique({
       where: { email: "demo@group1.local" },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+      },
+    });
+
+    if (!demoAdvisor) {
+      return NextResponse.json(
+        { error: "Demo advisor not found. Run: npm run db:seed" },
+        { status: 404 }
+      );
+    }
+
+    const demoStudent = await prisma.student.findFirst({
+      where: { advisorId: demoAdvisor.id },
       include: {
         academicCourses: true,
         degreeRequirements: true,
       },
     });
 
-    if (!demoUser) {
+    if (!demoStudent) {
       return NextResponse.json(
-        { error: "Demo user not found. Run: npm run db:seed" },
+        { error: "Demo student not found. Run: npm run db:seed" },
         { status: 404 }
       );
     }
 
-    const totalCredits = demoUser.academicCourses.reduce(
+    const totalCredits = demoStudent.academicCourses.reduce(
       (sum, c) => sum + (parseFloat(c.credits) || 0),
       0
     );
 
     return NextResponse.json({
-      user: { name: demoUser.name, email: demoUser.email },
+      user: { name: demoAdvisor.name, email: demoAdvisor.email },
+      student: {
+        id: demoStudent.id,
+        name: demoStudent.name,
+        externalStudentId: demoStudent.externalStudentId,
+      },
       totalCredits,
-      academicCourses: demoUser.academicCourses,
-      degreeRequirements: demoUser.degreeRequirements,
+      academicCourses: demoStudent.academicCourses,
+      degreeRequirements: demoStudent.degreeRequirements,
     });
   } catch (error) {
     console.error("Error fetching demo progress:", error);

@@ -1,81 +1,64 @@
 import { NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
 import prisma from "@/lib/prisma";
+import { getAuthorizedStudent, requireAdvisorSession } from "@/lib/server-auth";
 
-export async function GET() {
+export async function GET(request: Request) {
   try {
-    const session = await getServerSession();
-    console.log("GET - Session:", session);
+    const session = await requireAdvisorSession();
+    const studentId = new URL(request.url).searchParams.get("studentId");
+    const student = await getAuthorizedStudent(studentId, session.user.id);
 
-    if (!session?.user?.email) {
-      console.log("GET - Unauthorized: No user email in session");
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
-    const user = await prisma.user.findUnique({
-      where: { email: session.user.email },
-      include: { degreeRequirements: true },
+    const degreeRequirements = await prisma.degreeRequirement.findMany({
+      where: { studentId: student.id },
+      orderBy: { createdAt: "asc" },
     });
 
-    if (!user) {
-      return NextResponse.json({ error: "User not found" }, { status: 404 });
-    }
-
-    return NextResponse.json(user.degreeRequirements);
+    return NextResponse.json(degreeRequirements);
   } catch (error) {
     console.error("Error fetching degree requirements:", error);
+    const message =
+      error instanceof Error ? error.message : "Failed to fetch degree requirements";
+    const status =
+      message === "Unauthorized" ? 401 : message === "Student not found" ? 404 : 400;
     return NextResponse.json(
-      { error: "Failed to fetch degree requirements" },
-      { status: 500 }
+      { error: message },
+      { status }
     );
   }
 }
 
 export async function POST(request: Request) {
   try {
-    const session = await getServerSession();
-    console.log("POST - Session:", session);
-
-    if (!session?.user?.email) {
-      console.log("POST - Unauthorized: No user email in session");
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
-    const user = await prisma.user.findUnique({
-      where: { email: session.user.email },
-    });
-
-    if (!user) {
-      return NextResponse.json({ error: "User not found" }, { status: 404 });
-    }
-
+    const session = await requireAdvisorSession();
+    const studentId = new URL(request.url).searchParams.get("studentId");
+    const student = await getAuthorizedStudent(studentId, session.user.id);
     const data = await request.json();
-    console.log("POST - Received data:", data);
 
     // Delete existing degree requirements
     await prisma.degreeRequirement.deleteMany({
-      where: {
-        userId: user.id,
-      },
+      where: { studentId: student.id },
     });
 
     // Create new degree requirements
     const degreeRequirements = await prisma.degreeRequirement.createMany({
       data: data.map((block: any) => ({
-        userId: user.id,
+        studentId: student.id,
         title: block.title,
         status: block.status,
         courses: block.courses,
       })),
     });
 
-    console.log("POST - Created degree requirements:", degreeRequirements);
     return NextResponse.json(degreeRequirements);
   } catch (error) {
     console.error("Error saving degree requirements:", error);
+    const message =
+      error instanceof Error ? error.message : "Failed to save degree requirements";
+    const status =
+      message === "Unauthorized" ? 401 : message === "Student not found" ? 404 : 400;
     return NextResponse.json(
-      { error: "Failed to save degree requirements" },
-      { status: 500 }
+      { error: message },
+      { status }
     );
   }
 }

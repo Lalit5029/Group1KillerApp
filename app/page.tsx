@@ -1,307 +1,116 @@
-'use client';
+"use client";
 
-import { useState, useEffect } from 'react'
-import Link from 'next/link';
-import { useRouter } from 'next/navigation';
-import { useSession, signOut } from 'next-auth/react';
-import CourseScheduler from "@/components/course-scheduler"
-import { Button } from '@/components/ui/button'
-import { BookUser, LogIn, UserPlus } from 'lucide-react'
-import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card'
-import type { SelectedCourse, CourseData } from '@/lib/types'
+import { useEffect, useState } from "react";
+import Link from "next/link";
+import { useRouter, useSearchParams } from "next/navigation";
+import { signOut, useSession } from "next-auth/react";
+import CourseScheduler from "@/components/course-scheduler";
+import { Button } from "@/components/ui/button";
+import type { Student } from "@/lib/types";
 
 export default function Home() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { data: session, status } = useSession();
-  const [selectedCourses, setSelectedCourses] = useState<SelectedCourse[]>([])
-  const [courseData, setCourseData] = useState<CourseData[]>([])
+  const studentId = searchParams.get("studentId");
+  const [student, setStudent] = useState<Student | null>(null);
+  const [isLoadingStudent, setIsLoadingStudent] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  // Load saved courses when component mounts
   useEffect(() => {
-    const loadSavedCourses = async () => {
+    if (status === "unauthenticated") {
+      router.replace("/login");
+    }
+  }, [router, status]);
+
+  useEffect(() => {
+    if (status !== "authenticated") {
+      return;
+    }
+
+    if (!studentId) {
+      router.replace("/students");
+      return;
+    }
+
+    const loadStudent = async () => {
+      setIsLoadingStudent(true);
+      setError(null);
       try {
-        const response = await fetch('/api/courses')
-        if (response.ok) {
-          const savedCourses = await response.json()
-          setSelectedCourses(savedCourses)
-          
-          // Convert SelectedCourse to CourseData
-          const convertedCourses: CourseData[] = savedCourses.map((course: SelectedCourse) => ({
-            course: course.Class,
-            title: course.Class, // Using Class as title for now
-            grade: course.grade || "IP",
-            credits: course.credits || "0",
-            term: "Fall 2024", // Default term
-            catalogGroup: course.requirementGroup || "General", // Default catalog group
-            requirementGroup: course.requirementGroup || null,
-            status: "In Progress"
-          }))
-          
-          setCourseData(convertedCourses)
+        const response = await fetch(`/api/students/${studentId}`);
+        const data = await response.json();
+        if (!response.ok) {
+          throw new Error(data.message || "Failed to load student");
         }
-      } catch (error) {
-        console.error("Failed to load saved courses:", error)
+        setStudent(data);
+      } catch (loadError) {
+        setError(loadError instanceof Error ? loadError.message : "Failed to load student");
+      } finally {
+        setIsLoadingStudent(false);
       }
-    }
+    };
 
-    loadSavedCourses()
-  }, [])
+    loadStudent();
+  }, [router, status, studentId]);
 
-  const handleLogout = async () => {
-    try {
-      await signOut({ 
-        redirect: true,
-        callbackUrl: '/'
-      });
-    } catch (error) {
-      console.error('Error during logout:', error);
-    }
-  };
+  if (status === "loading" || isLoadingStudent) {
+    return <main className="min-h-screen p-8 text-sm text-slate-600">Loading advisor workspace...</main>;
+  }
 
-  const DegreeRequirements = () => {
-    const [requirements, setRequirements] = useState({
-      generalEducation: {
-        title: "General Education",
-        credits: 0,
-        required: 0,
-        completed: 0,
-        remaining: 0,
-        courses: [],
-        progress: 0,
-        status: ""
-      },
-      majorRequirements: {
-        title: "Major Requirements",
-        credits: 0,
-        required: 0,
-        completed: 0,
-        remaining: 0,
-        courses: [],
-        progress: 0,
-        status: ""
-      },
-      electives: {
-        title: "Electives",
-        credits: 0,
-        required: 0,
-        completed: 0,
-        remaining: 0,
-        courses: [],
-        progress: 0,
-        status: ""
-      },
-      overall: {
-        totalCredits: 0,
-        requiredCredits: 0,
-        completedCredits: 0,
-        remainingCredits: 0,
-        gpa: 0,
-        progress: 0,
-        status: ""
-      }
-    });
+  if (!studentId) {
+    return null;
+  }
 
-    useEffect(() => {
-      const fetchRequirements = async () => {
-        try {
-          const response = await fetch("/api/scrape");
-          if (!response.ok) {
-            throw new Error('Failed to fetch requirements');
-          }
-          const data = await response.json();
-          console.log('Fetched data:', data);
-          setRequirements(data);
-        } catch (error) {
-          console.error('Error fetching requirements:', error);
-        }
-      };
-
-      fetchRequirements();
-    }, []);
-
-    const renderCourseList = (courses) => (
-      <div className="mt-2 space-y-1">
-        {courses.map((course, index) => (
-          <div key={index} className="flex justify-between text-sm">
-            <span className="font-medium">{course.code}</span>
-            <span className="text-gray-600">{course.title}</span>
-            <span className="text-gray-500">{course.credits} credits</span>
-            <span className={`px-2 py-1 rounded text-xs ${
-              course.status === "Completed" ? "bg-green-100 text-green-800" :
-              course.status === "In Progress" ? "bg-blue-100 text-blue-800" :
-              "bg-gray-100 text-gray-800"
-            }`}>
-              {course.status}
-            </span>
-            {course.grade && (
-              <span className="font-medium">{course.grade}</span>
-            )}
-          </div>
-        ))}
-      </div>
-    );
-
+  if (error || !student) {
     return (
-      <div className="bg-white rounded-lg shadow p-6">
-        <h2 className="text-2xl font-bold mb-4">Degree Requirements</h2>
-        
-        {/* Overall Progress */}
-        <div className="mb-6 p-4 bg-gray-50 rounded-lg">
-          <div className="flex justify-between items-center mb-2">
-            <h3 className="text-lg font-semibold">Overall Progress</h3>
-            <span className="text-sm text-gray-600">GPA: {requirements.overall.gpa}</span>
-          </div>
-          <div className="flex justify-between text-sm mb-2">
-            <span>Total Credits: {requirements.overall.completedCredits}/{requirements.overall.requiredCredits}</span>
-            <span>Remaining: {requirements.overall.remainingCredits}</span>
-          </div>
-          <div className="w-full bg-gray-200 rounded-full h-2.5">
-            <div
-              className="bg-blue-600 h-2.5 rounded-full"
-              style={{ width: `${requirements.overall.progress}%` }}
-            ></div>
-          </div>
-          <div className="mt-2 text-sm text-gray-600">
-            Status: <span className="font-medium">{requirements.overall.status}</span>
+      <main className="min-h-screen bg-slate-50 p-8">
+        <div className="mx-auto max-w-3xl rounded-lg border bg-white p-6 shadow-sm">
+          <h1 className="text-xl font-semibold text-slate-900">Unable to open student workspace</h1>
+          <p className="mt-2 text-sm text-slate-600">{error || "Student not found."}</p>
+          <div className="mt-4 flex gap-3">
+            <Button asChild>
+              <Link href="/students">Back to student list</Link>
+            </Button>
+            <Button variant="outline" onClick={() => signOut({ callbackUrl: "/login" })}>
+              Log out
+            </Button>
           </div>
         </div>
-
-        {/* General Education */}
-        <div className="mb-6">
-          <h3 className="text-lg font-semibold mb-2">{requirements.generalEducation.title}</h3>
-          <div className="flex justify-between text-sm mb-2">
-            <span>Credits: {requirements.generalEducation.completed}/{requirements.generalEducation.required}</span>
-            <span>Remaining: {requirements.generalEducation.remaining}</span>
-          </div>
-          <div className="w-full bg-gray-200 rounded-full h-2.5">
-            <div
-              className="bg-green-600 h-2.5 rounded-full"
-              style={{ width: `${requirements.generalEducation.progress}%` }}
-            ></div>
-          </div>
-          {renderCourseList(requirements.generalEducation.courses)}
-        </div>
-
-        {/* Major Requirements */}
-        <div className="mb-6">
-          <h3 className="text-lg font-semibold mb-2">{requirements.majorRequirements.title}</h3>
-          <div className="flex justify-between text-sm mb-2">
-            <span>Credits: {requirements.majorRequirements.completed}/{requirements.majorRequirements.required}</span>
-            <span>Remaining: {requirements.majorRequirements.remaining}</span>
-          </div>
-          <div className="w-full bg-gray-200 rounded-full h-2.5">
-            <div
-              className="bg-purple-600 h-2.5 rounded-full"
-              style={{ width: `${requirements.majorRequirements.progress}%` }}
-            ></div>
-          </div>
-          {renderCourseList(requirements.majorRequirements.courses)}
-        </div>
-
-        {/* Electives */}
-        <div>
-          <h3 className="text-lg font-semibold mb-2">{requirements.electives.title}</h3>
-          <div className="flex justify-between text-sm mb-2">
-            <span>Credits: {requirements.electives.completed}/{requirements.electives.required}</span>
-            <span>Remaining: {requirements.electives.remaining}</span>
-          </div>
-          <div className="w-full bg-gray-200 rounded-full h-2.5">
-            <div
-              className="bg-yellow-600 h-2.5 rounded-full"
-              style={{ width: `${requirements.electives.progress}%` }}
-            ></div>
-          </div>
-          {renderCourseList(requirements.electives.courses)}
-        </div>
-      </div>
+      </main>
     );
-  };
+  }
 
   return (
     <main className="min-h-screen bg-gray-50 p-4 md:p-8">
-      <nav className="bg-white shadow-sm mb-8 rounded-lg">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between h-16">
-            <div className="flex">
-              <div className="flex-shrink-0 flex items-center">
-                <h1 className="text-xl font-bold">Course Scheduler</h1>
+      <nav className="mb-8 rounded-lg bg-white shadow-sm">
+        <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
+          <div>
+            <h1 className="text-xl font-bold text-slate-900">Advisor Course Planner</h1>
+            <p className="text-xs text-slate-500">
+              Working on {student.name}
+              {student.externalStudentId ? ` • ${student.externalStudentId}` : ""}
+            </p>
+          </div>
+          <div className="flex items-center gap-3">
+            <div className="hidden text-right sm:block">
+              <div className="text-sm font-medium text-slate-900">
+                {session?.user?.name || "Advisor"}
               </div>
+              <div className="text-xs text-slate-500">{session?.user?.email}</div>
             </div>
-            <div className="flex items-center ml-auto">
-              {status === 'authenticated' && session?.user ? (
-                <div className="flex items-center space-x-4">
-                  <div className="flex flex-col items-end">
-                    <span className="text-sm font-medium text-gray-900">
-                      {session.user.name || 'User'}
-                    </span>
-                    <span className="text-xs text-gray-500">
-                      {session.user.email}
-                    </span>
-                  </div>
-                  <div className="h-8 w-8 rounded-full bg-indigo-600 flex items-center justify-center text-white font-medium">
-                    {session.user.name?.[0]?.toUpperCase() || 'U'}
-                  </div>
-                  <button
-                    onClick={handleLogout}
-                    className="text-gray-700 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium hover:bg-gray-100"
-                  >
-                    Logout
-                  </button>
-                </div>
-              ) : (
-                <div className="flex items-center space-x-4">
-                  <Link
-                    href="/login"
-                    className="flex items-center text-indigo-600 hover:text-indigo-800 px-4 py-2 rounded-md text-sm font-medium border border-indigo-600 hover:bg-indigo-50 transition-colors"
-                  >
-                    <LogIn className="mr-2 h-4 w-4" />
-                    Login
-                  </Link>
-                  <Link
-                    href="/register"
-                    className="flex items-center bg-indigo-600 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors"
-                  >
-                    <UserPlus className="mr-2 h-4 w-4" />
-                    Register
-                  </Link>
-                </div>
-              )}
-            </div>
+            <Button asChild variant="outline">
+              <Link href="/students">Switch student</Link>
+            </Button>
+            <Button variant="outline" onClick={() => signOut({ callbackUrl: "/login" })}>
+              Log out
+            </Button>
           </div>
         </div>
       </nav>
 
-      <div className="max-w-7xl mx-auto space-y-8">
-        {/* Test database (for teammates) */}
-        <div className="mb-4 p-4 bg-slate-50 rounded-lg border border-slate-200 text-sm text-slate-700">
-          <span className="font-medium">Test the database:</span>{" "}
-          <Link href="/dashboard" className="text-indigo-600 hover:underline">Dashboard</Link>
-          {" "}(data from MongoDB, no login) or log in with{" "}
-          <span className="font-mono text-slate-800">demo@group1.local</span> /{" "}
-          <span className="font-mono text-slate-800">demo123</span>.
-          {" "}Run <span className="font-mono text-slate-800">npm run db:seed</span> first if you see no data.
-        </div>
-
-        {/* Academic Progress Section */}
-        <div className="mb-8 p-6 bg-white rounded-lg shadow-md border border-gray-200 flex flex-col md:flex-row justify-between items-center">
-          <div>
-            <h2 className="text-xl font-semibold text-gray-800 mb-2">Explore Academic Progress</h2>
-            <p className="text-gray-600">
-              View degree requirements, track your progress, and see how courses fit into your plan using sample student data.
-            </p>
-          </div>
-          <Link href="/academic-progress" passHref>
-            <Button className="mt-4 md:mt-0">
-              <BookUser className="mr-2 h-4 w-4" />
-              View Sample Progress
-            </Button>
-          </Link>
-        </div>
-
-
-        {/* Course Scheduler Section */}
-        <CourseScheduler />
+      <div className="mx-auto max-w-7xl">
+        <CourseScheduler selectedStudentId={student.id} selectedStudentName={student.name} />
       </div>
     </main>
-  )
+  );
 }

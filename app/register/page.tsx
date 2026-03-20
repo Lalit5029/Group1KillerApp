@@ -87,10 +87,10 @@ export default function RegisterPage() {
           }}>SU</div>
 
           <h1 style={{ margin: '0 0 12px', fontSize: '32px', fontWeight: 800, lineHeight: 1.2 }}>
-            Join Syracuse<br />University
+            Join the Advisor<br />Workspace
           </h1>
           <p style={{ margin: 0, fontSize: '15px', opacity: 0.75, maxWidth: '240px', lineHeight: 1.6 }}>
-            Create your account and get access to everything SU has to offer.
+            Create your advisor account to manage student schedules, imports, and recommendations.
           </p>
 
           <div style={{ marginTop: '48px', display: 'flex', flexDirection: 'column', gap: '16px', textAlign: 'left' }}>
@@ -115,8 +115,8 @@ export default function RegisterPage() {
             ← Back to Login
           </Link>
 
-          <h2 style={{ margin: '0 0 6px', fontSize: '24px', fontWeight: 700, color: '#fff' }}>Create account</h2>
-          <p style={{ margin: '0 0 32px', color: '#64748b', fontSize: '14px' }}>Sign up for your SU account</p>
+          <h2 style={{ margin: '0 0 6px', fontSize: '24px', fontWeight: 700, color: '#fff' }}>Create advisor account</h2>
+          <p style={{ margin: '0 0 32px', color: '#64748b', fontSize: '14px' }}>Register to manage advisees and their academic plans</p>
 
           {error && (
             <div style={{

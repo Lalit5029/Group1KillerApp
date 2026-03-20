@@ -1,30 +1,27 @@
 import { NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
 import prisma from "@/lib/prisma";
+import { getAuthorizedStudent, requireAdvisorSession } from "@/lib/server-auth";
 
 // GET /api/courses - Get user's saved courses
-export async function GET() {
+export async function GET(request: Request) {
   try {
-    const session = await getServerSession();
-    if (!session?.user?.email) {
-      return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
-    }
+    const session = await requireAdvisorSession();
+    const studentId = new URL(request.url).searchParams.get("studentId");
+    const student = await getAuthorizedStudent(studentId, session.user.id);
 
-    const user = await prisma.user.findUnique({
-      where: { email: session.user.email },
-      include: { courses: true },
+    const courses = await prisma.selectedCourse.findMany({
+      where: { studentId: student.id },
+      orderBy: { createdAt: "asc" },
     });
-
-    if (!user) {
-      return NextResponse.json({ message: "User not found" }, { status: 404 });
-    }
-
-    return NextResponse.json(user.courses);
+    return NextResponse.json(courses);
   } catch (error) {
     console.error("Error fetching courses:", error);
+    const message = error instanceof Error ? error.message : "Error fetching courses";
+    const status =
+      message === "Unauthorized" ? 401 : message === "Student not found" ? 404 : 400;
     return NextResponse.json(
-      { message: "Error fetching courses" },
-      { status: 500 }
+      { message },
+      { status }
     );
   }
 }
@@ -32,30 +29,20 @@ export async function GET() {
 // POST /api/courses - Save user's courses
 export async function POST(request: Request) {
   try {
-    const session = await getServerSession();
-    if (!session?.user?.email) {
-      return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
-    }
-
+    const session = await requireAdvisorSession();
+    const studentId = new URL(request.url).searchParams.get("studentId");
     const courses = await request.json();
-
-    const user = await prisma.user.findUnique({
-      where: { email: session.user.email },
-    });
-
-    if (!user) {
-      return NextResponse.json({ message: "User not found" }, { status: 404 });
-    }
+    const student = await getAuthorizedStudent(studentId, session.user.id);
 
     // Delete existing courses
     await prisma.selectedCourse.deleteMany({
-      where: { userId: user.id },
+      where: { studentId: student.id },
     });
 
     // Add new courses
     await prisma.selectedCourse.createMany({
       data: courses.map((course: any) => ({
-        userId: user.id,
+        studentId: student.id,
         courseClass: course.Class,
         section: course.Section,
         instructor: course.Instructor || "",
@@ -67,9 +54,12 @@ export async function POST(request: Request) {
     return NextResponse.json({ message: "Courses saved successfully" });
   } catch (error) {
     console.error("Error saving courses:", error);
+    const message = error instanceof Error ? error.message : "Error saving courses";
+    const status =
+      message === "Unauthorized" ? 401 : message === "Student not found" ? 404 : 400;
     return NextResponse.json(
-      { message: "Error saving courses" },
-      { status: 500 }
+      { message },
+      { status }
     );
   }
 }

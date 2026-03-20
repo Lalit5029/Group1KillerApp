@@ -13,7 +13,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { AcademicDataVisualizer } from "./academic-data-visualizer"
 import { DegreeRequirementsView } from "./degree-requirements-view"
 import { Calendar, GraduationCap, BookOpen, Download, Upload } from "lucide-react"
-import type { Course, SelectedCourse, Notification, Major, Requirements, CourseData } from "@/lib/types"
+import type { Course, SelectedCourse, Notification, Major, Requirements, CourseData, CourseSearchCriteria } from "@/lib/types"
 import { fetchCourses, fetchRequirements } from "@/lib/data-utils"
 import { hasConflict } from "@/lib/schedule-utils"
 import { useSession } from "next-auth/react"
@@ -68,7 +68,12 @@ const WORKLOAD_TARGETS: Record<WorkloadLevel, number> = {
   high: 18,
 }
 
-export default function CourseScheduler() {
+interface CourseSchedulerProps {
+  selectedStudentId: string
+  selectedStudentName?: string
+}
+
+export default function CourseScheduler({ selectedStudentId, selectedStudentName }: CourseSchedulerProps) {
   // State
   const [courses, setCourses] = useState<Course[]>([])
   const [requirements, setRequirements] = useState<Requirements>({})
@@ -102,6 +107,11 @@ export default function CourseScheduler() {
   const [error, setError] = useState<string | null>(null)
   const [expandedBlocks, setExpandedBlocks] = useState<Record<string, boolean>>({})
   const [expandedTerms, setExpandedTerms] = useState<Record<string, boolean>>({});
+
+  const withStudentId = (path: string) => {
+    const separator = path.includes("?") ? "&" : "?"
+    return `${path}${separator}studentId=${encodeURIComponent(selectedStudentId)}`
+  }
 
   // Initialize app
   useEffect(() => {
@@ -153,7 +163,7 @@ export default function CourseScheduler() {
     }
     setIsLoadingFromDb(true)
     try {
-      const response = await fetch('/api/courses')
+      const response = await fetch(withStudentId('/api/courses'))
       if (response.ok) {
         const savedCourses = await response.json()
         if (savedCourses && savedCourses.length > 0) {
@@ -212,7 +222,7 @@ export default function CourseScheduler() {
     }
     setIsSavingToDb(true)
     try {
-      const response = await fetch('/api/courses', {
+      const response = await fetch(withStudentId('/api/courses'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(selectedCourses)
@@ -510,7 +520,18 @@ export default function CourseScheduler() {
   }
 
   // Search courses
-  const searchCourses = (query: string) => {
+  const searchCourses = (criteria: CourseSearchCriteria) => {
+    const query = [
+      criteria.query,
+      criteria.subject,
+      criteria.courseNumber,
+      criteria.instructor,
+      criteria.section,
+    ]
+      .filter(Boolean)
+      .join(" ")
+      .trim()
+
     if (!query.trim()) {
       setCurrentSearchResults([])
       return
@@ -601,6 +622,20 @@ export default function CourseScheduler() {
   const removeCourse = (courseId: string) => {
     setSelectedCourses((prev) => prev.filter((c) => c.id !== courseId))
     showNotification("Course removed from schedule", "success")
+  }
+
+  const swapCourse = (oldCourseId: string, newCourse: Course) => {
+    setSelectedCourses((prev) =>
+      prev.map((course) =>
+        course.id === oldCourseId
+          ? {
+              ...newCourse,
+              id: oldCourseId,
+            }
+          : course
+      )
+    )
+    showNotification(`Swapped into ${newCourse.Class}`, "success")
   }
 
   // Show course details
@@ -737,7 +772,7 @@ export default function CourseScheduler() {
   const loadSavedCalendarCourses = async () => {
     if (session?.user) {
       try {
-        const response = await fetch('/api/courses/calendar')
+        const response = await fetch(withStudentId('/api/courses'))
         if (response.ok) {
           const savedCourses = await response.json()
           if (savedCourses && savedCourses.length > 0) {
@@ -750,9 +785,11 @@ export default function CourseScheduler() {
               Room: course.room
             }))
             setCalendarCourses(formattedCourses)
+            setSelectedCourses(formattedCourses)
             showNotification("Loaded your saved calendar courses", "success")
           } else {
             setCalendarCourses([])
+            setSelectedCourses([])
           }
         }
       } catch (error) {
@@ -762,6 +799,7 @@ export default function CourseScheduler() {
       }
     } else {
       setCalendarCourses([])
+      setSelectedCourses([])
     }
   }
 
@@ -769,7 +807,7 @@ export default function CourseScheduler() {
   const loadSavedAcademicCourses = async () => {
     if (session?.user) {
       try {
-        const response = await fetch('/api/courses/academic')
+        const response = await fetch(withStudentId('/api/courses/academic'))
         if (response.ok) {
           const savedCourses = await response.json()
           if (savedCourses && savedCourses.length > 0) {
@@ -805,14 +843,14 @@ export default function CourseScheduler() {
 
   // Save calendar courses
   const saveCalendarCourses = async () => {
-    if (session?.user && calendarCourses.length > 0) {
+    if (session?.user && selectedCourses.length > 0) {
       try {
-        const response = await fetch('/api/courses/calendar', {
+        const response = await fetch(withStudentId('/api/courses'), {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
           },
-          body: JSON.stringify(calendarCourses)
+          body: JSON.stringify(selectedCourses)
         })
         
         if (!response.ok) {
@@ -843,7 +881,7 @@ export default function CourseScheduler() {
           isFuture: course.isFuture || false
         }));
 
-        const response = await fetch('/api/courses/academic', {
+        const response = await fetch(withStudentId('/api/courses/academic'), {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -869,7 +907,7 @@ export default function CourseScheduler() {
   const loadSavedDegreeRequirements = async () => {
     if (session?.user) {
       try {
-        const response = await fetch('/api/courses/degree-requirements')
+        const response = await fetch(withStudentId('/api/courses/degree-requirements'))
         if (response.ok) {
           const savedData = await response.json()
           if (savedData && savedData.length > 0) {
@@ -898,7 +936,7 @@ export default function CourseScheduler() {
 
     if (session?.user && degreeCourses.length > 0) {
       try {
-        const response = await fetch('/api/courses/degree-requirements', {
+        const response = await fetch(withStudentId('/api/courses/degree-requirements'), {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -918,23 +956,27 @@ export default function CourseScheduler() {
 
   // Load both types of courses when component mounts
   useEffect(() => {
+    setSelectedCourses([])
+    setCalendarCourses([])
+    setAcademicCourses([])
+    setDegreeCourses([])
     loadSavedCalendarCourses()
     loadSavedAcademicCourses()
     loadSavedDegreeRequirements()
-  }, [session])
+  }, [selectedStudentId, session])
 
   // Save both types of courses when they change
   useEffect(() => {
     saveCalendarCourses()
-  }, [calendarCourses, session])
+  }, [selectedCourses, selectedStudentId, session])
 
   useEffect(() => {
     saveAcademicCourses()
-  }, [academicCourses, session])
+  }, [academicCourses, selectedStudentId, session])
 
   useEffect(() => {
     saveDegreeRequirements()
-  }, [degreeCourses, session])
+  }, [degreeCourses, selectedStudentId, session])
 
   const handleImport = async () => {
     setIsLoading(true)
@@ -1288,7 +1330,12 @@ export default function CourseScheduler() {
 
   return (
     <div className="app-container max-w-7xl mx-auto p-4 md:p-6">
-      <AppHeader selectedMajor={selectedMajor} selectedYear={selectedYear} isLoading={isLoading} />
+      <AppHeader
+        selectedMajor={selectedMajor}
+        selectedYear={selectedYear}
+        isLoading={isLoading}
+        studentName={selectedStudentName}
+      />
 
       <div className="mb-6 bg-white rounded-xl shadow-soft">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
@@ -1354,12 +1401,14 @@ export default function CourseScheduler() {
 
               <Dashboard
                 selectedCourses={selectedCourses}
+                allCourses={courses}
                 currentView={currentView}
                 onToggleView={toggleView}
                 onShowDetails={showCourseDetails}
                 onOpenNotes={openNotesModal}
                 onRemoveCourse={removeCourse}
                 courseNotes={courseNotes}
+                onSwapCourse={swapCourse}
               />
             </TabsContent>
 
@@ -1369,7 +1418,7 @@ export default function CourseScheduler() {
                   <CardHeader>
                     <CardTitle>Import Academic Record</CardTitle>
                     <CardDescription>
-                      Import your academic record from MySlice to track your progress.
+                      Import academic history for {selectedStudentName || "the selected student"} from MySlice to track progress.
                     </CardDescription>
                   </CardHeader>
                   <CardContent>

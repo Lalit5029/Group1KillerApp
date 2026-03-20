@@ -19,6 +19,7 @@ export async function POST(request: Request) {
     // Check if user already exists
     const existingUser = await prisma.user.findUnique({
       where: { email },
+      select: { id: true },
     });
 
     if (existingUser) {
@@ -39,6 +40,7 @@ export async function POST(request: Request) {
         name,
         email,
         password: hashedPassword,
+        role: "ADVISOR",
       },
     });
     console.log("User created successfully:", user.id);

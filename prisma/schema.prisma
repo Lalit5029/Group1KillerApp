@@ -10,18 +10,43 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+enum UserRole {
+  ADVISOR
+  ADMIN
+}
+
 model User {
-  id                String    @id @default(auto()) @map("_id") @db.ObjectId
-  name              String?
-  email             String?   @unique
-  emailVerified     DateTime?
-  image             String?
-  password          String?
-  accounts          Account[]
-  sessions          Session[]
-  courses           SelectedCourse[]
-  academicCourses   AcademicCourse[]
-  degreeRequirements DegreeRequirement[]
+  id            String    @id @default(auto()) @map("_id") @db.ObjectId
+  name          String?
+  email         String?   @unique
+  emailVerified DateTime?
+  image         String?
+  password      String?
+  role          UserRole  @default(ADVISOR)
+  accounts      Account[]
+  sessions      Session[]
+  advisedStudents Student[]
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+}
+
+model Student {
+  id                  String              @id @default(auto()) @map("_id") @db.ObjectId
+  advisorId           String              @db.ObjectId
+  name                String
+  email               String?
+  externalStudentId   String?
+  major               String?
+  academicYear        String?
+  notes               String?
+  advisor             User                @relation(fields: [advisorId], references: [id], onDelete: Cascade)
+  selectedCourses     SelectedCourse[]
+  academicCourses     AcademicCourse[]
+  degreeRequirements  DegreeRequirement[]
+  createdAt           DateTime            @default(now())
+  updatedAt           DateTime            @updatedAt
+
+  @@index([advisorId])
 }
 
 model Account {
@@ -52,8 +77,8 @@ model Session {
 }
 
 model SelectedCourse {
-  id        String   @id @default(auto()) @map("_id") @db.ObjectId
-  userId    String   @db.ObjectId
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  studentId    String   @db.ObjectId
   courseClass String
   section   String
   instructor String?
@@ -61,14 +86,14 @@ model SelectedCourse {
   room      String?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  student    Student   @relation(fields: [studentId], references: [id], onDelete: Cascade)
 
-  @@index([userId])
+  @@index([studentId])
 }
 
 model AcademicCourse {
   id        String   @id @default(auto()) @map("_id") @db.ObjectId
-  userId    String   @db.ObjectId
+  studentId String   @db.ObjectId
   code      String
   name      String
   term      String
@@ -82,20 +107,20 @@ model AcademicCourse {
   isFuture  Boolean @default(false)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  student   Student  @relation(fields: [studentId], references: [id], onDelete: Cascade)
 
-  @@index([userId])
+  @@index([studentId])
 }
 
 model DegreeRequirement {
   id        String   @id @default(auto()) @map("_id") @db.ObjectId
-  userId    String   @db.ObjectId
+  studentId String   @db.ObjectId
   title     String
   status    String
   courses   Json
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  student   Student  @relation(fields: [studentId], references: [id], onDelete: Cascade)
 
-  @@index([userId])
+  @@index([studentId])
 } 

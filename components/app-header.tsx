@@ -4,16 +4,20 @@ interface AppHeaderProps {
   selectedMajor: string
   selectedYear: string
   isLoading: boolean
+  studentName?: string
 }
 
-export function AppHeader({ selectedMajor, selectedYear, isLoading }: AppHeaderProps) {
+export function AppHeader({ selectedMajor, selectedYear, isLoading, studentName }: AppHeaderProps) {
   return (
     <header className="flex flex-wrap justify-between items-center mb-6 p-5 bg-gradient-to-r from-primary-600 to-secondary rounded-xl shadow-soft text-white">
       <div className="flex items-center gap-3">
         <div className="bg-white/20 p-2 rounded-full backdrop-blur-sm">
           <GraduationCap className="h-6 w-6" />
         </div>
-        <h1 className="text-xl font-semibold">Academic Planner</h1>
+        <div>
+          <h1 className="text-xl font-semibold">Academic Planner</h1>
+          {studentName ? <p className="text-xs text-white/80">Student: {studentName}</p> : null}
+        </div>
       </div>
 
       <div className="flex-grow text-center">

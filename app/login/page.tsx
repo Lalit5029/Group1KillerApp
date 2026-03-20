@@ -1,16 +1,23 @@
 'use client'
 
-import { useState } from 'react'
-import { signIn } from 'next-auth/react'
+import { useEffect, useState } from 'react'
+import { signIn, useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 
 export default function LoginPage() {
   const router = useRouter()
+  const { status } = useSession()
   const [error, setError] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(false)
   const [showPass, setShowPass] = useState(false)
   const [focused, setFocused] = useState('')
+
+  useEffect(() => {
+    if (status === 'authenticated') {
+      router.replace('/students')
+    }
+  }, [router, status])
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
@@ -34,7 +41,7 @@ export default function LoginPage() {
         return
       }
 
-      router.push('/')
+      router.push('/students')
       router.refresh()
     } catch (err) {
       setError('An unexpected error occurred. Please try again.')
@@ -108,32 +115,7 @@ export default function LoginPage() {
           </Link>
 
           <h2 style={{ margin: '0 0 6px', fontSize: '24px', fontWeight: 700, color: '#fff' }}>Welcome back</h2>
-          <p style={{ margin: '0 0 32px', color: '#64748b', fontSize: '14px' }}>Sign in to your SU account</p>
-
-          <button
-            type="button"
-            onClick={() => signIn('azure-ad', { callbackUrl: '/' })}
-            style={{
-              width: '100%', padding: '12px',
-              background: 'rgba(255,255,255,0.05)',
-              border: '1.5px solid rgba(255,255,255,0.12)',
-              borderRadius: '10px', fontSize: '14px', fontWeight: 600,
-              color: '#fff', cursor: 'pointer', marginBottom: '24px',
-              display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px',
-              transition: 'border-color 0.2s, background 0.2s',
-            }}
-            onMouseEnter={e => { e.currentTarget.style.borderColor = '#ff6600'; e.currentTarget.style.background = 'rgba(255,102,0,0.1)' }}
-            onMouseLeave={e => { e.currentTarget.style.borderColor = 'rgba(255,255,255,0.12)'; e.currentTarget.style.background = 'rgba(255,255,255,0.05)' }}
-          >
-            <span style={{ fontSize: '18px' }}>🪟</span> Continue with Outlook
-          </button>
-
-          {/* Divider */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '24px' }}>
-            <div style={{ flex: 1, height: '1px', background: 'rgba(255,255,255,0.08)' }} />
-            <span style={{ color: '#475569', fontSize: '12px' }}>or sign in with email</span>
-            <div style={{ flex: 1, height: '1px', background: 'rgba(255,255,255,0.08)' }} />
-          </div>
+          <p style={{ margin: '0 0 32px', color: '#64748b', fontSize: '14px' }}>Sign in to your advisor account</p>
 
           {error && (
             <div style={{

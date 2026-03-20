@@ -21,6 +21,7 @@ type DegreeRequirement = {
 
 type DemoProgress = {
   user: { name: string | null; email: string | null };
+  student: { id: string; name: string; externalStudentId: string | null };
   totalCredits: number;
   academicCourses: AcademicCourse[];
   degreeRequirements: DegreeRequirement[];
@@ -57,7 +58,11 @@ export default function DashboardPage() {
     <div className="p-8 max-w-2xl">
       <h1 className="text-2xl font-bold mb-2">Dashboard — Data from MongoDB</h1>
       <p className="text-gray-600 mb-6">
-        This page reads from MongoDB via Prisma. Demo user: {data.user.email}
+        This page reads advisor-owned student data from MongoDB via Prisma. Demo advisor: {data.user.email}
+      </p>
+      <p className="text-gray-600 mb-6">
+        Current student: {data.student.name}
+        {data.student.externalStudentId ? ` (${data.student.externalStudentId})` : ""}
       </p>
 
       <section className="mb-8">
@@ -86,7 +91,7 @@ export default function DashboardPage() {
       </section>
 
       <p className="text-sm text-gray-500">
-        Log in as demo@group1.local / demo123 to use the full academic progress page.
+        Log in as demo@group1.local / demo123 to use the advisor workflow.
       </p>
       <div className="mt-4 flex gap-4">
         <Link href="/login" className="text-blue-600 underline">Login</Link>

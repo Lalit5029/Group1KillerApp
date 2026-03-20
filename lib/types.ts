@@ -33,6 +33,16 @@ export interface Major {
   name: string;
 }
 
+export interface Student {
+  id: string;
+  name: string;
+  email?: string | null;
+  externalStudentId?: string | null;
+  major?: string | null;
+  academicYear?: string | null;
+  notes?: string | null;
+}
+
 export interface Requirements {
   [key: string]: {
     [majorName: string]: {
