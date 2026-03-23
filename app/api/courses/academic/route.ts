@@ -64,6 +64,12 @@ export async function POST(request: Request) {
       where: { studentId: student.id },
     });
 
+    if (!Array.isArray(courses) || courses.length === 0) {
+      return NextResponse.json({
+        message: "Academic courses cleared successfully",
+      });
+    }
+
     // Add new academic courses
     await prisma.academicCourse.createMany({
       data: courses.map((course: any) => ({

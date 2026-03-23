@@ -1,0 +1,66 @@
+{
+  "majorKey": "Computer Science, BS",
+  "recommendedPlan": {
+    "Freshman": [
+      "ECS 101",
+      "CIS 151",
+      "MAT 295",
+      "WRT 105",
+      "FYS 101",
+      "CIS 252",
+      "MAT 296",
+      "PHI 251",
+      "PHY 211",
+      "PHY 221"
+    ],
+    "Sophomore": [
+      "CIS 375",
+      "CIS 351",
+      "MAT 397 or MAT 331",
+      "Science elective sequence option",
+      "CIS 321",
+      "CIS 341",
+      "CIS 352",
+      "CSE 384",
+      "WRT 205"
+    ],
+    "Junior": [
+      "CIS 453",
+      "CIS 477",
+      "CSE 486",
+      "CIS 473",
+      "CIS 454"
+    ],
+    "Senior": [
+      "ECS 392",
+      "Upper-division technical electives",
+      "Free electives / A-SS-H as needed"
+    ]
+  },
+  "reference": {
+    "minimumCredits": 120,
+    "generalEducation": [
+      "Writing (6 cr): WRT 105, WRT 205",
+      "Presentational skills (3 cr): CRS 225 or CRS 325 or IST 344",
+      "Natural sciences (8 cr): PHY 211 + PHY 221, plus one sequence: PHY 212+PHY 222 or CHE 106+CHE 107 or BIO 121+BIO 122",
+      "Social science and humanities (21 cr), including PHI 251 and ECS 392",
+      "Free electives (8 cr)"
+    ],
+    "mathematics": [
+      "MAT 295 (Calculus I)",
+      "MAT 296 (Calculus II)",
+      "MAT 397 (Calculus III) or MAT 331 (Linear Algebra)",
+      "CIS 321 (Introduction to Probability and Statistics)"
+    ],
+    "core": [
+      "ECS 101, CIS 151",
+      "CIS 252, CIS 341, CIS 351, CIS 352, CSE 384",
+      "CIS 375, CIS 453, CIS 454, CIS 473, CIS 477, CSE 486",
+      "18 credits upper-division technical electives (at least 9 credits CIS/CSE)"
+    ],
+    "standards": [
+      "Minimum grade C- for writing, mathematics, CS core, and upper-division technical electives",
+      "Computer science core must be completed with at least B- (2.667) average"
+    ]
+  }
+}

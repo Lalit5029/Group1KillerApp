@@ -102,7 +102,7 @@ async function updateJobLog(jobId, message) {
   try {
     const response = await fetch(
       `${
-        process.env.API_BASE_URL || "http://localhost:3001"
+        process.env.API_BASE_URL || "http://localhost:3000"
       }/api/update-job-log`,
       {
         method: "POST",
@@ -123,6 +123,36 @@ async function updateJobLog(jobId, message) {
 
 async function delay(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+async function isAuthorizationErrorPage(page) {
+  try {
+    const bodyText = await page.evaluate(() => document.body?.innerText || "");
+    return /You are not authorized to access this component/i.test(bodyText);
+  } catch {
+    return false;
+  }
+}
+
+async function waitForCourseHistoryTableManual(page, jobId) {
+  const deadline = Date.now() + MANUAL_LOGIN_TIMEOUT_MS;
+  await updateJobLog(
+    jobId,
+    "Direct course-history page access is restricted for this account. In the opened MySlice window, manually navigate to Academics > Course History."
+  );
+
+  while (Date.now() < deadline) {
+    try {
+      await page.waitForSelector("tr[id^='trCRSE_HIST$']", { timeout: 3000 });
+      await updateJobLog(jobId, "Detected course history table after manual navigation.");
+      return true;
+    } catch {
+      // keep polling until timeout
+    }
+    await delay(1500);
+  }
+
+  return false;
 }
 
 async function waitForManualMySliceLogin(page, jobId) {
@@ -474,9 +504,19 @@ export async function login(username, password, jobId, options = {}) {
     });
     await updateJobLog(jobId, "Navigated to course history page");
 
-    // Wait for course table to load
-    await page.waitForSelector("tr[id^='trCRSE_HIST$']", { timeout: 30000 });
-    await updateJobLog(jobId, "Course table loaded");
+    // If this account cannot directly open the component, allow manual navigation flow.
+    if (manualLogin && (await isAuthorizationErrorPage(page))) {
+      const foundManually = await waitForCourseHistoryTableManual(page, jobId);
+      if (!foundManually) {
+        throw new Error(
+          "MySlice account is not authorized for direct Course History component access. Open Course History manually in the same window and retry import."
+        );
+      }
+    } else {
+      // Wait for course table to load
+      await page.waitForSelector("tr[id^='trCRSE_HIST$']", { timeout: 30000 });
+      await updateJobLog(jobId, "Course table loaded");
+    }
 
     // Get page content
     const htmlData = await page.content();

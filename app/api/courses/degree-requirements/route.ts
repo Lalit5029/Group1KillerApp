@@ -39,6 +39,10 @@ export async function POST(request: Request) {
       where: { studentId: student.id },
     });
 
+    if (!Array.isArray(data) || data.length === 0) {
+      return NextResponse.json({ message: "Degree requirements cleared successfully" });
+    }
+
     // Create new degree requirements
     const degreeRequirements = await prisma.degreeRequirement.createMany({
       data: data.map((block: any) => ({

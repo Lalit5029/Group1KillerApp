@@ -2,13 +2,24 @@ import { NextResponse } from 'next/server';
 import fs from 'fs';
 import path from 'path';
 
-const COMPUTER_SCIENCE_MAJOR_KEY = "Computer Science, BS";
-const COMPUTER_SCIENCE_RECOMMENDED_PLAN = {
-  Freshman: ["ECS 101", "CIS 151", "MAT 295", "WRT 105", "FYS 101", "CIS 252", "MAT 296", "PHI 251", "PHY 211", "PHY 221"],
-  Sophomore: ["CIS 375", "CIS 351", "MAT 397", "PHY 212", "PHY 222", "CIS 321", "CIS 341", "CIS 352", "CSE 384", "WRT 205"],
-  Junior: ["CIS 453", "CIS 477", "CSE 486", "CIS 473", "CIS 454"],
-  Senior: ["ECS 392"],
-};
+const DEFAULT_CS_MAJOR_KEY = "Computer Science, BS";
+
+function loadCsGraduationConfig() {
+  const csConfigPath = path.join(process.cwd(), "public", "data", "cs_graduation_requirements.json");
+  if (!fs.existsSync(csConfigPath)) {
+    return null;
+  }
+
+  const raw = fs.readFileSync(csConfigPath, "utf8");
+  const parsed = JSON.parse(raw);
+  if (!parsed || typeof parsed !== "object") return null;
+
+  const majorKey = parsed.majorKey || DEFAULT_CS_MAJOR_KEY;
+  const recommendedPlan = parsed.recommendedPlan;
+  if (!recommendedPlan || typeof recommendedPlan !== "object") return null;
+
+  return { majorKey, recommendedPlan };
+}
 
 /** Map scraper category key to Freshman/Sophomore/Junior/Senior */
 function categoryToYear(categoryKey) {
@@ -91,8 +102,11 @@ export async function GET() {
     }
 
     const schedulerFormat = transformScraperToSchedulerFormat(reqData);
-    // Keep scraper majors, but enforce the advisor-approved CS plan for this project focus.
-    schedulerFormat[COMPUTER_SCIENCE_MAJOR_KEY] = COMPUTER_SCIENCE_RECOMMENDED_PLAN;
+    const csConfig = loadCsGraduationConfig();
+    if (csConfig) {
+      // Keep scraper majors, but override CS plan from shared JSON config.
+      schedulerFormat[csConfig.majorKey] = csConfig.recommendedPlan;
+    }
     console.log(`Loaded scraper requirements for ${Object.keys(schedulerFormat).length} majors`);
 
     return NextResponse.json(schedulerFormat);

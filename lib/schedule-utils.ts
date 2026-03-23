@@ -67,12 +67,30 @@ export interface ScheduleConflict {
   overlapLabel: string;
 }
 
+function normalizeCourseKey(course: SelectedCourse) {
+  return [
+    (course.Class || "").trim().toUpperCase(),
+    (course.Section || "").trim().toUpperCase(),
+    (course.DaysTimes || "").trim().toUpperCase(),
+  ].join("::");
+}
+
+function formatMinutes(totalMinutes: number) {
+  const minutes = Math.max(0, Math.floor(totalMinutes));
+  const hour24 = Math.floor(minutes / 60) % 24;
+  const mins = minutes % 60;
+  const period = hour24 >= 12 ? "PM" : "AM";
+  const hour12 = hour24 % 12 === 0 ? 12 : hour24 % 12;
+  return `${hour12}:${String(mins).padStart(2, "0")}${period}`;
+}
+
 /**
  * Find all pairwise time conflicts between already-selected courses
  */
 export function findScheduleConflicts(selectedCourses: SelectedCourse[]): ScheduleConflict[] {
   const conflicts: ScheduleConflict[] = [];
   const seenPairs = new Set<string>();
+  const seenConflictDescriptors = new Set<string>();
 
   for (let i = 0; i < selectedCourses.length; i++) {
     const a = selectedCourses[i];
@@ -82,6 +100,10 @@ export function findScheduleConflicts(selectedCourses: SelectedCourse[]): Schedu
 
     for (let j = i + 1; j < selectedCourses.length; j++) {
       const b = selectedCourses[j];
+
+      // Skip duplicate copies of the same exact selected course row.
+      if (normalizeCourseKey(a) === normalizeCourseKey(b)) continue;
+
       if (!b.DaysTimes || b.DaysTimes.trim() === "") continue;
       const infoB = parseDaysTimes(b.DaysTimes);
       if (!infoB) continue;
@@ -99,8 +121,23 @@ export function findScheduleConflicts(selectedCourses: SelectedCourse[]): Schedu
       if (seenPairs.has(key)) continue;
       seenPairs.add(key);
 
-      const daysLabel = Array.from(new Set([...infoA.days, ...infoB.days])).join("");
-      const overlapLabel = `${daysLabel} ${a.DaysTimes || b.DaysTimes || ""}`.trim();
+      const overlapDays = infoA.days.filter((day) => infoB.days.includes(day));
+      const overlapStart = Math.max(infoA.startMinutes, infoB.startMinutes);
+      const overlapEnd = Math.min(infoA.endMinutes, infoB.endMinutes);
+      const overlapLabel = `${overlapDays.join("")} ${formatMinutes(overlapStart)} - ${formatMinutes(overlapEnd)}`.trim();
+
+      // Dedupe repeated conflict cards produced by duplicate selected rows.
+      const descriptor = [
+        (a.Class || "").trim().toUpperCase(),
+        (a.Section || "").trim().toUpperCase(),
+        (b.Class || "").trim().toUpperCase(),
+        (b.Section || "").trim().toUpperCase(),
+        overlapLabel,
+      ]
+        .sort()
+        .join("__");
+      if (seenConflictDescriptors.has(descriptor)) continue;
+      seenConflictDescriptors.add(descriptor);
 
       conflicts.push({
         id: key,

@@ -69,39 +69,7 @@ const WORKLOAD_TARGETS: Record<WorkloadLevel, number> = {
   high: 18,
 }
 
-const CS_MAJOR_KEY = "Computer Science, BS"
-const CS_REQUIREMENTS_REFERENCE = {
-  minimumCredits: 120,
-  generalEducation: [
-    "Writing (6 cr): WRT 105, WRT 205",
-    "Presentational skills (3 cr): CRS 225 or CRS 325 or IST 344",
-    "Natural sciences (8 cr): PHY 211 + PHY 221, plus one sequence: PHY 212+PHY 222 or CHE 106+CHE 107 or BIO 121+BIO 122",
-    "Social science and humanities (21 cr), including PHI 251 and ECS 392",
-    "Free electives (8 cr)",
-  ],
-  mathematics: [
-    "MAT 295 (Calculus I)",
-    "MAT 296 (Calculus II)",
-    "MAT 397 (Calculus III) or MAT 331 (Linear Algebra)",
-    "CIS 321 (Introduction to Probability and Statistics)",
-  ],
-  core: [
-    "ECS 101, CIS 151",
-    "CIS 252, CIS 341, CIS 351, CIS 352, CSE 384",
-    "CIS 375, CIS 453, CIS 454, CIS 473, CIS 477, CSE 486",
-    "18 credits upper-division technical electives (at least 9 credits CIS/CSE)",
-  ],
-  standards: [
-    "Minimum grade C- for writing, mathematics, CS core, and upper-division technical electives",
-    "Computer science core must be completed with at least B- (2.667) average",
-  ],
-  roadmap: {
-    Freshman: ["ECS 101", "CIS 151", "MAT 295", "WRT 105", "FYS 101", "CIS 252", "MAT 296", "PHI 251", "PHY 211", "PHY 221"],
-    Sophomore: ["CIS 375", "CIS 351", "MAT 397 or MAT 331", "Science elective sequence option", "CIS 321", "CIS 341", "CIS 352", "CSE 384", "WRT 205"],
-    Junior: ["CIS 453", "CIS 477", "CSE 486", "CIS 473", "CIS 454"],
-    Senior: ["ECS 392", "Upper-division technical electives", "Free electives / A-SS-H as needed"],
-  },
-}
+const DEFAULT_CS_MAJOR_KEY = "Computer Science, BS"
 
 interface CourseSchedulerProps {
   selectedStudentId: string
@@ -165,6 +133,16 @@ export default function CourseScheduler({ selectedStudentId, selectedStudentName
   const [error, setError] = useState<string | null>(null)
   const [expandedBlocks, setExpandedBlocks] = useState<Record<string, boolean>>({})
   const [expandedTerms, setExpandedTerms] = useState<Record<string, boolean>>({});
+  const [isStudentDataHydrating, setIsStudentDataHydrating] = useState(false)
+  const [csMajorKey, setCsMajorKey] = useState(DEFAULT_CS_MAJOR_KEY)
+  const [csRequirementsReference, setCsRequirementsReference] = useState<{
+    minimumCredits: number;
+    generalEducation: string[];
+    mathematics: string[];
+    core: string[];
+    standards: string[];
+    roadmap: Record<string, string[]>;
+  } | null>(null)
   const advisorAlerts = useMemo(() => evaluateCsGraduationReadiness(academicCourses), [academicCourses])
 
   const withStudentId = (path: string) => {
@@ -177,9 +155,25 @@ export default function CourseScheduler({ selectedStudentId, selectedStudentName
     const initializeApp = async () => {
       try {
         setIsLoading(true);
+        let effectiveCsMajorKey = DEFAULT_CS_MAJOR_KEY
+        const csConfigResponse = await fetch("/data/cs_graduation_requirements.json")
+        if (csConfigResponse.ok) {
+          const csConfig = await csConfigResponse.json()
+          if (csConfig?.majorKey) {
+            setCsMajorKey(csConfig.majorKey)
+            effectiveCsMajorKey = csConfig.majorKey
+          }
+          if (csConfig?.reference && csConfig?.recommendedPlan) {
+            setCsRequirementsReference({
+              ...csConfig.reference,
+              roadmap: csConfig.recommendedPlan,
+            })
+          }
+        }
+
         const requirementsData = await fetchRequirements()
-        const csOnlyRequirements = requirementsData[CS_MAJOR_KEY]
-          ? { [CS_MAJOR_KEY]: requirementsData[CS_MAJOR_KEY] }
+        const csOnlyRequirements = requirementsData[effectiveCsMajorKey]
+          ? { [effectiveCsMajorKey]: requirementsData[effectiveCsMajorKey] }
           : requirementsData
 
         setRequirements(csOnlyRequirements)
@@ -1068,30 +1062,80 @@ export default function CourseScheduler({ selectedStudentId, selectedStudentName
     saveDegreeRequirements()
   }, [degreeCourses, isStudentDataHydrating, selectedStudentId, session])
 
+  const getFriendlyImportError = (message: string) => {
+    if (/Failed to fetch/i.test(message)) {
+      return "Could not reach the import service. Start backend API on port 3001, or retry to use the built-in /api fallback."
+    }
+    return message || "Import failed. Review the log below for details."
+  }
+
   const handleImport = async () => {
     setIsLoading(true)
     setImportLogs([])
     setImportStatus("running")
     setImportStatusMessage("A browser window will open for MySlice. Sign in there and keep this page open while import runs.")
     try {
-      // Make the actual API call to start import
-      const response = await fetch("http://localhost:3001/api/scrape-academic-record", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ manualLogin: true }),
-      })
-
-      if (!response.ok) {
-        throw new Error("Failed to start import process")
+      let response: Response
+      let statusBaseUrl = "http://localhost:3001"
+      try {
+        // Prefer standalone backend API
+        response = await fetch("http://localhost:3001/api/scrape-academic-record", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ manualLogin: true }),
+        })
+      } catch (_primaryErr) {
+        // Fallback to Next.js API route if :3001 is not running
+        response = await fetch("/api/scrape-academic-record", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ manualLogin: true }),
+        })
+        statusBaseUrl = ""
       }
 
-      const { jobId } = await response.json()
+      if (!response.ok) {
+        let serverMessage = ""
+        try {
+          const errBody = await response.json()
+          serverMessage = errBody?.error || errBody?.message || ""
+        } catch (_e) {
+          // ignore parse errors
+        }
+        throw new Error(serverMessage || "Failed to start import process")
+      }
+
+      const startData = await response.json()
+
+      // Next.js fallback route can return direct results (no async job id).
+      if (!startData?.jobId) {
+        const importedCourses = dedupeAcademicCourseRows(
+          Array.isArray(startData?.courses) ? startData.courses : []
+        )
+        setAcademicCourses(importedCourses)
+
+        const importedBlocks = Array.isArray(startData?.blocks) ? startData.blocks : []
+        if (importedBlocks.length > 0) {
+          setDegreeCourses(importedBlocks)
+          await saveDegreeRequirements()
+        }
+
+        setImportStatus("success")
+        setImportStatusMessage(`Import successful. ${importedCourses.length} course(s) were imported from MySlice.`)
+        showNotification("Successfully imported courses from MySlice", "success")
+        setIsLoading(false)
+        return
+      }
+
+      const { jobId } = startData
       
       // Poll for job status
       const checkStatus = async () => {
-        const statusResponse = await fetch(`http://localhost:3001/api/scrape-status/${jobId}`)
+        const statusResponse = await fetch(`${statusBaseUrl}/api/scrape-status/${jobId}`)
         const statusData = await statusResponse.json()
 
         // Update logs with the detailed log message from the backend
@@ -1133,9 +1177,10 @@ export default function CourseScheduler({ selectedStudentId, selectedStudentName
       checkStatus()
     } catch (error) {
       console.error("Failed to import courses:", error)
+      const friendly = getFriendlyImportError((error as Error).message || "")
       setImportStatus("error")
-      setImportStatusMessage((error as Error).message || "Import failed. Review the log below for details.")
-      showNotification((error as Error).message || "Failed to import courses", "error")
+      setImportStatusMessage(friendly)
+      showNotification(friendly || "Failed to import courses", "error")
       setIsLoading(false)
     }
   }
@@ -1186,28 +1231,37 @@ export default function CourseScheduler({ selectedStudentId, selectedStudentName
       return acc;
     }, {});
 
-    // Sort terms chronologically
-    const sortedTerms = Object.keys(coursesByTerm).sort((a, b) => {
-      const [aSeason, aYear] = a.split(' ');
-      const [bSeason, bYear] = b.split(' ');
-      
-      if (aYear !== bYear) return parseInt(aYear) - parseInt(bYear);
-      
-      const sessionOrder: Record<string, number> = {
-        'Fall': 3,
-        'Summer': 2,
-        'Spring': 1,
-        'Winter': 0
-      };
-      
-      return (sessionOrder[aSeason] || 0) - (sessionOrder[bSeason] || 0);
-    });
+    // Build a fixed 8-semester roadmap (Fall/Spring) starting from the earliest data year.
+    const parsedYears = Object.keys(coursesByTerm)
+      .map((term) => {
+        const match = term.match(/\b(20\d{2})\b/);
+        return match ? Number.parseInt(match[1], 10) : NaN;
+      })
+      .filter((year) => !Number.isNaN(year));
+
+    const startYear = parsedYears.length > 0 ? Math.min(...parsedYears) : new Date().getFullYear();
+    const semesterRoadmap: string[] = [];
+    let year = startYear;
+    for (let i = 0; i < 8; i++) {
+      if (i % 2 === 0) {
+        semesterRoadmap.push(`Fall ${year}`);
+      } else {
+        semesterRoadmap.push(`Spring ${year + 1}`);
+        year += 1;
+      }
+    }
+
+    // Keep non Fall/Spring terms visible after the core 8-semester roadmap.
+    const extraTerms = Object.keys(coursesByTerm).filter(
+      (term) => !semesterRoadmap.includes(term),
+    );
+    const allTerms = [...semesterRoadmap, ...extraTerms];
 
     return (
       <div className="mt-4 space-y-4">
-        {sortedTerms.map(term => {
+        {allTerms.map(term => {
           const isExpanded = expandedTerms[term] ?? true;
-          const termCourses = coursesByTerm[term];
+          const termCourses = coursesByTerm[term] || [];
           
           return (
             <div key={term} className="border rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow">
@@ -1236,27 +1290,31 @@ export default function CourseScheduler({ selectedStudentId, selectedStudentName
               
               {isExpanded && (
                 <div className="divide-y">
-                  {termCourses.map((course, index) => (
-                    <div key={index} className="grid grid-cols-12 gap-4 items-center text-sm p-3 hover:bg-gray-50 transition-colors">
-                      <div className="col-span-2">
-                        <span className="font-medium text-gray-900">{course.code}</span>
+                  {termCourses.length === 0 ? (
+                    <div className="p-3 text-sm text-muted-foreground">No courses planned/imported for this semester yet.</div>
+                  ) : (
+                    termCourses.map((course, index) => (
+                      <div key={index} className="grid grid-cols-12 gap-4 items-center text-sm p-3 hover:bg-gray-50 transition-colors">
+                        <div className="col-span-2">
+                          <span className="font-medium text-gray-900">{course.code}</span>
+                        </div>
+                        <div className="col-span-4">
+                          <span className="text-gray-600">{course.title}</span>
+                        </div>
+                        <div className="col-span-2">
+                          <span className="text-gray-600">{course.credits} credits</span>
+                        </div>
+                        <div className="col-span-2">
+                          <span className="text-gray-600">{course.status || 'N/A'}</span>
+                        </div>
+                        <div className="col-span-2">
+                          <span className={`font-medium ${getGradeColor(course.grade || '')}`}>
+                            {course.grade || 'N/A'}
+                          </span>
+                        </div>
                       </div>
-                      <div className="col-span-4">
-                        <span className="text-gray-600">{course.title}</span>
-                      </div>
-                      <div className="col-span-2">
-                        <span className="text-gray-600">{course.credits} credits</span>
-                      </div>
-                      <div className="col-span-2">
-                        <span className="text-gray-600">{course.status || 'N/A'}</span>
-                      </div>
-                      <div className="col-span-2">
-                        <span className={`font-medium ${getGradeColor(course.grade || '')}`}>
-                          {course.grade || 'N/A'}
-                        </span>
-                      </div>
-                    </div>
-                  ))}
+                    ))
+                  )}
                 </div>
               )}
             </div>
@@ -1617,15 +1675,19 @@ export default function CourseScheduler({ selectedStudentId, selectedStudentName
                     </CardDescription>
                   </CardHeader>
                   <CardContent className="space-y-5 text-sm">
+                    {!csRequirementsReference ? (
+                      <p className="text-muted-foreground">CS requirements reference file is not available.</p>
+                    ) : (
+                      <>
                     <div>
                       <p className="font-medium">Minimum Credits</p>
-                      <p className="text-muted-foreground">{CS_REQUIREMENTS_REFERENCE.minimumCredits} credits required for BS in Computer Science.</p>
+                      <p className="text-muted-foreground">{csRequirementsReference.minimumCredits} credits required for BS in Computer Science.</p>
                     </div>
 
                     <div>
                       <p className="font-medium mb-2">General Education</p>
                       <ul className="list-disc pl-5 space-y-1 text-muted-foreground">
-                        {CS_REQUIREMENTS_REFERENCE.generalEducation.map((item) => (
+                        {csRequirementsReference.generalEducation.map((item) => (
                           <li key={item}>{item}</li>
                         ))}
                       </ul>
@@ -1634,7 +1696,7 @@ export default function CourseScheduler({ selectedStudentId, selectedStudentName
                     <div>
                       <p className="font-medium mb-2">Mathematics Section</p>
                       <ul className="list-disc pl-5 space-y-1 text-muted-foreground">
-                        {CS_REQUIREMENTS_REFERENCE.mathematics.map((item) => (
+                        {csRequirementsReference.mathematics.map((item) => (
                           <li key={item}>{item}</li>
                         ))}
                       </ul>
@@ -1643,7 +1705,7 @@ export default function CourseScheduler({ selectedStudentId, selectedStudentName
                     <div>
                       <p className="font-medium mb-2">Major/Core Section</p>
                       <ul className="list-disc pl-5 space-y-1 text-muted-foreground">
-                        {CS_REQUIREMENTS_REFERENCE.core.map((item) => (
+                        {csRequirementsReference.core.map((item) => (
                           <li key={item}>{item}</li>
                         ))}
                       </ul>
@@ -1652,7 +1714,7 @@ export default function CourseScheduler({ selectedStudentId, selectedStudentName
                     <div>
                       <p className="font-medium mb-2">Academic Standards</p>
                       <ul className="list-disc pl-5 space-y-1 text-muted-foreground">
-                        {CS_REQUIREMENTS_REFERENCE.standards.map((item) => (
+                        {csRequirementsReference.standards.map((item) => (
                           <li key={item}>{item}</li>
                         ))}
                       </ul>
@@ -1661,7 +1723,7 @@ export default function CourseScheduler({ selectedStudentId, selectedStudentName
                     <div>
                       <p className="font-medium mb-2">Recommended Sequence (Advisor Guide)</p>
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                        {Object.entries(CS_REQUIREMENTS_REFERENCE.roadmap).map(([year, items]) => (
+                        {Object.entries(csRequirementsReference.roadmap).map(([year, items]) => (
                           <div key={year} className="border rounded-md p-3 bg-muted/30">
                             <p className="font-medium mb-1">{year}</p>
                             <p className="text-muted-foreground">{items.join(", ")}</p>
@@ -1669,6 +1731,8 @@ export default function CourseScheduler({ selectedStudentId, selectedStudentName
                         ))}
                       </div>
                     </div>
+                      </>
+                    )}
                   </CardContent>
                 </Card>
 
