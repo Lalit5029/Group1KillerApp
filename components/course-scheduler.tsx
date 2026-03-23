@@ -74,6 +74,29 @@ interface CourseSchedulerProps {
 }
 
 export default function CourseScheduler({ selectedStudentId, selectedStudentName }: CourseSchedulerProps) {
+  const dedupeAcademicCourseRows = (rows: CourseData[]) => {
+    const seen = new Set<string>()
+
+    return rows.filter((course) => {
+      const dedupeKey = [
+        course.code,
+        course.term,
+        course.name || course.title,
+        course.grade,
+        course.credits,
+      ]
+        .map((value) => String(value || "").trim().toUpperCase())
+        .join("::")
+
+      if (seen.has(dedupeKey)) {
+        return false
+      }
+
+      seen.add(dedupeKey)
+      return true
+    })
+  }
+
   // State
   const [courses, setCourses] = useState<Course[]>([])
   const [requirements, setRequirements] = useState<Requirements>({})
@@ -107,6 +130,7 @@ export default function CourseScheduler({ selectedStudentId, selectedStudentName
   const [error, setError] = useState<string | null>(null)
   const [expandedBlocks, setExpandedBlocks] = useState<Record<string, boolean>>({})
   const [expandedTerms, setExpandedTerms] = useState<Record<string, boolean>>({});
+  const [isStudentDataHydrating, setIsStudentDataHydrating] = useState<boolean>(true)
 
   const withStudentId = (path: string) => {
     const separator = path.includes("?") ? "&" : "?"
@@ -825,7 +849,7 @@ export default function CourseScheduler({ selectedStudentId, selectedStudentName
               isRecommended: course.isRecommended,
               isFuture: course.isFuture
             }))
-            setAcademicCourses(formattedCourses)
+            setAcademicCourses(dedupeAcademicCourseRows(formattedCourses))
             showNotification("Loaded your saved academic courses", "success")
           } else {
             setAcademicCourses([])
@@ -956,27 +980,50 @@ export default function CourseScheduler({ selectedStudentId, selectedStudentName
 
   // Load both types of courses when component mounts
   useEffect(() => {
-    setSelectedCourses([])
-    setCalendarCourses([])
-    setAcademicCourses([])
-    setDegreeCourses([])
-    loadSavedCalendarCourses()
-    loadSavedAcademicCourses()
-    loadSavedDegreeRequirements()
+    let isActive = true
+
+    const hydrateStudentData = async () => {
+      setIsStudentDataHydrating(true)
+      setSelectedCourses([])
+      setCalendarCourses([])
+      setAcademicCourses([])
+      setDegreeCourses([])
+
+      try {
+        await Promise.all([
+          loadSavedCalendarCourses(),
+          loadSavedAcademicCourses(),
+          loadSavedDegreeRequirements(),
+        ])
+      } finally {
+        if (isActive) {
+          setIsStudentDataHydrating(false)
+        }
+      }
+    }
+
+    hydrateStudentData()
+
+    return () => {
+      isActive = false
+    }
   }, [selectedStudentId, session])
 
   // Save both types of courses when they change
   useEffect(() => {
+    if (isStudentDataHydrating) return
     saveCalendarCourses()
-  }, [selectedCourses, selectedStudentId, session])
+  }, [isStudentDataHydrating, selectedCourses, selectedStudentId, session])
 
   useEffect(() => {
+    if (isStudentDataHydrating) return
     saveAcademicCourses()
-  }, [academicCourses, selectedStudentId, session])
+  }, [academicCourses, isStudentDataHydrating, selectedStudentId, session])
 
   useEffect(() => {
+    if (isStudentDataHydrating) return
     saveDegreeRequirements()
-  }, [degreeCourses, selectedStudentId, session])
+  }, [degreeCourses, isStudentDataHydrating, selectedStudentId, session])
 
   const handleImport = async () => {
     setIsLoading(true)
@@ -1013,7 +1060,7 @@ export default function CourseScheduler({ selectedStudentId, selectedStudentName
         if (statusData.status === "completed") {
           // Set imported course data to academic courses
           if (statusData.result) {
-            setAcademicCourses(statusData.result.courses)
+            setAcademicCourses(dedupeAcademicCourseRows(statusData.result.courses))
             // Set degree requirements data
             if (statusData.result.blocks) {
               setDegreeCourses(statusData.result.blocks)

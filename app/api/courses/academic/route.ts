@@ -2,6 +2,29 @@ import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { getAuthorizedStudent, requireAdvisorSession } from "@/lib/server-auth";
 
+function dedupeAcademicCourses(courses: any[]) {
+  const seen = new Set<string>();
+
+  return courses.filter((course) => {
+    const dedupeKey = [
+      course.code,
+      course.term,
+      course.name || course.title,
+      course.grade,
+      course.credits,
+    ]
+      .map((value) => String(value || "").trim().toUpperCase())
+      .join("::");
+
+    if (seen.has(dedupeKey)) {
+      return false;
+    }
+
+    seen.add(dedupeKey);
+    return true;
+  });
+}
+
 // GET /api/courses/academic - Get user's saved academic courses
 export async function GET(request: Request) {
   try {
@@ -14,7 +37,7 @@ export async function GET(request: Request) {
       orderBy: { createdAt: "asc" },
     });
 
-    return NextResponse.json(academicCourses);
+    return NextResponse.json(dedupeAcademicCourses(academicCourses));
   } catch (error) {
     console.error("Error fetching academic courses:", error);
     const message =
@@ -33,7 +56,7 @@ export async function POST(request: Request) {
   try {
     const session = await requireAdvisorSession();
     const studentId = new URL(request.url).searchParams.get("studentId");
-    const courses = await request.json();
+    const courses = dedupeAcademicCourses(await request.json());
     const student = await getAuthorizedStudent(studentId, session.user.id);
 
     // Delete existing academic courses
