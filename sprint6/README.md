@@ -1,12 +1,12 @@
 # Sprint 6: CS Graduation Requirements + Advisor Readiness Alerts — Work Done by Me
 
-This document summarizes the two Sprint 6 features completed from the advisor point of view.
+This document summarizes the two Sprint 6 features completed.
 
 ---
 
 ## 1. Computer Science graduation requirements feature (CS-only focus)
 
-I implemented a Computer Science-focused graduation requirements experience using the Syracuse BS CS structure and recommended roadmap.
+Implemented a Computer Science-focused graduation requirements experience using the Syracuse BS CS structure and recommended roadmap.
 
 - **API change**
   - **File:** `app/api/requirements/route.js`
@@ -36,7 +36,7 @@ I implemented a Computer Science-focused graduation requirements experience usin
 
 ## 2. Graduation Readiness Checker (Advisor Alerts panel)
 
-I added a new feature that automatically evaluates a student’s imported academic courses and surfaces advising alerts.
+Added a new feature that automatically evaluates a student’s imported academic courses and surfaces advising alerts.
 
 - **Rule engine**
   - **File:** `lib/graduation-readiness.ts`
