@@ -41,3 +41,4 @@ next-env.d.ts
 
 # chrome_profile
 backend/src/chrome_profile/
+backend/src/chrome_profile_manual/
