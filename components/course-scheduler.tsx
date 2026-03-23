@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useMemo } from "react"
 import { AppHeader } from "./app-header"
 import { MainControls } from "./main-controls"
 import { Dashboard } from "./dashboard"
@@ -23,6 +23,7 @@ import { Button } from "@/components/ui/button"
 import { useToast } from "@/components/ui/use-toast"
 import { Label } from "@/components/ui/label"
 import { Badge } from "@/components/ui/badge"
+import { evaluateCsGraduationReadiness } from "@/lib/graduation-readiness"
 
 interface RequirementGroup {
   name: string;
@@ -68,6 +69,40 @@ const WORKLOAD_TARGETS: Record<WorkloadLevel, number> = {
   high: 18,
 }
 
+const CS_MAJOR_KEY = "Computer Science, BS"
+const CS_REQUIREMENTS_REFERENCE = {
+  minimumCredits: 120,
+  generalEducation: [
+    "Writing (6 cr): WRT 105, WRT 205",
+    "Presentational skills (3 cr): CRS 225 or CRS 325 or IST 344",
+    "Natural sciences (8 cr): PHY 211 + PHY 221, plus one sequence: PHY 212+PHY 222 or CHE 106+CHE 107 or BIO 121+BIO 122",
+    "Social science and humanities (21 cr), including PHI 251 and ECS 392",
+    "Free electives (8 cr)",
+  ],
+  mathematics: [
+    "MAT 295 (Calculus I)",
+    "MAT 296 (Calculus II)",
+    "MAT 397 (Calculus III) or MAT 331 (Linear Algebra)",
+    "CIS 321 (Introduction to Probability and Statistics)",
+  ],
+  core: [
+    "ECS 101, CIS 151",
+    "CIS 252, CIS 341, CIS 351, CIS 352, CSE 384",
+    "CIS 375, CIS 453, CIS 454, CIS 473, CIS 477, CSE 486",
+    "18 credits upper-division technical electives (at least 9 credits CIS/CSE)",
+  ],
+  standards: [
+    "Minimum grade C- for writing, mathematics, CS core, and upper-division technical electives",
+    "Computer science core must be completed with at least B- (2.667) average",
+  ],
+  roadmap: {
+    Freshman: ["ECS 101", "CIS 151", "MAT 295", "WRT 105", "FYS 101", "CIS 252", "MAT 296", "PHI 251", "PHY 211", "PHY 221"],
+    Sophomore: ["CIS 375", "CIS 351", "MAT 397 or MAT 331", "Science elective sequence option", "CIS 321", "CIS 341", "CIS 352", "CSE 384", "WRT 205"],
+    Junior: ["CIS 453", "CIS 477", "CSE 486", "CIS 473", "CIS 454"],
+    Senior: ["ECS 392", "Upper-division technical electives", "Free electives / A-SS-H as needed"],
+  },
+}
+
 interface CourseSchedulerProps {
   selectedStudentId: string
   selectedStudentName?: string
@@ -107,6 +142,7 @@ export default function CourseScheduler({ selectedStudentId, selectedStudentName
   const [error, setError] = useState<string | null>(null)
   const [expandedBlocks, setExpandedBlocks] = useState<Record<string, boolean>>({})
   const [expandedTerms, setExpandedTerms] = useState<Record<string, boolean>>({});
+  const advisorAlerts = useMemo(() => evaluateCsGraduationReadiness(academicCourses), [academicCourses])
 
   const withStudentId = (path: string) => {
     const separator = path.includes("?") ? "&" : "?"
@@ -119,16 +155,24 @@ export default function CourseScheduler({ selectedStudentId, selectedStudentName
       try {
         setIsLoading(true);
         const requirementsData = await fetchRequirements()
-        setRequirements(requirementsData)
+        const csOnlyRequirements = requirementsData[CS_MAJOR_KEY]
+          ? { [CS_MAJOR_KEY]: requirementsData[CS_MAJOR_KEY] }
+          : requirementsData
+
+        setRequirements(csOnlyRequirements)
         console.log("Requirements loaded:", Object.keys(requirementsData).length, "majors");
 
         // Extract majors directly from the requirements
-        const majorsList = Object.keys(requirementsData).map((majorName) => ({
+        const majorsList = Object.keys(csOnlyRequirements).map((majorName) => ({
           id: majorName,
           name: majorName,
         }));
 
         setMajors(majorsList)
+        if (majorsList.length > 0) {
+          setSelectedMajor(majorsList[0].id)
+          setSelectedYear((prev) => prev || "Freshman")
+        }
         setIsDataReady(true)
         
         // Load courses right away
@@ -1526,6 +1570,110 @@ export default function CourseScheduler({ selectedStudentId, selectedStudentName
 
             <TabsContent value="requirements" className="mt-0">
               <div className="space-y-6">
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Advisor Alerts: Graduation Readiness Checker</CardTitle>
+                    <CardDescription>
+                      Automatic checks for CS graduation risks, policy compliance, and next-step advising actions.
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-3">
+                      {advisorAlerts.map((alert) => {
+                        const tone =
+                          alert.level === "critical"
+                            ? "border-red-200 bg-red-50 text-red-900"
+                            : alert.level === "warning"
+                              ? "border-amber-200 bg-amber-50 text-amber-900"
+                              : "border-emerald-200 bg-emerald-50 text-emerald-900"
+
+                        const label =
+                          alert.level === "critical"
+                            ? "Critical"
+                            : alert.level === "warning"
+                              ? "Warning"
+                              : "On Track"
+
+                        return (
+                          <div key={alert.id} className={`rounded-md border p-4 ${tone}`}>
+                            <div className="flex flex-wrap items-center justify-between gap-2">
+                              <p className="font-semibold">{alert.title}</p>
+                              <Badge variant="outline">{label}</Badge>
+                            </div>
+                            <p className="mt-2 text-sm">{alert.detail}</p>
+                            <p className="mt-1 text-xs opacity-90">
+                              <span className="font-medium">Advisor action:</span> {alert.nextAction}
+                            </p>
+                          </div>
+                        )
+                      })}
+                    </div>
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Computer Science BS Graduation Requirements</CardTitle>
+                    <CardDescription>
+                      Advisor reference (Syracuse University): core/distribution requirements and recommended sequence.
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-5 text-sm">
+                    <div>
+                      <p className="font-medium">Minimum Credits</p>
+                      <p className="text-muted-foreground">{CS_REQUIREMENTS_REFERENCE.minimumCredits} credits required for BS in Computer Science.</p>
+                    </div>
+
+                    <div>
+                      <p className="font-medium mb-2">General Education</p>
+                      <ul className="list-disc pl-5 space-y-1 text-muted-foreground">
+                        {CS_REQUIREMENTS_REFERENCE.generalEducation.map((item) => (
+                          <li key={item}>{item}</li>
+                        ))}
+                      </ul>
+                    </div>
+
+                    <div>
+                      <p className="font-medium mb-2">Mathematics Section</p>
+                      <ul className="list-disc pl-5 space-y-1 text-muted-foreground">
+                        {CS_REQUIREMENTS_REFERENCE.mathematics.map((item) => (
+                          <li key={item}>{item}</li>
+                        ))}
+                      </ul>
+                    </div>
+
+                    <div>
+                      <p className="font-medium mb-2">Major/Core Section</p>
+                      <ul className="list-disc pl-5 space-y-1 text-muted-foreground">
+                        {CS_REQUIREMENTS_REFERENCE.core.map((item) => (
+                          <li key={item}>{item}</li>
+                        ))}
+                      </ul>
+                    </div>
+
+                    <div>
+                      <p className="font-medium mb-2">Academic Standards</p>
+                      <ul className="list-disc pl-5 space-y-1 text-muted-foreground">
+                        {CS_REQUIREMENTS_REFERENCE.standards.map((item) => (
+                          <li key={item}>{item}</li>
+                        ))}
+                      </ul>
+                    </div>
+
+                    <div>
+                      <p className="font-medium mb-2">Recommended Sequence (Advisor Guide)</p>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                        {Object.entries(CS_REQUIREMENTS_REFERENCE.roadmap).map(([year, items]) => (
+                          <div key={year} className="border rounded-md p-3 bg-muted/30">
+                            <p className="font-medium mb-1">{year}</p>
+                            <p className="text-muted-foreground">{items.join(", ")}</p>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+
                 <Card>
                   <CardHeader>
                     <CardTitle>Degree Requirements</CardTitle>
