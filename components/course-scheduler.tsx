@@ -978,30 +978,77 @@ export default function CourseScheduler({ selectedStudentId, selectedStudentName
     saveDegreeRequirements()
   }, [degreeCourses, selectedStudentId, session])
 
+  const getFriendlyImportError = (message: string) => {
+    if (/Failed to fetch/i.test(message)) {
+      return "Could not reach the import service. Start backend API on port 3001, or retry to use the built-in /api fallback."
+    }
+    return message || "Import failed. Review the log below for details."
+  }
+
   const handleImport = async () => {
     setIsLoading(true)
     setImportLogs([])
     setImportStatus("running")
     setImportStatusMessage("A browser window will open for MySlice. Sign in there and keep this page open while import runs.")
     try {
-      // Make the actual API call to start import
-      const response = await fetch("http://localhost:3001/api/scrape-academic-record", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ manualLogin: true }),
-      })
-
-      if (!response.ok) {
-        throw new Error("Failed to start import process")
+      // Prefer standalone backend API; fall back to Next.js API route if :3001 is unavailable.
+      let response: Response
+      let statusBaseUrl = "http://localhost:3001"
+      try {
+        response = await fetch("http://localhost:3001/api/scrape-academic-record", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ manualLogin: true }),
+        })
+      } catch (_primaryErr) {
+        response = await fetch("/api/scrape-academic-record", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ manualLogin: true }),
+        })
+        statusBaseUrl = ""
       }
 
-      const { jobId } = await response.json()
-      
+      if (!response.ok) {
+        let serverMessage = ""
+        try {
+          const errBody = await response.json()
+          serverMessage = errBody?.error || errBody?.message || ""
+        } catch (_e) {
+          // ignore JSON parse failures
+        }
+        throw new Error(serverMessage || "Failed to start import process")
+      }
+
+      const startData = await response.json()
+
+      // Fallback route (/api/scrape-academic-record) returns direct results instead of a job id.
+      if (!startData?.jobId) {
+        const importedCourses = Array.isArray(startData?.courses) ? startData.courses : []
+        const importedBlocks = Array.isArray(startData?.blocks) ? startData.blocks : []
+
+        setAcademicCourses(importedCourses)
+        if (importedBlocks.length > 0) {
+          setDegreeCourses(importedBlocks)
+          await saveDegreeRequirements()
+        }
+
+        setImportStatus("success")
+        setImportStatusMessage(`Import successful. ${importedCourses.length} course(s) were imported from MySlice.`)
+        showNotification("Successfully imported courses from MySlice", "success")
+        setIsLoading(false)
+        return
+      }
+
+      const { jobId } = startData
+
       // Poll for job status
       const checkStatus = async () => {
-        const statusResponse = await fetch(`http://localhost:3001/api/scrape-status/${jobId}`)
+        const statusResponse = await fetch(`${statusBaseUrl}/api/scrape-status/${jobId}`)
         const statusData = await statusResponse.json()
 
         // Update logs with the detailed log message from the backend
@@ -1043,9 +1090,10 @@ export default function CourseScheduler({ selectedStudentId, selectedStudentName
       checkStatus()
     } catch (error) {
       console.error("Failed to import courses:", error)
+      const friendly = getFriendlyImportError((error as Error).message || "")
       setImportStatus("error")
-      setImportStatusMessage((error as Error).message || "Import failed. Review the log below for details.")
-      showNotification((error as Error).message || "Failed to import courses", "error")
+      setImportStatusMessage(friendly)
+      showNotification(friendly || "Failed to import courses", "error")
       setIsLoading(false)
     }
   }
