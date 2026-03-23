@@ -10,22 +10,22 @@ function matchesPath(pathname: string, routes: string[]) {
 }
 
 export async function middleware(request: NextRequest) {
-  const { pathname, search } = request.nextUrl;
+  const { pathname, searchParams } = request.nextUrl;
   const token = await getToken({ req: request, secret: process.env.NEXTAUTH_SECRET });
   const isAuthenticated = Boolean(token);
 
-  if (!isAuthenticated && matchesPath(pathname, PROTECTED_PATHS)) {
+  if (pathname === "/") {
+    if (isAuthenticated && searchParams.get("studentId")) {
+      return NextResponse.next();
+    }
+
     const loginUrl = new URL("/login", request.url);
     return NextResponse.redirect(loginUrl);
   }
 
-  if (isAuthenticated && matchesPath(pathname, AUTH_PAGES)) {
-    const studentsUrl = new URL("/students", request.url);
-    return NextResponse.redirect(studentsUrl);
-  }
-
-  if (isAuthenticated && pathname === "/" && !search) {
-    return NextResponse.next();
+  if (!isAuthenticated && matchesPath(pathname, PROTECTED_PATHS.filter((path) => path !== "/"))) {
+    const loginUrl = new URL("/login", request.url);
+    return NextResponse.redirect(loginUrl);
   }
 
   return NextResponse.next();

@@ -128,7 +128,7 @@ async function delay(ms) {
 async function waitForManualMySliceLogin(page, jobId) {
   await updateJobLog(
     jobId,
-    "A Chrome window has been opened for MySlice. Complete sign-in there, including 2FA, and leave the window open while import continues."
+    "A fresh Chrome window has been opened for MySlice. Complete sign-in there, including 2FA, and leave the window open while import continues."
   );
 
   const startTime = Date.now();
@@ -206,7 +206,6 @@ export async function login(username, password, jobId, options = {}) {
       browser = await puppeteer.launch({
         headless: manualLogin ? false : true,
         executablePath: chromePath,
-        userDataDir: manualLogin ? join(__dirname, "chrome_profile_manual") : undefined,
         args: [
           "--no-sandbox",
           "--disable-setuid-sandbox",
@@ -216,6 +215,7 @@ export async function login(username, password, jobId, options = {}) {
           "--disable-extensions",
           "--disable-plugins",
           "--disable-popup-blocking",
+          ...(manualLogin ? ["--incognito"] : []),
         ],
         ignoreDefaultArgs: ["--enable-automation"],
       });
@@ -600,6 +600,7 @@ export async function login(username, password, jobId, options = {}) {
 function parseCourseData(html) {
   const $ = cheerio.load(html);
   const courses = [];
+  const seenCourses = new Set();
 
   // Find all course rows
   $('tr[id^="trCRSE_HIST$"]').each((index, element) => {
@@ -629,6 +630,16 @@ function parseCourseData(html) {
 
     // Only add the course if we have the essential information
     if (code && title) {
+      const dedupeKey = [code, term, title, grade || "IP", credits || "0"]
+        .map((value) => String(value || "").trim().toUpperCase())
+        .join("::");
+
+      if (seenCourses.has(dedupeKey)) {
+        return;
+      }
+
+      seenCourses.add(dedupeKey);
+
       courses.push({
         code,
         name: title,
