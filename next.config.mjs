@@ -1,3 +1,8 @@
+import path from "path";
+import { fileURLToPath } from "url";
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+
 let userConfig = undefined;
 try {
   // try to import ESM first
@@ -13,6 +18,9 @@ try {
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  // Use this app folder as the tracing root so Next doesn’t pick a parent lockfile
+  // (e.g. ~/package-lock.json) as the workspace root when pnpm-lock.yaml also exists.
+  outputFileTracingRoot: path.join(__dirname),
   eslint: {
     ignoreDuringBuilds: true,
   },

@@ -126,7 +126,7 @@ export default function RegisterPage() {
             }}>{error}</div>
           )}
 
-          <form onSubmit={handleSubmit}>
+          <form onSubmit={handleSubmit} method="post" action="#" noValidate>
             <label style={{ display: 'block', fontSize: '13px', fontWeight: 600, color: '#94a3b8', marginBottom: '6px' }}>Full Name</label>
             <input
               name="name"

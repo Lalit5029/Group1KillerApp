@@ -35,12 +35,13 @@ export async function POST(request: Request) {
     console.log("Password hashed successfully");
 
     // Create user
+    // Omit `role` — schema uses @default(ADVISOR). If you see "Unknown argument role",
+    // run: npx prisma generate (and npx prisma db push if the DB is behind schema).
     const user = await prisma.user.create({
       data: {
         name,
         email,
         password: hashedPassword,
-        role: "ADVISOR",
       },
     });
     console.log("User created successfully:", user.id);
