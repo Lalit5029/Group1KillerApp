@@ -42,3 +42,7 @@ next-env.d.ts
 # chrome_profile
 backend/src/chrome_profile/
 backend/src/chrome_profile_manual/
+
+# scraper runtime outputs
+course_history.json
+backend/course_history.json

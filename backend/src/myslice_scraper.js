@@ -38,7 +38,8 @@ const MYSLICE_HOME_URL =
 const COURSE_HISTORY_URL =
   "https://cs92prod.ps.syr.edu/psc/CS92PROD/EMPLOYEE/SA/c/SA_LEARNER_SERVICES.SSS_MY_CRSEHIST.GBL";
 const DEGREE_REQUIREMENTS_URL = "https://degreeworks.syr.edu/worksheets/WEB31";
-const MANUAL_LOGIN_TIMEOUT_MS = 5 * 60 * 1000;
+// Manual import: allow time for 2FA + menu navigation; table often lives inside an iframe.
+const MANUAL_LOGIN_TIMEOUT_MS = 10 * 60 * 1000;
 
 // Chrome executable paths for different operating systems
 const CHROME_PATHS = {
@@ -127,76 +128,109 @@ async function delay(ms) {
 
 async function isAuthorizationErrorPage(page) {
   try {
-    const bodyText = await page.evaluate(() => document.body?.innerText || "");
-    return /You are not authorized to access this component/i.test(bodyText);
+    const bodyText = await page.evaluate(() => {
+      const t = document.title || "";
+      const inner = document.body?.innerText || "";
+      return `${t}\n${inner}`;
+    });
+
+    // PeopleSoft tends to show slightly different phrases depending on the exact security
+    // denial and navigation/action mode.
+    return (
+      /You are not authorized to access this component/i.test(bodyText) ||
+      /You have not been granted security authorization/i.test(bodyText) ||
+      /You are not authorized for this page/i.test(bodyText) ||
+      /\b40\s*,\s*20\b/.test(bodyText)
+    );
   } catch {
     return false;
   }
+}
+
+/**
+ * PeopleSoft Fluid / MySlice usually renders Course History inside an iframe.
+ * page.$ / page.content() only see the top document, so we must scan all frames.
+ */
+async function findCourseHistoryFrame(page) {
+  for (const frame of page.frames()) {
+    try {
+      const count = await frame.evaluate(
+        () => document.querySelectorAll("tr[id^='trCRSE_HIST$']").length
+      );
+      if (count > 0) {
+        return frame;
+      }
+    } catch {
+      // Cross-origin or detached frame
+    }
+  }
+  return null;
+}
+
+async function hasCourseHistoryTable(page) {
+  const frame = await findCourseHistoryFrame(page);
+  return !!frame;
 }
 
 async function waitForCourseHistoryTableManual(page, jobId) {
   const deadline = Date.now() + MANUAL_LOGIN_TIMEOUT_MS;
   await updateJobLog(
     jobId,
-    "Direct course-history page access is restricted for this account. In the opened MySlice window, manually navigate to Academics > Course History."
+    "Direct Course History deep-link is blocked for your account (PeopleSoft 40,20 / security authorization). In the SAME Chrome window, use the left navigation and open Academics → Course History (or Student Records → Course History). If prompted, choose View/Display (not Correction/Update). Leave the window open until the course table appears."
   );
 
   while (Date.now() < deadline) {
-    try {
-      await page.waitForSelector("tr[id^='trCRSE_HIST$']", { timeout: 3000 });
-      await updateJobLog(jobId, "Detected course history table after manual navigation.");
-      return true;
-    } catch {
-      // keep polling until timeout
+    const frame = await findCourseHistoryFrame(page);
+    if (frame) {
+      try {
+        await frame.waitForSelector("tr[id^='trCRSE_HIST$']", { timeout: 3000 });
+        await updateJobLog(jobId, "Detected course history table after manual navigation.");
+        return true;
+      } catch {
+        // keep polling
+      }
     }
     await delay(1500);
   }
 
+  await updateJobLog(
+    jobId,
+    `Timed out waiting for Course History table. Current URL: ${page.url()}`
+  );
   return false;
 }
 
 async function waitForManualMySliceLogin(page, jobId) {
   await updateJobLog(
     jobId,
-    "A fresh Chrome window has been opened for MySlice. Complete sign-in there, including 2FA, and leave the window open while import continues."
+    "A fresh Chrome window has been opened for MySlice. Complete sign-in there, including 2FA, then manually open Academics -> Course History in that SAME window. Leave it open while import continues."
   );
 
   const startTime = Date.now();
 
   while (Date.now() - startTime < MANUAL_LOGIN_TIMEOUT_MS) {
-    const currentUrl = page.url();
+    // In manual mode, do not auto-navigate to direct course-history URL because that can
+    // force PeopleSoft 40,20 before users finish 2FA or menu-based navigation.
+    if (await hasCourseHistoryTable(page)) {
+      await updateJobLog(
+        jobId,
+        "Course History table found after manual navigation. Continuing import."
+      );
+      return;
+    }
 
-    // Once the user is no longer on the Microsoft login flow, test whether the authenticated
-    // session can access course history. If it still redirects back to login, keep waiting.
-    if (
-      currentUrl &&
-      !currentUrl.includes("login.microsoftonline.com") &&
-      !currentUrl.includes("signin")
-    ) {
-      try {
-        await page.goto(COURSE_HISTORY_URL, {
-          waitUntil: ["domcontentloaded", "networkidle0"],
-          timeout: 60000,
-        });
-        await page.waitForSelector("tr[id^='trCRSE_HIST$']", {
-          timeout: 10000,
-        });
-        await updateJobLog(jobId, "Manual MySlice login detected. Continuing import.");
-        return;
-      } catch (error) {
-        // The session is not fully ready yet. Return to MySlice home and keep polling.
-        await page.goto(MYSLICE_HOME_URL, {
-          waitUntil: "domcontentloaded",
-          timeout: 60000,
-        });
-      }
+    if (await isAuthorizationErrorPage(page)) {
+      await updateJobLog(
+        jobId,
+        "Authorization page detected. Use MySlice left menu to open Academics -> Course History in this same window."
+      );
     }
 
     await delay(2000);
   }
 
   throw new Error(
-    "Manual MySlice login timed out. Sign in to MySlice in the opened browser window, then retry the import."
+    "Manual MySlice login timed out. Sign in, complete 2FA, and open Academics -> Course History in the opened browser window, then retry the import."
   );
 }
 
@@ -497,15 +531,36 @@ export async function login(username, password, jobId, options = {}) {
       );
     }
 
-    // Navigate to course history page
-    await page.goto(COURSE_HISTORY_URL, {
-      waitUntil: ["networkidle0", "domcontentloaded"],
-      timeout: 60000,
-    });
-    await updateJobLog(jobId, "Navigated to course history page");
+    // In manual mode, avoid direct deep-link navigation because some accounts hit 40,20.
+    const alreadyOnCourseHistory = await hasCourseHistoryTable(page);
+    if (manualLogin && !alreadyOnCourseHistory) {
+      const foundManually = await waitForCourseHistoryTableManual(page, jobId);
+      if (!foundManually) {
+        throw new Error(
+          "Could not detect Course History table in manual mode. Open Academics -> Course History in the same browser window and retry."
+        );
+      }
+      await updateJobLog(jobId, "Detected Course History table in manual mode.");
+    } else if (!alreadyOnCourseHistory) {
+      await page.goto(COURSE_HISTORY_URL, {
+        waitUntil: ["networkidle0", "domcontentloaded"],
+        timeout: 60000,
+      });
+      await updateJobLog(jobId, "Navigated to course history page");
+    } else {
+      await updateJobLog(
+        jobId,
+        "Already viewing Course History; skipping duplicate navigation to course history URL."
+      );
+    }
 
     // If this account cannot directly open the component, allow manual navigation flow.
-    if (manualLogin && (await isAuthorizationErrorPage(page))) {
+    if (await isAuthorizationErrorPage(page)) {
+      if (!manualLogin) {
+        throw new Error(
+          "MySlice returned 'not authorized (40,20)' for Course History. Re-run import with manual login enabled, then open Academics → Course History in the browser window when prompted."
+        );
+      }
       const foundManually = await waitForCourseHistoryTableManual(page, jobId);
       if (!foundManually) {
         throw new Error(
@@ -513,14 +568,34 @@ export async function login(username, password, jobId, options = {}) {
         );
       }
     } else {
-      // Wait for course table to load
-      await page.waitForSelector("tr[id^='trCRSE_HIST$']", { timeout: 30000 });
+      // Wait for course table to load (may be inside an iframe)
+      const deadline = Date.now() + 30000;
+      let courseFrame = await findCourseHistoryFrame(page);
+      while (!courseFrame && Date.now() < deadline) {
+        await delay(400);
+        courseFrame = await findCourseHistoryFrame(page);
+      }
+      if (courseFrame) {
+        await courseFrame.waitForSelector("tr[id^='trCRSE_HIST$']", {
+          timeout: 15000,
+        });
+      } else {
+        await page.waitForSelector("tr[id^='trCRSE_HIST$']", { timeout: 30000 });
+      }
       await updateJobLog(jobId, "Course table loaded");
     }
 
-    // Get page content
-    const htmlData = await page.content();
-    await updateJobLog(jobId, "Retrieved course data");
+    // Scrape HTML from the frame that actually contains course rows (not only top document)
+    const courseHistoryFrame = await findCourseHistoryFrame(page);
+    const htmlData = courseHistoryFrame
+      ? await courseHistoryFrame.content()
+      : await page.content();
+    await updateJobLog(
+      jobId,
+      courseHistoryFrame
+        ? "Retrieved course data (from Course History iframe)"
+        : "Retrieved course data (top document)"
+    );
 
     // Parse course data
     const courses = await parseCourseData(htmlData);
