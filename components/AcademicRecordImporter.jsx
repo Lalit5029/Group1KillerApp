@@ -1,10 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { Button, Card, Alert, Spinner, List, Tag, Progress, Typography } from '@/components/ui';
-import { Clock, CheckCircle, AlertCircle, BookOpen, Download } from 'lucide-react';
+import { Clock, CheckCircle, AlertCircle, BookOpen, Download, HelpCircle } from 'lucide-react';
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
 
 const getFriendlyAcademicImportError = (message = '') => {
+  if (/Failed to fetch/i.test(message)) {
+    return 'Could not reach the import service. Start the backend API on port 3001, or use the built-in /api fallback by keeping Next.js running and retrying.';
+  }
   if (
     message.includes('AADSTS750054') ||
     /SAMLRequest or SAMLResponse must be present/i.test(message)
@@ -28,6 +31,7 @@ export default function AcademicRecordImporter({ onImportComplete }) {
   const [error, setError] = useState(null);
   const [importStatus, setImportStatus] = useState('idle');
   const [importStatusMessage, setImportStatusMessage] = useState('');
+  const [showImportHelp, setShowImportHelp] = useState(false);
 
   // Start the scraping process
   const startImport = async () => {
@@ -37,24 +41,46 @@ export default function AcademicRecordImporter({ onImportComplete }) {
     setImportStatusMessage('A browser window will open for MySlice. Sign in there and keep this page open while import runs.');
 
     try {
-      const response = await fetch(`${API_BASE_URL}/api/scrape-academic-record`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ manualLogin: true }),
-      });
+      // Prefer the standalone backend API, but fall back to Next.js API route
+      // so import can still run when localhost:3001 isn't active.
+      let response;
+      try {
+        response = await fetch(`${API_BASE_URL}/api/scrape-academic-record`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ manualLogin: true }),
+        });
+      } catch (_primaryErr) {
+        response = await fetch('/api/scrape-academic-record', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ manualLogin: true }),
+        });
+      }
 
       if (!response.ok) {
-        throw new Error(`Failed to start import: ${response.statusText}`);
+        let serverMessage = '';
+        try {
+          const errBody = await response.json();
+          serverMessage = errBody?.error || errBody?.message || '';
+        } catch (_e) {
+          // ignore JSON parse errors and keep status text fallback
+        }
+        throw new Error(serverMessage || `Failed to start import: ${response.statusText}`);
       }
 
       const data = await response.json();
       setJobId(data.jobId);
     } catch (err) {
-      setError(err.message);
+      const rawMessage = err?.message || 'Failed to import academic records.';
+      const friendly = getFriendlyAcademicImportError(rawMessage);
+      setError(friendly);
       setImportStatus('error');
-      setImportStatusMessage(err.message || 'Import failed. Review the log below for details.');
+      setImportStatusMessage(friendly);
       setIsImporting(false);
     }
   };
