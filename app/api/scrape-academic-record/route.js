@@ -32,9 +32,10 @@ export async function POST(request) {
     console.log("Login successful, fetching course history...");
     // Get course history
     const courses = result.courses;
+    const blocks = result.blocks || [];
     console.log("Course history fetched successfully");
 
-    return NextResponse.json({ success: true, courses });
+    return NextResponse.json({ success: true, courses, blocks });
   } catch (error) {
     console.error("Academic record scrape error:", error);
     return NextResponse.json(
