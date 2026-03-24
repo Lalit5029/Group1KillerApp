@@ -1066,7 +1066,40 @@ export default function CourseScheduler({ selectedStudentId, selectedStudentName
     if (/Failed to fetch/i.test(message)) {
       return "Could not reach the import service. Start backend API on port 3001, or retry to use the built-in /api fallback."
     }
+    if (/not authorized to access this component|security authorization|40\s*,\s*20/i.test(message)) {
+      return "MySlice logged in, but that account is not authorized to open the Course History component directly. In the same browser window, open Academics or Student Records → Course History in View/Display mode, then retry the import."
+    }
     return message || "Import failed. Review the log below for details."
+  }
+
+  const persistImportedAcademicCourses = async (coursesToPersist: CourseData[]) => {
+    const response = await fetch(withStudentId('/api/courses/academic'), {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(coursesToPersist),
+    })
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}))
+      throw new Error(errorData.message || 'Failed to save imported academic courses')
+    }
+  }
+
+  const persistImportedDegreeRequirements = async (blocksToPersist: BlockData[]) => {
+    const response = await fetch(withStudentId('/api/courses/degree-requirements'), {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(blocksToPersist),
+    })
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}))
+      throw new Error(errorData.message || 'Failed to save imported degree requirements')
+    }
   }
 
   const handleImport = async () => {
@@ -1116,12 +1149,17 @@ export default function CourseScheduler({ selectedStudentId, selectedStudentName
         const importedCourses = dedupeAcademicCourseRows(
           Array.isArray(startData?.courses) ? startData.courses : []
         )
-        setAcademicCourses(importedCourses)
-
         const importedBlocks = Array.isArray(startData?.blocks) ? startData.blocks : []
+
+        if (importedCourses.length === 0) {
+          throw new Error("Import completed, but MySlice returned no courses. Your previously saved student data was left unchanged.")
+        }
+
+        await persistImportedAcademicCourses(importedCourses)
+        setAcademicCourses(importedCourses)
         if (importedBlocks.length > 0) {
+          await persistImportedDegreeRequirements(importedBlocks)
           setDegreeCourses(importedBlocks)
-          await saveDegreeRequirements()
         }
 
         setImportStatus("success")
@@ -1145,17 +1183,24 @@ export default function CourseScheduler({ selectedStudentId, selectedStudentName
         }
 
         if (statusData.status === "completed") {
-          // Set imported course data to academic courses
-          if (statusData.result) {
-            setAcademicCourses(dedupeAcademicCourseRows(statusData.result.courses))
-            // Set degree requirements data
-            if (statusData.result.blocks) {
-              setDegreeCourses(statusData.result.blocks)
-              // Save degree requirements after import
-              await saveDegreeRequirements()
-            }
+          const importedCourses = dedupeAcademicCourseRows(
+            Array.isArray(statusData.result?.courses) ? statusData.result.courses : []
+          )
+          const importedBlocks = Array.isArray(statusData.result?.blocks) ? statusData.result.blocks : []
+
+          if (importedCourses.length === 0) {
+            throw new Error("Import completed, but MySlice returned no courses. Your previously saved student data was left unchanged.")
           }
-          const importedCourseCount = Array.isArray(statusData.result?.courses) ? statusData.result.courses.length : 0
+
+          await persistImportedAcademicCourses(importedCourses)
+          setAcademicCourses(importedCourses)
+
+          if (importedBlocks.length > 0) {
+            await persistImportedDegreeRequirements(importedBlocks)
+            setDegreeCourses(importedBlocks)
+          }
+
+          const importedCourseCount = importedCourses.length
           setImportStatus("success")
           setImportStatusMessage(`Import successful. ${importedCourseCount} course(s) were imported from MySlice.`)
           showNotification("Successfully imported courses from MySlice", "success")
