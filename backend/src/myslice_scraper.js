@@ -203,30 +203,18 @@ async function waitForCourseHistoryTableManual(page, jobId) {
 async function waitForManualMySliceLogin(page, jobId) {
   await updateJobLog(
     jobId,
-    "A fresh Chrome window has been opened for MySlice. Complete sign-in there, including 2FA. Once MySlice finishes loading, import will continue automatically."
+    "A fresh Chrome window has been opened for MySlice. Complete sign-in there, including 2FA, then manually open Academics -> Course History in that SAME window. Leave it open while import continues."
   );
 
   const startTime = Date.now();
 
   while (Date.now() - startTime < MANUAL_LOGIN_TIMEOUT_MS) {
+    // Do not return on "any post-login URL" — that fires on the 40,20 page and MySlice
+    // home before Course History loads, then login() deep-links and hits 40,20 again.
     if (await hasCourseHistoryTable(page)) {
       await updateJobLog(
         jobId,
         "Course History table found after manual navigation. Continuing import."
-      );
-      return;
-    }
-
-    const currentUrl = page.url();
-    if (
-      currentUrl &&
-      !currentUrl.includes("login.microsoftonline.com") &&
-      !currentUrl.includes("signin") &&
-      !currentUrl.includes("about:blank")
-    ) {
-      await updateJobLog(
-        jobId,
-        `Manual MySlice login detected on ${currentUrl}. Continuing import.`
       );
       return;
     }
@@ -543,8 +531,18 @@ export async function login(username, password, jobId, options = {}) {
       );
     }
 
+    // Manual mode: never deep-link to CS92 Course History URL (triggers 40,20 for many accounts).
+    // Headless automated login may still use the direct URL when the table is not already visible.
     const alreadyOnCourseHistory = await hasCourseHistoryTable(page);
-    if (!alreadyOnCourseHistory) {
+    if (manualLogin && !alreadyOnCourseHistory) {
+      const foundManually = await waitForCourseHistoryTableManual(page, jobId);
+      if (!foundManually) {
+        throw new Error(
+          "Could not detect Course History table in manual mode. Open Academics -> Course History in the same browser window and retry."
+        );
+      }
+      await updateJobLog(jobId, "Detected Course History table in manual mode.");
+    } else if (!alreadyOnCourseHistory) {
       await page.goto(COURSE_HISTORY_URL, {
         waitUntil: ["networkidle0", "domcontentloaded"],
         timeout: 60000,
