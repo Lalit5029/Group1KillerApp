@@ -1,13 +1,12 @@
 "use client"
 
-import { useState, useEffect, useMemo } from "react"
+import { useState, useEffect, useMemo, useCallback } from "react"
 import { AppHeader } from "./app-header"
 import { MainControls } from "./main-controls"
 import { Dashboard } from "./dashboard"
 import { SearchPopup } from "./search-popup"
 import { CourseDetailsModal } from "./course-details-modal"
 import { CourseNotesModal } from "./course-notes-modal"
-import { InitialSelectionModal } from "./initial-selection-modal"
 import { NotificationArea } from "./notification-area"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { AcademicDataVisualizer } from "./academic-data-visualizer"
@@ -16,6 +15,12 @@ import { Calendar, GraduationCap, BookOpen, Download, Upload } from "lucide-reac
 import type { Course, SelectedCourse, Notification, Major, Requirements, CourseData, CourseSearchCriteria } from "@/lib/types"
 import { fetchCourses, fetchRequirements } from "@/lib/data-utils"
 import { hasConflict } from "@/lib/schedule-utils"
+import {
+  buildSearchQueryFromCriteria,
+  filterCoursesByCriteria,
+} from "@/lib/course-search"
+import { estimateSectionCredits } from "@/lib/schedule-credits"
+import { WhatIfPlanner } from "@/components/what-if-planner"
 import { useSession } from "next-auth/react"
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
@@ -24,6 +29,8 @@ import { useToast } from "@/components/ui/use-toast"
 import { Label } from "@/components/ui/label"
 import { Badge } from "@/components/ui/badge"
 import { evaluateCsGraduationReadiness } from "@/lib/graduation-readiness"
+import { GraduationPathTimeline } from "@/components/graduation-path-timeline"
+import { CLASS_YEARS, normalizeAcademicYearLabel, type ClassYear } from "@/lib/class-year"
 
 interface RequirementGroup {
   name: string;
@@ -71,12 +78,22 @@ const WORKLOAD_TARGETS: Record<WorkloadLevel, number> = {
 
 const DEFAULT_CS_MAJOR_KEY = "Computer Science, BS"
 
+function plannerYearStorageKey(studentId: string) {
+  return `planner:selectedYear:${studentId}`
+}
+
 interface CourseSchedulerProps {
   selectedStudentId: string
   selectedStudentName?: string
+  /** From student record (advisee registration); drives class year when set. */
+  studentAcademicYear?: string | null
 }
 
-export default function CourseScheduler({ selectedStudentId, selectedStudentName }: CourseSchedulerProps) {
+export default function CourseScheduler({
+  selectedStudentId,
+  selectedStudentName,
+  studentAcademicYear,
+}: CourseSchedulerProps) {
   const dedupeAcademicCourseRows = (rows: CourseData[]) => {
     const seen = new Set<string>()
 
@@ -114,7 +131,6 @@ export default function CourseScheduler({ selectedStudentId, selectedStudentName
   const [isSearchPopupOpen, setIsSearchPopupOpen] = useState<boolean>(false)
   const [isCourseDetailsModalOpen, setIsCourseDetailsModalOpen] = useState<boolean>(false)
   const [isNotesModalOpen, setIsNotesModalOpen] = useState<boolean>(false)
-  const [isInitialModalOpen, setIsInitialModalOpen] = useState<boolean>(true)
   const [currentCourseDetails, setCurrentCourseDetails] = useState<Course | null>(null)
   const [notifications, setNotifications] = useState<Notification[]>([])
   const [majors, setMajors] = useState<Major[]>([])
@@ -134,6 +150,7 @@ export default function CourseScheduler({ selectedStudentId, selectedStudentName
   const [expandedBlocks, setExpandedBlocks] = useState<Record<string, boolean>>({})
   const [expandedTerms, setExpandedTerms] = useState<Record<string, boolean>>({});
   const [isStudentDataHydrating, setIsStudentDataHydrating] = useState(false)
+  const [isWhatIfOpen, setIsWhatIfOpen] = useState(false)
   const [csMajorKey, setCsMajorKey] = useState(DEFAULT_CS_MAJOR_KEY)
   const [csRequirementsReference, setCsRequirementsReference] = useState<{
     minimumCredits: number;
@@ -186,10 +203,6 @@ export default function CourseScheduler({ selectedStudentId, selectedStudentName
         }));
 
         setMajors(majorsList)
-        if (majorsList.length > 0) {
-          setSelectedMajor(majorsList[0].id)
-          setSelectedYear((prev) => prev || "Freshman")
-        }
         setIsDataReady(true)
         
         // Load courses right away
@@ -212,6 +225,36 @@ export default function CourseScheduler({ selectedStudentId, selectedStudentName
 
     initializeApp()
   }, [])
+
+  // CS-only app: major comes from requirements; class year from student record, then per-student localStorage.
+  useEffect(() => {
+    if (!isDataReady || Object.keys(requirements).length === 0) return
+    const majorKey =
+      requirements[csMajorKey] != null ? csMajorKey : Object.keys(requirements)[0]
+    if (majorKey) setSelectedMajor(majorKey)
+
+    const fromStudent = normalizeAcademicYearLabel(studentAcademicYear)
+    let stored: string | null = null
+    try {
+      stored = localStorage.getItem(plannerYearStorageKey(selectedStudentId))
+    } catch {
+      stored = null
+    }
+    const storedOk =
+      stored && (CLASS_YEARS as readonly string[]).includes(stored) ? stored : null
+    // Prefer last class-year choice in this browser (per advisee); else student record; else default.
+    const year = storedOk ?? fromStudent ?? "Freshman"
+    setSelectedYear(year)
+  }, [isDataReady, requirements, studentAcademicYear, csMajorKey, selectedStudentId])
+
+  const handleClassYearChange = (year: ClassYear) => {
+    setSelectedYear(year)
+    try {
+      localStorage.setItem(plannerYearStorageKey(selectedStudentId), year)
+    } catch {
+      /* ignore quota / private mode */
+    }
+  }
 
   // Manual load/save to database (called by buttons when logged in)
   const [isLoadingFromDb, setIsLoadingFromDb] = useState(false)
@@ -321,20 +364,8 @@ export default function CourseScheduler({ selectedStudentId, selectedStudentName
     }
   }
 
-  const estimateCourseCredits = (courseCode: string, section?: Course) => {
-    const explicitCredits = Number.parseFloat(((section as Course & { credits?: string } | undefined)?.credits) || "")
-    if (!Number.isNaN(explicitCredits) && explicitCredits > 0) {
-      return explicitCredits
-    }
-
-    const codeMatch = courseCode.match(/\b(\d{3})\b/)
-    const courseNumber = codeMatch ? Number.parseInt(codeMatch[1], 10) : NaN
-    if (Number.isNaN(courseNumber)) {
-      return 3
-    }
-
-    return courseNumber >= 400 ? 4 : 3
-  }
+  const estimateCourseCredits = (courseCode: string, section?: Course) =>
+    estimateSectionCredits(courseCode, section)
 
   // Generate best schedule based on major, year, and selected workload.
   const generateBestSchedule = (workload: WorkloadLevel) => {
@@ -580,63 +611,28 @@ export default function CourseScheduler({ selectedStudentId, selectedStudentName
     }
   }
 
-  // Search courses
+  const handleCriteriaPreview = useCallback(
+    (criteria: CourseSearchCriteria) => {
+      const query = buildSearchQueryFromCriteria(criteria)
+      if (!query.trim()) {
+        setCurrentSearchResults([])
+        return
+      }
+      setCurrentSearchResults(filterCoursesByCriteria(courses, criteria))
+    },
+    [courses]
+  )
+
+  // Search courses (explicit submit — shows toast)
   const searchCourses = (criteria: CourseSearchCriteria) => {
-    const query = [
-      criteria.query,
-      criteria.subject,
-      criteria.courseNumber,
-      criteria.instructor,
-      criteria.section,
-    ]
-      .filter(Boolean)
-      .join(" ")
-      .trim()
+    const query = buildSearchQueryFromCriteria(criteria)
 
     if (!query.trim()) {
       setCurrentSearchResults([])
       return
     }
 
-    const queryLower = query.toLowerCase()
-
-    // Improved search logic to match on multiple fields
-    const results = courses.filter((c) => {
-      // Search in course code
-      if (c.Class?.toLowerCase().includes(queryLower)) {
-        return true
-      }
-
-      // Search in instructor name
-      if (c.Instructor?.toLowerCase().includes(queryLower)) {
-        return true
-      }
-
-      // Search in section
-      if (c.Section?.toLowerCase().includes(queryLower)) {
-        return true
-      }
-
-      // Search in days/times
-      if (c.DaysTimes?.toLowerCase().includes(queryLower)) {
-        return true
-      }
-
-      // Search in room
-      if (c.Room?.toLowerCase().includes(queryLower)) {
-        return true
-      }
-
-      return false
-    })
-
-    // Sort results to prioritize exact matches
-    results.sort((a, b) => {
-      const aClassMatch = a.Class?.toLowerCase() === queryLower ? 0 : 1
-      const bClassMatch = b.Class?.toLowerCase() === queryLower ? 0 : 1
-      return aClassMatch - bClassMatch
-    })
-
+    const results = filterCoursesByCriteria(courses, criteria)
     setCurrentSearchResults(results)
 
     if (results.length === 0) {
@@ -734,13 +730,6 @@ export default function CourseScheduler({ selectedStudentId, selectedStudentName
   // Toggle view between calendar and list
   const toggleView = () => {
     setCurrentView(currentView === "calendar" ? "list" : "calendar")
-  }
-
-  // Handle major and year selection
-  const handleSelectionConfirm = (major: string, year: string) => {
-    setSelectedMajor(major)
-    setSelectedYear(year)
-    setIsInitialModalOpen(false)
   }
 
   // Show notification
@@ -1259,9 +1248,9 @@ export default function CourseScheduler({ selectedStudentId, selectedStudentName
       case 'IP':
         return 'text-purple-600';
       case 'WD':
-        return 'text-gray-600';
+        return 'text-muted-foreground';
       default:
-        return 'text-gray-500';
+        return 'text-muted-foreground';
     }
   };
 
@@ -1311,19 +1300,19 @@ export default function CourseScheduler({ selectedStudentId, selectedStudentName
           return (
             <div key={term} className="border rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow">
               <button 
-                className="w-full p-4 bg-gray-50 hover:bg-gray-100 flex justify-between items-center transition-colors"
+                className="w-full p-4 bg-muted/50 hover:bg-muted flex justify-between items-center transition-colors"
                 onClick={() => toggleTerm(term)}
               >
                 <div className="flex items-center space-x-2">
-                  <Calendar className="h-5 w-5 text-gray-600" />
+                  <Calendar className="h-5 w-5 text-muted-foreground" />
                   <span className="text-lg font-medium">{term}</span>
                 </div>
                 <div className="flex items-center space-x-2">
-                  <span className="text-sm text-gray-500">
+                  <span className="text-sm text-muted-foreground">
                     {termCourses.length} courses
                   </span>
                   <svg 
-                    className={`h-5 w-5 text-gray-500 transform transition-transform ${isExpanded ? '' : 'rotate-180'}`}
+                    className={`h-5 w-5 text-muted-foreground transform transition-transform ${isExpanded ? '' : 'rotate-180'}`}
                     fill="none" 
                     viewBox="0 0 24 24" 
                     stroke="currentColor"
@@ -1339,18 +1328,18 @@ export default function CourseScheduler({ selectedStudentId, selectedStudentName
                     <div className="p-3 text-sm text-muted-foreground">No courses planned/imported for this semester yet.</div>
                   ) : (
                     termCourses.map((course, index) => (
-                      <div key={index} className="grid grid-cols-12 gap-4 items-center text-sm p-3 hover:bg-gray-50 transition-colors">
+                      <div key={index} className="grid grid-cols-12 gap-4 items-center text-sm p-3 hover:bg-muted/50 transition-colors">
                         <div className="col-span-2">
-                          <span className="font-medium text-gray-900">{course.code}</span>
+                          <span className="font-medium text-foreground">{course.code}</span>
                         </div>
                         <div className="col-span-4">
-                          <span className="text-gray-600">{course.title}</span>
+                          <span className="text-muted-foreground">{course.title}</span>
                         </div>
                         <div className="col-span-2">
-                          <span className="text-gray-600">{course.credits} credits</span>
+                          <span className="text-muted-foreground">{course.credits} credits</span>
                         </div>
                         <div className="col-span-2">
-                          <span className="text-gray-600">{course.status || 'N/A'}</span>
+                          <span className="text-muted-foreground">{course.status || 'N/A'}</span>
                         </div>
                         <div className="col-span-2">
                           <span className={`font-medium ${getGradeColor(course.grade || '')}`}>
@@ -1393,7 +1382,7 @@ export default function CourseScheduler({ selectedStudentId, selectedStudentName
         case "incomplete":
           return "bg-yellow-100 text-yellow-800";
         default:
-          return "bg-gray-100 text-gray-800";
+          return "bg-muted text-foreground";
       }
     };
 
@@ -1408,7 +1397,7 @@ export default function CourseScheduler({ selectedStudentId, selectedStudentName
     if (isLoading) {
       return (
         <div className="flex items-center justify-center p-4">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-foreground"></div>
         </div>
       );
     }
@@ -1428,14 +1417,14 @@ export default function CourseScheduler({ selectedStudentId, selectedStudentName
           {degreeCourses.map((block, index) => {
             const progress = calculateProgress(block);
             return (
-              <div key={`progress-${index}`} className="bg-white p-4 rounded-lg shadow">
+              <div key={`progress-${index}`} className="rounded-lg border border-border bg-card p-4 shadow-sm">
                 <h4 className="font-medium mb-2">{block.title}</h4>
                 <div className="space-y-2">
                   <div className="flex justify-between text-sm">
-                    <span className="text-gray-600">Progress:</span>
+                    <span className="text-muted-foreground">Progress:</span>
                     <span className="font-medium">{Math.round(progress)}%</span>
                   </div>
-                  <div className="w-full bg-gray-200 rounded-full h-2.5">
+                  <div className="w-full bg-muted rounded-full h-2.5">
                     <div 
                       className={`h-2.5 rounded-full transition-all duration-300 ${
                         progress === 100 ? 'bg-green-600' : 'bg-blue-600'
@@ -1443,7 +1432,7 @@ export default function CourseScheduler({ selectedStudentId, selectedStudentName
                       style={{ width: `${progress}%` }}
                     ></div>
                   </div>
-                  <div className="text-sm text-gray-500">
+                  <div className="text-sm text-muted-foreground">
                     {block.courses.length} total courses
                   </div>
                 </div>
@@ -1467,7 +1456,7 @@ export default function CourseScheduler({ selectedStudentId, selectedStudentName
                   </Badge>
                 </div>
                 <button
-                  className="p-2 rounded-full hover:bg-gray-100 transition-colors"
+                  className="p-2 rounded-full hover:bg-muted transition-colors"
                   onClick={(e) => {
                     e.stopPropagation();
                     toggleBlock(block.title);
@@ -1497,18 +1486,18 @@ export default function CourseScheduler({ selectedStudentId, selectedStudentName
                   {block.courses.map((course, courseIndex) => (
                     <div
                       key={courseIndex}
-                      className="flex items-center justify-between p-2 bg-gray-50 rounded"
+                      className="flex items-center justify-between p-2 bg-muted/50 rounded"
                     >
                       <div>
                         <span className="font-medium">{course.code}</span>
-                        <span className="text-gray-600 ml-2">{course.title}</span>
+                        <span className="text-muted-foreground ml-2">{course.title}</span>
                       </div>
                       <div className="flex items-center space-x-4">
                         <span className={getGradeColor(course.grade)}>
                           {course.grade}
                         </span>
-                        <span className="text-gray-600">{course.credits} credits</span>
-                        <span className="text-gray-600">{course.term}</span>
+                        <span className="text-muted-foreground">{course.credits} credits</span>
+                        <span className="text-muted-foreground">{course.term}</span>
                       </div>
                     </div>
                   ))}
@@ -1522,34 +1511,35 @@ export default function CourseScheduler({ selectedStudentId, selectedStudentName
   };
 
   return (
-    <div className="app-container max-w-7xl mx-auto p-4 md:p-6">
+    <div className="app-container mx-auto max-w-7xl px-0 py-2 md:py-4">
       <AppHeader
         selectedMajor={selectedMajor}
         selectedYear={selectedYear}
         isLoading={isLoading}
         studentName={selectedStudentName}
+        onClassYearChange={handleClassYearChange}
       />
 
-      <div className="mb-6 bg-white rounded-xl shadow-soft">
+      <div className="mb-6 overflow-hidden rounded-xl border border-border bg-card shadow-md">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid w-full grid-cols-3 mb-6 p-1 bg-primary-50 rounded-t-xl">
+          <TabsList className="mb-0 grid w-full grid-cols-3 gap-0 rounded-none border-b border-border bg-muted/40 p-1.5">
             <TabsTrigger
               value="schedule"
-              className="flex items-center gap-2 rounded-lg data-[state=active]:bg-white data-[state=active]:text-primary data-[state=active]:shadow-soft"
+              className="flex items-center gap-2 rounded-lg data-[state=active]:bg-card data-[state=active]:text-primary data-[state=active]:shadow-sm"
             >
               <Calendar className="h-4 w-4" />
               Course Scheduler
             </TabsTrigger>
             <TabsTrigger
               value="academic"
-              className="flex items-center gap-2 rounded-lg data-[state=active]:bg-white data-[state=active]:text-primary data-[state=active]:shadow-soft"
+              className="flex items-center gap-2 rounded-lg data-[state=active]:bg-card data-[state=active]:text-primary data-[state=active]:shadow-sm"
             >
               <GraduationCap className="h-4 w-4" />
               Academic Progress
             </TabsTrigger>
             <TabsTrigger
               value="requirements"
-              className="flex items-center gap-2 rounded-lg data-[state=active]:bg-white data-[state=active]:text-primary data-[state=active]:shadow-soft"
+              className="flex items-center gap-2 rounded-lg data-[state=active]:bg-card data-[state=active]:text-primary data-[state=active]:shadow-sm"
             >
               <BookOpen className="h-4 w-4" />
               Degree Requirements
@@ -1563,6 +1553,7 @@ export default function CourseScheduler({ selectedStudentId, selectedStudentName
                 onToggleSearch={toggleSearchPopup}
                 onResetSchedule={resetSchedule}
                 onImportFromImage={handleImportFromImage}
+                onOpenWhatIf={() => setIsWhatIfOpen(true)}
                 disabled={!selectedMajor || !selectedYear || courses.length === 0}
               />
 
@@ -1621,7 +1612,7 @@ export default function CourseScheduler({ selectedStudentId, selectedStudentName
                         <p>When you start import, the scraper will open its own Chrome window.</p>
                         <p>Sign in to MySlice in that opened window, including 2FA, and leave it open while the scraper continues.</p>
                       </div>
-                      <p className="text-sm text-gray-500">
+                      <p className="text-sm text-muted-foreground">
                         Your MySlice credentials stay in the browser sign-in flow and are not entered into this app.
                       </p>
                       <Button
@@ -1652,10 +1643,10 @@ export default function CourseScheduler({ selectedStudentId, selectedStudentName
                         </div>
                       )}
                       {importLogs.length > 0 && (
-                        <div className="mt-4 p-4 bg-gray-50 rounded-md">
+                        <div className="mt-4 p-4 bg-muted/50 rounded-md">
                           <h4 className="text-sm font-medium mb-2">Import Log:</h4>
                           {importLogs.map((log, index) => (
-                            <p key={index} className="text-sm text-gray-600">{log}</p>
+                            <p key={index} className="text-sm text-muted-foreground">{log}</p>
                           ))}
                         </div>
                       )}
@@ -1711,6 +1702,8 @@ export default function CourseScheduler({ selectedStudentId, selectedStudentName
                     </div>
                   </CardContent>
                 </Card>
+
+                <GraduationPathTimeline courses={academicCourses} />
 
                 <Card>
                   <CardHeader>
@@ -1807,10 +1800,23 @@ export default function CourseScheduler({ selectedStudentId, selectedStudentName
         </Tabs>
       </div>
 
+      <WhatIfPlanner
+        open={isWhatIfOpen}
+        onOpenChange={setIsWhatIfOpen}
+        selectedCourses={selectedCourses}
+        catalogCourses={courses}
+        onApply={(next) => {
+          setSelectedCourses(next);
+          showNotification("Applied what-if plan to your schedule.", "success");
+        }}
+      />
+
       {isSearchPopupOpen && (
         <SearchPopup
           onClose={toggleSearchPopup}
           onSearch={searchCourses}
+          onCriteriaPreview={handleCriteriaPreview}
+          catalogCourses={courses}
           searchResults={currentSearchResults}
           onAddCourse={addCourseFromSearch}
         />
@@ -1828,10 +1834,6 @@ export default function CourseScheduler({ selectedStudentId, selectedStudentName
           onClose={() => setIsNotesModalOpen(false)}
           course={selectedCourses.find((c) => c.id === currentNotesCourseId) || null}
         />
-      )}
-
-      {isInitialModalOpen && (
-        <InitialSelectionModal requirements={requirements} isDataReady={isDataReady} onConfirm={handleSelectionConfirm} />
       )}
 
       <NotificationArea notifications={notifications} onRemove={removeNotification} />

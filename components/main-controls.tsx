@@ -9,7 +9,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog"
-import { Sparkles, Search, Trash2 } from "lucide-react"
+import { FlaskConical, Sparkles, Search, Trash2 } from "lucide-react"
 import { ScheduleImportModal } from "./schedule-import-modal"
 import type { SelectedCourse } from "@/lib/types"
 
@@ -20,6 +20,7 @@ interface MainControlsProps {
   onToggleSearch: () => void
   onResetSchedule: () => void
   onImportFromImage: (courses: SelectedCourse[]) => void
+  onOpenWhatIf: () => void
   disabled: boolean
 }
 
@@ -28,6 +29,7 @@ export function MainControls({
   onToggleSearch,
   onResetSchedule,
   onImportFromImage,
+  onOpenWhatIf,
   disabled,
 }: MainControlsProps) {
   const [isWorkloadDialogOpen, setIsWorkloadDialogOpen] = useState(false)
@@ -82,6 +84,16 @@ export function MainControls({
           >
             <Search className="h-4 w-4" />
             Search & Add Courses
+          </Button>
+
+          <Button
+            onClick={onOpenWhatIf}
+            disabled={disabled}
+            variant="secondary"
+            className="flex items-center gap-2 border border-primary/20"
+          >
+            <FlaskConical className="h-4 w-4" />
+            What-if planner
           </Button>
 
           <ScheduleImportModal onCoursesImported={onImportFromImage} />

@@ -17,6 +17,8 @@ export interface SelectedCourse {
   Instructor?: string;
   DaysTimes?: string;
   Room?: string;
+  /** When set, enables what-if planner to scope edits to a single term. */
+  term?: string;
   requirementGroup?: string;
   grade?: string;
   credits?: string;
