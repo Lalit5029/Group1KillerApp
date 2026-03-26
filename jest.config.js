@@ -6,7 +6,7 @@ export default {
   moduleNameMapper: {
     '^@/(.*)$': '<rootDir>/$1',
   },
-  setupFilesAfterEnv: ['<rootDir>/jest.setup.js'],
+  setupFilesAfterEnv: ['<rootDir>/jest.setup.cjs'],
   testPathIgnorePatterns: ['<rootDir>/.next/', '<rootDir>/node_modules/'],
   transformIgnorePatterns: [
     '/node_modules/(?!(next|@testing-library|@jest/globals)/)',

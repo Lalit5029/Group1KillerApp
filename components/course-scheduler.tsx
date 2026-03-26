@@ -15,7 +15,7 @@ import { DegreeRequirementsView } from "./degree-requirements-view"
 import { Calendar, GraduationCap, BookOpen, Download, Upload } from "lucide-react"
 import type { Course, SelectedCourse, Notification, Major, Requirements, CourseData, CourseSearchCriteria } from "@/lib/types"
 import { fetchCourses, fetchRequirements } from "@/lib/data-utils"
-import { hasConflict } from "@/lib/schedule-utils"
+import { hasConflict, parseDaysTimes } from "@/lib/schedule-utils"
 import { useSession } from "next-auth/react"
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
@@ -24,6 +24,7 @@ import { useToast } from "@/components/ui/use-toast"
 import { Label } from "@/components/ui/label"
 import { Badge } from "@/components/ui/badge"
 import { evaluateCsGraduationReadiness } from "@/lib/graduation-readiness"
+import type { RankedRecommendation } from "@/lib/recommendation/types"
 
 interface RequirementGroup {
   name: string;
@@ -134,6 +135,8 @@ export default function CourseScheduler({ selectedStudentId, selectedStudentName
   const [expandedBlocks, setExpandedBlocks] = useState<Record<string, boolean>>({})
   const [expandedTerms, setExpandedTerms] = useState<Record<string, boolean>>({});
   const [isStudentDataHydrating, setIsStudentDataHydrating] = useState(false)
+  const [latestRecommendations, setLatestRecommendations] = useState<RankedRecommendation[]>([])
+  const [latestBlockedRecommendations, setLatestBlockedRecommendations] = useState<RankedRecommendation[]>([])
   const [csMajorKey, setCsMajorKey] = useState(DEFAULT_CS_MAJOR_KEY)
   const [csRequirementsReference, setCsRequirementsReference] = useState<{
     minimumCredits: number;
@@ -336,8 +339,93 @@ export default function CourseScheduler({ selectedStudentId, selectedStudentName
     return courseNumber >= 400 ? 4 : 3
   }
 
-  // Generate best schedule based on major, year, and selected workload.
-  const generateBestSchedule = (workload: WorkloadLevel) => {
+  const findPossibleSectionsForCourseCode = (courseCode: string) => {
+    const normalizedCode = courseCode.trim()
+    const codeWithoutSpace = normalizedCode.replace(/\s+/g, "")
+
+    const exactSections = courses.filter((course) => {
+      if (!course.Class) return false
+
+      const courseClass = course.Class.trim()
+      const courseClassNoSpace = courseClass.replace(/\s+/g, "")
+
+      return (
+        courseClass.toLowerCase() === normalizedCode.toLowerCase() ||
+        courseClassNoSpace.toLowerCase() === codeWithoutSpace.toLowerCase() ||
+        courseClass.toLowerCase().includes(normalizedCode.toLowerCase())
+      )
+    })
+
+    if (exactSections.length > 0) {
+      return exactSections
+    }
+
+    return courses.filter(
+      (course) =>
+        course.Class &&
+        course.Class.replace(/\s+/g, "").toLowerCase().includes(codeWithoutSpace.toLowerCase())
+    )
+  }
+
+  const sectionConflictsWithCourse = (section: Course, other: Course) => {
+    return hasConflict(section, [
+      {
+        ...other,
+        id: `comparison-${other.Class || "course"}-${other.Section || "section"}`,
+      } as SelectedCourse,
+    ])
+  }
+
+  const scoreSectionForSchedule = (
+    section: Course,
+    currentSchedule: SelectedCourse[],
+    remainingRecommendations: RankedRecommendation[]
+  ) => {
+    let score = 0
+
+    if (hasConflict(section, currentSchedule)) {
+      return Number.NEGATIVE_INFINITY
+    }
+
+    const parsedMeeting = section.DaysTimes ? parseDaysTimes(section.DaysTimes) : null
+    if (parsedMeeting) {
+      score += 6
+    } else {
+      // Prefer sections with parseable meeting patterns so the timetable is
+      // easier to reason about and future conflicts can be checked accurately.
+      score -= 2
+    }
+
+    if (section.Room && section.Room.trim()) {
+      score += 1
+    }
+
+    const futureRecommendations = remainingRecommendations.slice(0, 5)
+    let potentialConflicts = 0
+
+    for (const recommendation of futureRecommendations) {
+      const futureSections = findPossibleSectionsForCourseCode(recommendation.courseCode)
+      if (futureSections.length === 0) continue
+
+      const conflictingSections = futureSections.filter((futureSection) =>
+        sectionConflictsWithCourse(section, futureSection)
+      )
+
+      if (conflictingSections.length === futureSections.length) {
+        potentialConflicts += 2
+      } else if (conflictingSections.length > 0) {
+        potentialConflicts += 1
+      }
+    }
+
+    score -= potentialConflicts * 2
+    return score
+  }
+
+  const buildScheduleFromRecommendations = (
+    recommendations: RankedRecommendation[],
+    workload: WorkloadLevel
+  ) => {
     if (!selectedMajor || !selectedYear || Object.keys(requirements).length === 0) {
       showNotification("Please confirm selection or wait for data to load.", "error");
       return;
@@ -357,22 +445,33 @@ export default function CourseScheduler({ selectedStudentId, selectedStudentName
     // Reset current schedule
     setSelectedCourses([]);
 
-    // Get suggested courses for the selected major and year
-    const majorRequirements = requirements[selectedMajor];
-    if (!majorRequirements) {
-      showNotification(`No requirements found for major: ${selectedMajor}`, "error");
-      console.error("Could not find requirements for major:", selectedMajor);
+    const scheduleCandidates = Array.isArray(recommendations)
+      ? recommendations
+          .filter((recommendation) => !recommendation.blocked)
+          .sort((a, b) => {
+            if (b.priorityScore !== a.priorityScore) {
+              return b.priorityScore - a.priorityScore
+            }
+            if (b.availableSectionCount !== a.availableSectionCount) {
+              return b.availableSectionCount - a.availableSectionCount
+            }
+            return a.courseCode.localeCompare(b.courseCode)
+          })
+      : []
+
+    if (scheduleCandidates.length === 0) {
+      showNotification("No recommended courses were available for scheduling.", "warning");
       return;
     }
 
-    const yearRequirements = majorRequirements[selectedYear];
-    if (!yearRequirements || !Array.isArray(yearRequirements) || yearRequirements.length === 0) {
-      showNotification(`No suggested courses listed for ${selectedMajor} - ${selectedYear}.`, "warning");
-      console.error("Year requirements missing or empty for:", selectedMajor, selectedYear);
-      return;
-    }
-
-    console.log("Required courses for", selectedMajor, selectedYear, ":", yearRequirements);
+    console.log(
+      "PyReason-ranked recommendations used for scheduling:",
+      scheduleCandidates.map((recommendation) => ({
+        courseCode: recommendation.courseCode,
+        priorityScore: recommendation.priorityScore,
+        reasons: recommendation.reasons,
+      }))
+    );
 
     // Print first few courses for debugging
     console.log("Sample available courses:");
@@ -388,82 +487,33 @@ export default function CourseScheduler({ selectedStudentId, selectedStudentName
     const targetCredits = WORKLOAD_TARGETS[workload];
 
     // Loop through each course code
-    for (let i = 0; i < yearRequirements.length; i++) {
+    for (let i = 0; i < scheduleCandidates.length; i++) {
       if (totalScheduledCredits >= targetCredits) {
         break;
       }
 
-      const code = yearRequirements[i];
+      const recommendation = scheduleCandidates[i]
+      const code = recommendation?.courseCode;
       if (!code) continue;
-
-      // Handle both formats - with or without spaces
       const normalizedCode = code.trim();
-      const codeWithoutSpace = normalizedCode.replace(/\s+/g, '');
-      
-      // Find all possible sections of this course - more flexible matching
-      const possibleSections = courses.filter((c) => {
-        if (!c.Class) return false;
-        
-        const courseClass = c.Class.trim();
-        const courseClassNoSpace = courseClass.replace(/\s+/g, '');
-        
-        // Try multiple matching strategies
-        return (
-          courseClass.toLowerCase() === normalizedCode.toLowerCase() || // Exact match with spaces
-          courseClassNoSpace.toLowerCase() === codeWithoutSpace.toLowerCase() || // Match without spaces
-          courseClass.toLowerCase().includes(normalizedCode.toLowerCase()) // Partial match
-        );
-      });
+      const possibleSections = findPossibleSectionsForCourseCode(normalizedCode)
 
       console.log(`Looking for course ${code}: found ${possibleSections.length} possible sections`);
       
       if (possibleSections.length === 0) {
-        // Try a more lenient search if no matches found
-        const lenientSections = courses.filter(c => 
-          c.Class && c.Class.replace(/\s+/g, '').toLowerCase().includes(codeWithoutSpace.toLowerCase())
-        );
-        
-        if (lenientSections.length > 0) {
-          console.log(`Found ${lenientSections.length} sections with lenient matching for ${code}`);
-          
-          let added = false;
-          for (const section of lenientSections) {
-            const estimatedCredits = estimateCourseCredits(normalizedCode, section);
-            if (totalScheduledCredits + estimatedCredits > MAX_SEMESTER_CREDITS) {
-              continue;
-            }
-
-            if (!hasConflict(section, newSelectedCourses)) {
-              newSelectedCourses.push({
-                ...section,
-                id: `course-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-                credits: estimatedCredits.toString(),
-              });
-              added = true;
-              coursesAddedCount++;
-              totalScheduledCredits += estimatedCredits;
-              break;
-            }
-          }
-          
-          if (!added) {
-            const couldFitWithinCredits = lenientSections.some(
-              (section) => totalScheduledCredits + estimateCourseCredits(normalizedCode, section) <= MAX_SEMESTER_CREDITS
-            );
-            if (!couldFitWithinCredits) {
-              skippedForCreditLimit.push(code);
-            } else {
-              showNotification(`Could not add "${code}": All sections conflict.`, "warning");
-            }
-          }
-        } else {
-          notFoundCourses.push(code);
-        }
+        notFoundCourses.push(code);
         continue;
       }
 
+      const remainingRecommendations = scheduleCandidates.slice(i + 1)
+      const rankedSections = [...possibleSections].sort((a, b) => {
+        const scoreB = scoreSectionForSchedule(b, newSelectedCourses, remainingRecommendations)
+        const scoreA = scoreSectionForSchedule(a, newSelectedCourses, remainingRecommendations)
+        return scoreB - scoreA
+      })
+
       let added = false;
-      for (const section of possibleSections) {
+      for (const section of rankedSections) {
         const estimatedCredits = estimateCourseCredits(normalizedCode, section);
         if (totalScheduledCredits + estimatedCredits > MAX_SEMESTER_CREDITS) {
           continue;
@@ -485,8 +535,8 @@ export default function CourseScheduler({ selectedStudentId, selectedStudentName
         }
       }
 
-      if (!added && possibleSections.length > 0) {
-        const couldFitWithinCredits = possibleSections.some(
+      if (!added && rankedSections.length > 0) {
+        const couldFitWithinCredits = rankedSections.some(
           (section) => totalScheduledCredits + estimateCourseCredits(normalizedCode, section) <= MAX_SEMESTER_CREDITS
         );
         if (!couldFitWithinCredits) {
@@ -534,6 +584,81 @@ export default function CourseScheduler({ selectedStudentId, selectedStudentName
       showNotification("No courses could be added to your schedule.", "error");
     }
   };
+
+  // PyReason now handles recommendation/prioritization first. Once the ranked
+  // list comes back, we pass the full recommendation objects into the existing
+  // section/time conflict scheduler so priority scores can shape the final timetable.
+  const generateBestSchedule = async (workload: WorkloadLevel) => {
+    console.log("[SuggestedCourses] generateBestSchedule called", {
+      workload,
+      selectedMajor,
+      selectedYear,
+      selectedStudentId,
+      requirementsLoaded: Object.keys(requirements).length,
+      coursesLoaded: courses.length,
+    })
+
+    if (!selectedMajor || !selectedYear || Object.keys(requirements).length === 0) {
+      showNotification("Please confirm selection or wait for data to load.", "error");
+      return;
+    }
+
+    const majorRequirements = requirements[selectedMajor];
+    if (!majorRequirements) {
+      showNotification(`No requirements found for major: ${selectedMajor}`, "error");
+      return;
+    }
+
+    setIsLoading(true)
+
+    try {
+      console.log("[SuggestedCourses] Requesting /api/recommendations")
+      const response = await fetch("/api/recommendations", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          studentId: selectedStudentId,
+          selectedMajor,
+          selectedYear,
+          term: "Current Catalog",
+          requirementsForMajor: majorRequirements,
+          catalogCourses: courses,
+        }),
+      })
+
+      const data = await response.json()
+      console.log("[SuggestedCourses] /api/recommendations response", {
+        ok: response.ok,
+        status: response.status,
+        recommendedCount: Array.isArray(data?.recommendedCourses) ? data.recommendedCourses.length : "n/a",
+        blockedCount: Array.isArray(data?.blockedCourses) ? data.blockedCourses.length : "n/a",
+        debug: data?.debug,
+      })
+      if (!response.ok) {
+        throw new Error(data.message || "Failed to generate recommendations")
+      }
+
+      const recommendedCourses = Array.isArray(data.recommendedCourses) ? data.recommendedCourses : []
+      const blockedCourses = Array.isArray(data.blockedCourses) ? data.blockedCourses : []
+
+      setLatestRecommendations(recommendedCourses)
+      setLatestBlockedRecommendations(blockedCourses)
+
+      if (recommendedCourses.length === 0) {
+        showNotification("No eligible recommended courses were available for the current catalog term.", "warning")
+        return
+      }
+
+      buildScheduleFromRecommendations(recommendedCourses, workload)
+    } catch (error) {
+      console.error("Failed to generate recommendations:", error)
+      showNotification((error as Error).message || "Failed to generate recommendations", "error")
+    } finally {
+      setIsLoading(false)
+    }
+  }
 
   // Handle courses imported from image
   const handleImportFromImage = (importedCourses: SelectedCourse[]) => {
@@ -1565,6 +1690,62 @@ export default function CourseScheduler({ selectedStudentId, selectedStudentName
                 onImportFromImage={handleImportFromImage}
                 disabled={!selectedMajor || !selectedYear || courses.length === 0}
               />
+
+              {(latestRecommendations.length > 0 || latestBlockedRecommendations.length > 0) && (
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Recommendation Insights</CardTitle>
+                    <CardDescription>
+                      The reasoning layer ranks courses first, then the existing scheduler picks sections without time conflicts.
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-6">
+                    {latestRecommendations.length > 0 && (
+                      <div className="space-y-3">
+                        <h3 className="text-sm font-semibold text-slate-900">Recommended Now</h3>
+                        {latestRecommendations.slice(0, 6).map((item) => (
+                          <div key={item.courseCode} className="rounded-lg border p-4">
+                            <div className="flex items-start justify-between gap-4">
+                              <div>
+                                <p className="font-medium text-slate-900">{item.courseCode}</p>
+                                <p className="text-sm text-slate-500">{item.title}</p>
+                              </div>
+                              <Badge variant="secondary">{item.priorityScore}</Badge>
+                            </div>
+                            <ul className="mt-3 space-y-1 text-sm text-slate-600">
+                              {item.reasons.map((reason) => (
+                                <li key={reason}>• {reason}</li>
+                              ))}
+                            </ul>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+
+                    {latestBlockedRecommendations.length > 0 && (
+                      <div className="space-y-3">
+                        <h3 className="text-sm font-semibold text-slate-900">Blocked or Deferred</h3>
+                        {latestBlockedRecommendations.slice(0, 4).map((item) => (
+                          <div key={item.courseCode} className="rounded-lg border border-dashed p-4">
+                            <div className="flex items-start justify-between gap-4">
+                              <div>
+                                <p className="font-medium text-slate-900">{item.courseCode}</p>
+                                <p className="text-sm text-slate-500">{item.title}</p>
+                              </div>
+                              <Badge variant="outline">{item.priorityScore}</Badge>
+                            </div>
+                            <ul className="mt-3 space-y-1 text-sm text-slate-600">
+                              {item.reasons.map((reason) => (
+                                <li key={reason}>• {reason}</li>
+                              ))}
+                            </ul>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              )}
 
               {session?.user && (
                 <div className="flex flex-wrap gap-2 items-center">
