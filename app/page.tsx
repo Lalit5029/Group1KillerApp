@@ -124,8 +124,7 @@ export default function Home() {
               Academic planning workspace
             </h2>
             <p className="mt-1 max-w-3xl text-sm text-muted-foreground">
-              Schedule courses, review degree requirements, and import academic records—scoped to
-              this student.
+              Schedule courses, review degree requirements, and import academic records
             </p>
           </div>
         </div>
