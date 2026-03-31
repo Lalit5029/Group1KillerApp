@@ -4,15 +4,28 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { signOut, useSession } from "next-auth/react";
 import type { Student } from "@/lib/types";
-
-const ORANGE = "#F85C00";
-const NAVY = "#001a3d";
+import { SiteHeader } from "@/components/site-header";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  AlertDialog,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { cn } from "@/lib/utils";
+import { ArrowRight, Loader2, Trash2 } from "lucide-react";
 
 const EMPTY_FORM = {
   name: "",
   externalStudentId: "",
   email: "",
-  major: "",
+  major: "Computer Science, BS",
   academicYear: "",
 };
 
@@ -25,6 +38,8 @@ export default function StudentsPage() {
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
   const [form, setForm] = useState(EMPTY_FORM);
+  const [deletingStudent, setDeletingStudent] = useState<Student | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const loadStudents = async () => {
     setIsLoading(true);
@@ -69,129 +84,60 @@ export default function StudentsPage() {
     }
   };
 
-  const openStudentWorkspace = (studentId: string) => {
-    router.push(`/?studentId=${studentId}`);
+  const openStudentWorkspace = (id: string) => {
+    router.push(`/?studentId=${id}`);
   };
 
-  const inputStyle: React.CSSProperties = {
-    background: "rgba(255,255,255,0.07)",
-    border: "1px solid rgba(255,255,255,0.15)",
-    borderRadius: 10,
-    padding: "10px 14px",
-    color: "#fff",
-    fontSize: 14,
-    outline: "none",
-    width: "100%",
-  };
-
-  const labelStyle: React.CSSProperties = {
-    fontSize: 11,
-    fontWeight: 700,
-    color: "rgba(255,255,255,0.55)",
-    textTransform: "uppercase",
-    letterSpacing: "0.7px",
-    marginBottom: 6,
-    display: "block",
-  };
-
-  const cardStyle: React.CSSProperties = {
-    background: "rgba(255,255,255,0.04)",
-    backdropFilter: "blur(16px)",
-    border: "1px solid rgba(248,92,0,0.22)",
-    borderRadius: 18,
-    padding: 28,
+  const confirmRemoveStudent = async () => {
+    if (!deletingStudent) return;
+    setIsDeleting(true);
+    setError(null);
+    try {
+      const response = await fetch(`/api/students/${deletingStudent.id}`, {
+        method: "DELETE",
+      });
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        throw new Error(data.message || "Failed to remove student");
+      }
+      setStudents((current) => current.filter((s) => s.id !== deletingStudent.id));
+      setDeletingStudent(null);
+    } catch (removeError) {
+      setError(removeError instanceof Error ? removeError.message : "Failed to remove student");
+    } finally {
+      setIsDeleting(false);
+    }
   };
 
   return (
-    <main
-      style={{
-        minHeight: "100vh",
-        background: NAVY,
-        fontFamily: "'Segoe UI', sans-serif",
-        color: "#fff",
-      }}
-    >
-      {/* Navbar */}
-      <nav
-        style={{
-          background: NAVY,
-          borderBottom: "1px solid rgba(248,92,0,0.28)",
-          padding: "0 32px",
-          height: 64,
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between",
-          position: "sticky",
-          top: 0,
-          zIndex: 100,
-        }}
+    <div className="min-h-screen bg-muted/30">
+      <SiteHeader
+        title="Advisor workspace"
+        subtitle="Syracuse University • Student records & scheduling"
       >
-        <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-          <div
-            style={{
-              width: 38,
-              height: 38,
-              background: ORANGE,
-              borderRadius: 10,
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              fontWeight: 900,
-              fontSize: 16,
-              fontFamily: "Georgia, serif",
-              boxShadow: "0 4px 14px rgba(248,92,0,0.5)",
-            }}
-          >
-            SU
-          </div>
-          <span style={{ fontWeight: 700, fontSize: 17 }}>
-            Course <span style={{ color: ORANGE }}>Scheduler</span>
-          </span>
-        </div>
-        <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-          <span style={{ fontSize: 13, color: "rgba(255,255,255,0.5)" }}>
-            {session?.user?.name || session?.user?.email}
-          </span>
-          <button
-            onClick={() => signOut({ callbackUrl: "/login" })}
-            style={{
-              background: "transparent",
-              border: "1.5px solid rgba(248,92,0,0.55)",
-              color: ORANGE,
-              borderRadius: 8,
-              padding: "7px 16px",
-              fontSize: 13,
-              fontWeight: 600,
-              cursor: "pointer",
-            }}
-          >
-            Log out
-          </button>
-        </div>
-      </nav>
+        <span className="hidden max-w-[200px] truncate text-right text-sm text-muted-foreground sm:block">
+          {session?.user?.name || session?.user?.email}
+        </span>
+        <Button variant="outline" size="sm" onClick={() => signOut({ callbackUrl: "/login" })}>
+          Log out
+        </Button>
+      </SiteHeader>
 
-      {/* Page content */}
-      <div style={{ maxWidth: 1100, margin: "0 auto", padding: "40px 24px" }}>
-        <div style={{ marginBottom: 32 }}>
-          <h1 style={{ fontSize: 30, fontWeight: 800, margin: 0, letterSpacing: -0.5 }}>
-            Advisor Workspace
-          </h1>
-          <p style={{ marginTop: 6, fontSize: 14, color: "rgba(255,255,255,0.45)" }}>
-            Pick a student record to begin advising, or create a new one below.
+      <div className="mx-auto max-w-6xl px-4 py-10 sm:px-6 lg:px-8">
+        <div className="mb-10">
+          <h2 className="text-3xl font-bold tracking-tight text-foreground md:text-4xl">
+            Your advisees
+          </h2>
+          <p className="mt-2 max-w-2xl text-base text-muted-foreground">
+            Select a student to open scheduling, degree requirements, and MySlice imports—or create
+            a new record.
           </p>
         </div>
 
         {error && (
           <div
-            style={{
-              background: "rgba(220,53,53,0.15)",
-              border: "1px solid rgba(220,53,53,0.4)",
-              borderRadius: 10,
-              padding: "12px 16px",
-              fontSize: 13,
-              color: "#ff8080",
-              marginBottom: 20,
-            }}
+            className="mb-6 rounded-lg border border-destructive/40 bg-destructive/10 px-4 py-3 text-sm text-destructive"
+            role="alert"
           >
             {error}
           </div>
@@ -199,201 +145,188 @@ export default function StudentsPage() {
 
         {success && (
           <div
-            style={{
-              background: "rgba(34,197,94,0.12)",
-              border: "1px solid rgba(34,197,94,0.35)",
-              borderRadius: 10,
-              padding: "12px 16px",
-              fontSize: 13,
-              color: "#4ade80",
-              marginBottom: 20,
-            }}
+            className="mb-6 rounded-lg border border-primary/30 bg-primary/10 px-4 py-3 text-sm text-primary"
+            role="status"
           >
-            Student created successfully!
+            Student created successfully.
           </div>
         )}
 
-        <div
-          style={{
-            display: "grid",
-            gridTemplateColumns: "1.2fr 0.85fr",
-            gap: 24,
-          }}
-        >
-          {/* Students list */}
-          <div style={cardStyle}>
-            <h2 style={{ fontSize: 17, fontWeight: 700, margin: "0 0 4px" }}>Your Students</h2>
-            <p style={{ fontSize: 13, color: "rgba(255,255,255,0.45)", margin: "0 0 20px" }}>
-              Select a student to open scheduling, recommendations, and academic imports.
-            </p>
+        <div className="grid gap-8 lg:grid-cols-12">
+          <Card className="border-border/80 shadow-md lg:col-span-7">
+            <CardHeader>
+              <CardTitle>Students</CardTitle>
+              <CardDescription>
+                Open a student workspace or remove a record. Removing a student deletes their
+                saved schedules and imported data for this workspace.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              {isLoading ? (
+                <div className="flex items-center gap-2 py-8 text-muted-foreground">
+                  <Loader2 className="h-5 w-5 animate-spin" />
+                  Loading students…
+                </div>
+              ) : students.length === 0 ? (
+                <div className="rounded-xl border border-dashed border-border bg-muted/40 px-6 py-12 text-center text-sm text-muted-foreground">
+                  No students yet. Create a record using the form to begin advising.
+                </div>
+              ) : (
+                <ul className="flex flex-col gap-2">
+                  {students.map((student) => (
+                    <li key={student.id} className="flex items-stretch gap-2">
+                      <button
+                        type="button"
+                        onClick={() => openStudentWorkspace(student.id)}
+                        className={cn(
+                          "flex min-w-0 flex-1 items-center justify-between gap-4 rounded-xl border border-border bg-card px-4 py-4 text-left transition",
+                          "hover:border-primary/50 hover:bg-primary/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                        )}
+                      >
+                        <div className="min-w-0">
+                          <div className="font-semibold text-foreground">{student.name}</div>
+                          <div className="mt-0.5 truncate text-sm text-muted-foreground">
+                            {[student.externalStudentId, student.major, student.academicYear]
+                              .filter(Boolean)
+                              .join(" · ") || "No metadata yet"}
+                          </div>
+                        </div>
+                        <span className="inline-flex shrink-0 items-center gap-1 rounded-md bg-primary/10 px-3 py-1 text-xs font-semibold text-primary">
+                          Open
+                          <ArrowRight className="h-3.5 w-3.5" />
+                        </span>
+                      </button>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="icon"
+                        className="h-auto min-h-[3.5rem] shrink-0 border-destructive/30 text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
+                        aria-label={`Remove ${student.name}`}
+                        onClick={() => setDeletingStudent(student)}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </CardContent>
+          </Card>
 
-            {isLoading ? (
-              <p style={{ fontSize: 13, color: "rgba(255,255,255,0.4)" }}>Loading students...</p>
-            ) : students.length === 0 ? (
-              <div
-                style={{
-                  border: "1.5px dashed rgba(255,255,255,0.15)",
-                  borderRadius: 12,
-                  padding: "32px 20px",
-                  textAlign: "center",
-                  color: "rgba(255,255,255,0.3)",
-                  fontSize: 13,
-                }}
-              >
-                No students yet. Create the first record to begin advising.
-              </div>
-            ) : (
-              <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-                {students.map((student) => (
-                  <button
-                    key={student.id}
-                    type="button"
-                    onClick={() => openStudentWorkspace(student.id)}
-                    style={{
-                      background: "rgba(255,255,255,0.05)",
-                      border: "1px solid rgba(255,255,255,0.1)",
-                      borderRadius: 12,
-                      padding: "14px 18px",
-                      textAlign: "left",
-                      color: "#fff",
-                      cursor: "pointer",
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "space-between",
-                      transition: "all 0.2s",
-                    }}
-                    onMouseEnter={(e) => {
-                      e.currentTarget.style.borderColor = ORANGE;
-                      e.currentTarget.style.background = "rgba(248,92,0,0.09)";
-                    }}
-                    onMouseLeave={(e) => {
-                      e.currentTarget.style.borderColor = "rgba(255,255,255,0.1)";
-                      e.currentTarget.style.background = "rgba(255,255,255,0.05)";
-                    }}
-                  >
-                    <div>
-                      <div style={{ fontWeight: 600, fontSize: 15 }}>{student.name}</div>
-                      <div style={{ fontSize: 12, color: "rgba(255,255,255,0.45)", marginTop: 4 }}>
-                        {[student.externalStudentId, student.major, student.academicYear]
-                          .filter(Boolean)
-                          .join(" · ") || "No metadata yet"}
-                      </div>
-                    </div>
-                    <span
-                      style={{
-                        fontSize: 12,
-                        fontWeight: 700,
-                        color: ORANGE,
-                        background: "rgba(248,92,0,0.15)",
-                        borderRadius: 6,
-                        padding: "4px 10px",
-                      }}
-                    >
-                      Open →
-                    </span>
-                  </button>
-                ))}
-              </div>
-            )}
-          </div>
-
-          {/* Add student form */}
-          <div style={cardStyle}>
-            <h2 style={{ fontSize: 17, fontWeight: 700, margin: "0 0 4px" }}>Add Student</h2>
-            <p style={{ fontSize: 13, color: "rgba(255,255,255,0.45)", margin: "0 0 20px" }}>
-              Create a student record to own schedules, imports, and requirements.
-            </p>
-
-            <form onSubmit={handleCreateStudent} style={{ display: "flex", flexDirection: "column", gap: 14 }}>
-              <div>
-                <label htmlFor="name" style={labelStyle}>Student Name</label>
-                <input
-                  id="name"
-                  style={inputStyle}
-                  placeholder="Jane Smith"
-                  value={form.name}
-                  required
-                  onChange={(e) => setForm((c) => ({ ...c, name: e.target.value }))}
-                  onFocus={(e) => (e.target.style.borderColor = ORANGE)}
-                  onBlur={(e) => (e.target.style.borderColor = "rgba(255,255,255,0.15)")}
-                />
-              </div>
-              <div>
-                <label htmlFor="externalStudentId" style={labelStyle}>SUID</label>
-                <input
-                  id="externalStudentId"
-                  style={inputStyle}
-                  placeholder="900123456"
-                  value={form.externalStudentId}
-                  onChange={(e) => setForm((c) => ({ ...c, externalStudentId: e.target.value }))}
-                  onFocus={(e) => (e.target.style.borderColor = ORANGE)}
-                  onBlur={(e) => (e.target.style.borderColor = "rgba(255,255,255,0.15)")}
-                />
-              </div>
-              <div>
-                <label htmlFor="email" style={labelStyle}>Student Email</label>
-                <input
-                  id="email"
-                  type="email"
-                  style={inputStyle}
-                  placeholder="student@syr.edu"
-                  value={form.email}
-                  onChange={(e) => setForm((c) => ({ ...c, email: e.target.value }))}
-                  onFocus={(e) => (e.target.style.borderColor = ORANGE)}
-                  onBlur={(e) => (e.target.style.borderColor = "rgba(255,255,255,0.15)")}
-                />
-              </div>
-              <div style={{ display: "flex", gap: 12 }}>
-                <div style={{ flex: 1 }}>
-                  <label htmlFor="major" style={labelStyle}>Major</label>
-                  <input
-                    id="major"
-                    style={inputStyle}
-                    placeholder="Computer Science, BS"
-                    value={form.major}
-                    onChange={(e) => setForm((c) => ({ ...c, major: e.target.value }))}
-                    onFocus={(e) => (e.target.style.borderColor = ORANGE)}
-                    onBlur={(e) => (e.target.style.borderColor = "rgba(255,255,255,0.15)")}
+          <Card className="border-border/80 shadow-md lg:col-span-5">
+            <CardHeader>
+              <CardTitle>Add student</CardTitle>
+              <CardDescription>
+                New records own schedules, imports, and requirements in this workspace.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <form onSubmit={handleCreateStudent} className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="name">Student name</Label>
+                  <Input
+                    id="name"
+                    placeholder="Jane Smith"
+                    required
+                    value={form.name}
+                    onChange={(e) => setForm((c) => ({ ...c, name: e.target.value }))}
                   />
                 </div>
-                <div style={{ flex: 1 }}>
-                  <label htmlFor="academicYear" style={labelStyle}>Year</label>
-                  <input
-                    id="academicYear"
-                    style={inputStyle}
-                    placeholder="Junior"
-                    value={form.academicYear}
-                    onChange={(e) => setForm((c) => ({ ...c, academicYear: e.target.value }))}
-                    onFocus={(e) => (e.target.style.borderColor = ORANGE)}
-                    onBlur={(e) => (e.target.style.borderColor = "rgba(255,255,255,0.15)")}
+                <div className="space-y-2">
+                  <Label htmlFor="externalStudentId">SUID</Label>
+                  <Input
+                    id="externalStudentId"
+                    placeholder="900123456"
+                    value={form.externalStudentId}
+                    onChange={(e) => setForm((c) => ({ ...c, externalStudentId: e.target.value }))}
                   />
                 </div>
-              </div>
-              <button
-                type="submit"
-                disabled={isCreating}
-                style={{
-                  marginTop: 4,
-                  background: isCreating
-                    ? "rgba(248,92,0,0.4)"
-                    : `linear-gradient(135deg, ${ORANGE}, #cc4a00)`,
-                  border: "none",
-                  borderRadius: 10,
-                  padding: "12px",
-                  color: "#fff",
-                  fontWeight: 700,
-                  fontSize: 15,
-                  cursor: isCreating ? "not-allowed" : "pointer",
-                  boxShadow: isCreating ? "none" : "0 6px 20px rgba(248,92,0,0.4)",
-                  transition: "all 0.2s",
-                }}
-              >
-                {isCreating ? "Creating..." : "Create Student"}
-              </button>
-            </form>
-          </div>
+                <div className="space-y-2">
+                  <Label htmlFor="email">Student email</Label>
+                  <Input
+                    id="email"
+                    type="email"
+                    placeholder="student@syr.edu"
+                    value={form.email}
+                    onChange={(e) => setForm((c) => ({ ...c, email: e.target.value }))}
+                  />
+                </div>
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <div className="space-y-2">
+                    <Label htmlFor="major">Major</Label>
+                    <Input
+                      id="major"
+                      placeholder="Computer Science, BS"
+                      value={form.major}
+                      onChange={(e) => setForm((c) => ({ ...c, major: e.target.value }))}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="academicYear">Year</Label>
+                    <Input
+                      id="academicYear"
+                      placeholder="Junior"
+                      value={form.academicYear}
+                      onChange={(e) => setForm((c) => ({ ...c, academicYear: e.target.value }))}
+                    />
+                  </div>
+                </div>
+                <Button type="submit" className="w-full" disabled={isCreating} size="lg">
+                  {isCreating ? (
+                    <>
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                      Creating…
+                    </>
+                  ) : (
+                    "Create student"
+                  )}
+                </Button>
+              </form>
+            </CardContent>
+          </Card>
         </div>
       </div>
-    </main>
+
+      <AlertDialog
+        open={!!deletingStudent}
+        onOpenChange={(open) => {
+          if (!open && !isDeleting) {
+            setDeletingStudent(null);
+          }
+        }}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Remove this student?</AlertDialogTitle>
+            <AlertDialogDescription>
+              {deletingStudent ? (
+                <>
+                  <span className="font-medium text-foreground">{deletingStudent.name}</span> will be
+                  removed from your roster. Their saved schedule, academic imports, and degree
+                  requirement data stored for this app will be permanently deleted.
+                </>
+              ) : null}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isDeleting}>Cancel</AlertDialogCancel>
+            <Button
+              variant="destructive"
+              disabled={isDeleting}
+              onClick={confirmRemoveStudent}
+            >
+              {isDeleting ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  Removing…
+                </>
+              ) : (
+                "Remove student"
+              )}
+            </Button>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </div>
   );
 }

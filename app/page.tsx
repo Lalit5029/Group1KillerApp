@@ -6,6 +6,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { signOut, useSession } from "next-auth/react";
 import CourseScheduler from "@/components/course-scheduler";
 import { Button } from "@/components/ui/button";
+import { SiteHeader } from "@/components/site-header";
 import type { Student } from "@/lib/types";
 
 export default function Home() {
@@ -54,7 +55,11 @@ export default function Home() {
   }, [router, status, studentId]);
 
   if (status === "loading" || isLoadingStudent) {
-    return <main className="min-h-screen p-8 text-sm text-slate-600">Loading advisor workspace...</main>;
+    return (
+      <main className="min-h-screen bg-background p-8 text-sm text-muted-foreground">
+        Loading advisor workspace…
+      </main>
+    );
   }
 
   if (!studentId) {
@@ -63,11 +68,11 @@ export default function Home() {
 
   if (error || !student) {
     return (
-      <main className="min-h-screen bg-slate-50 p-8">
-        <div className="mx-auto max-w-3xl rounded-lg border bg-white p-6 shadow-sm">
-          <h1 className="text-xl font-semibold text-slate-900">Unable to open student workspace</h1>
-          <p className="mt-2 text-sm text-slate-600">{error || "Student not found."}</p>
-          <div className="mt-4 flex gap-3">
+      <main className="min-h-screen bg-muted/30 p-8">
+        <div className="mx-auto max-w-3xl rounded-xl border border-border bg-card p-8 shadow-sm">
+          <h1 className="text-xl font-semibold text-foreground">Unable to open student workspace</h1>
+          <p className="mt-2 text-sm text-muted-foreground">{error || "Student not found."}</p>
+          <div className="mt-6 flex flex-wrap gap-3">
             <Button asChild>
               <Link href="/students">Back to student list</Link>
             </Button>
@@ -80,37 +85,55 @@ export default function Home() {
     );
   }
 
+  const subtitle = [
+    student.name,
+    student.externalStudentId ? `SUID ${student.externalStudentId}` : null,
+  ]
+    .filter(Boolean)
+    .join(" · ");
+
   return (
-    <main className="min-h-screen bg-gray-50 p-4 md:p-8">
-      <nav className="mb-8 rounded-lg bg-white shadow-sm">
-        <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
-          <div>
-            <h1 className="text-xl font-bold text-slate-900">Advisor Course Planner</h1>
-            <p className="text-xs text-slate-500">
-              Working on {student.name}
-              {student.externalStudentId ? ` • ${student.externalStudentId}` : ""}
-            </p>
+    <div className="min-h-screen bg-muted/25">
+      <SiteHeader
+        title="Course Planner"
+        subtitle={subtitle}
+      >
+        <div className="hidden text-right sm:block">
+          <div className="text-sm font-medium text-foreground">
+            {session?.user?.name || "Advisor"}
           </div>
-          <div className="flex items-center gap-3">
-            <div className="hidden text-right sm:block">
-              <div className="text-sm font-medium text-slate-900">
-                {session?.user?.name || "Advisor"}
-              </div>
-              <div className="text-xs text-slate-500">{session?.user?.email}</div>
-            </div>
-            <Button asChild variant="outline">
-              <Link href="/students">Switch student</Link>
-            </Button>
-            <Button variant="outline" onClick={() => signOut({ callbackUrl: "/login" })}>
-              Log out
-            </Button>
+          <div className="max-w-[200px] truncate text-xs text-muted-foreground">
+            {session?.user?.email}
           </div>
         </div>
-      </nav>
+        <Button asChild variant="secondary" size="sm" className="hidden sm:inline-flex">
+          <Link href="/students">Switch student</Link>
+        </Button>
+        <Button asChild variant="outline" size="sm" className="sm:hidden">
+          <Link href="/students">Students</Link>
+        </Button>
+        <Button variant="outline" size="sm" onClick={() => signOut({ callbackUrl: "/login" })}>
+          Log out
+        </Button>
+      </SiteHeader>
 
-      <div className="mx-auto max-w-7xl">
-        <CourseScheduler selectedStudentId={student.id} selectedStudentName={student.name} />
-      </div>
-    </main>
+      <main className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8 lg:py-8">
+        <div className="mb-6 rounded-lg border border-border/60 bg-card/80 px-4 py-4 shadow-sm backdrop-blur-sm sm:px-4">
+          <div>
+            <h2 className="text-xl font-semibold tracking-tight text-foreground md:text-2xl">
+              Academic planning workspace
+            </h2>
+            <p className="mt-1 max-w-3xl text-sm text-muted-foreground">
+              Schedule courses, review degree requirements, and import academic records
+            </p>
+          </div>
+        </div>
+        <CourseScheduler
+          selectedStudentId={student.id}
+          selectedStudentName={student.name}
+          studentAcademicYear={student.academicYear}
+        />
+      </main>
+    </div>
   );
 }

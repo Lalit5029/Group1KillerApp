@@ -1,288 +1,298 @@
-// "use client"
+"use client";
 
-// import type React from "react"
+import { useState, useEffect, useMemo, useRef } from "react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
+import { Search, Plus } from "lucide-react";
+import type { Course, CourseSearchCriteria } from "@/lib/types";
+import {
+  buildSearchQueryFromCriteria,
+  filterCoursesByCriteria,
+} from "@/lib/course-search";
+import { cn } from "@/lib/utils";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
-// import { useState } from "react"
-// import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
-// import { Input } from "@/components/ui/input"
-// import { Button } from "@/components/ui/button"
-// import { Search, Plus } from "lucide-react"
-// import type { Course } from "@/lib/types"
-
-// interface SearchPopupProps {
-//   onClose: () => void
-//   onSearch: (query: string) => void
-//   searchResults: Course[]
-//   onAddCourse: (course: Course) => void
-// }
-
-// export function SearchPopup({ onClose, onSearch, searchResults, onAddCourse }: SearchPopupProps) {
-//   const [searchQuery, setSearchQuery] = useState("")
-
-//   const handleSearch = (e: React.FormEvent) => {
-//     e.preventDefault()
-//     onSearch(searchQuery)
-//   }
-
-//   const handleKeyDown = (e: React.KeyboardEvent) => {
-//     if (e.key === "Enter") {
-//       onSearch(searchQuery)
-//     }
-//   }
-
-//   return (
-//     <Dialog open={true} onOpenChange={() => onClose()}>
-//       <DialogContent className="sm:max-w-[650px]">
-//         <DialogHeader>
-//           <DialogTitle className="flex items-center gap-2">
-//             <Search className="h-5 w-5 text-primary" />
-//             Search Courses
-//           </DialogTitle>
-//         </DialogHeader>
-
-//         <form onSubmit={handleSearch} className="mt-4">
-//           <div className="relative">
-//             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
-//             <Input
-//               placeholder="Search by Course Code or Instructor Name and press Enter..."
-//               value={searchQuery}
-//               onChange={(e) => setSearchQuery(e.target.value)}
-//               onKeyDown={handleKeyDown}
-//               className="pl-10 bg-white border-2 border-primary-200 focus:border-primary focus:ring-2 focus:ring-primary-100"
-//             />
-//             <Button
-//               type="submit"
-//               className="absolute right-1 top-1/2 transform -translate-y-1/2 bg-primary hover:bg-primary-600"
-//             >
-//               Search
-//             </Button>
-//           </div>
-//         </form>
-
-//         <div className="mt-4 max-h-[350px] overflow-y-auto border rounded-md border-gray-200">
-//           {searchResults.length === 0 ? (
-//             <p className="text-center text-muted-foreground py-8 bg-gray-50">
-//               {searchQuery ? "No courses found matching your search." : "Enter a search term to find courses."}
-//             </p>
-//           ) : (
-//             <div className="space-y-2 p-2">
-//               {searchResults.map((course, index) => (
-//                 <div
-//                   key={`${course.Class}-${course.Section}-${index}`}
-//                   className={`flex justify-between items-center p-3 rounded-md ${getDepartmentClass(course.Class)} hover:shadow-md transition-shadow`}
-//                 >
-//                   <div>
-//                     <div className="font-medium">
-//                       {course.Class} {course.Section}
-//                     </div>
-//                     <div className="text-sm text-muted-foreground">
-//                       {course.DaysTimes || "TBA"} - {course.Instructor || "N/A"}
-//                     </div>
-//                     <div className="text-xs text-muted-foreground">{course.Room || "TBA"}</div>
-//                   </div>
-//                   <Button
-//                     size="sm"
-//                     onClick={() => onAddCourse(course)}
-//                     className="flex items-center gap-1 bg-primary hover:bg-primary-600"
-//                   >
-//                     <Plus className="h-4 w-4" />
-//                     Add
-//                   </Button>
-//                 </div>
-//               ))}
-//             </div>
-//           )}
-//         </div>
-//       </DialogContent>
-//     </Dialog>
-//   )
-// }
-
-// // Helper function to get department styling class
-// function getDepartmentClass(className?: string): string {
-//   if (!className) return "bg-gray-100"
-
-//   const deptCode = getDepartmentCode(className)
-
-//   const deptColors: Record<string, string> = {
-//     BEN: "bg-blue-50 border-l-4 border-blue-500",
-//     CSE: "bg-green-50 border-l-4 border-green-500",
-//     MAE: "bg-red-50 border-l-4 border-red-500",
-//     CEN: "bg-yellow-50 border-l-4 border-yellow-500",
-//     CEE: "bg-purple-50 border-l-4 border-purple-500",
-//     ELE: "bg-teal-50 border-l-4 border-teal-500",
-//     MAT: "bg-orange-50 border-l-4 border-orange-500",
-//     PHY: "bg-indigo-50 border-l-4 border-indigo-500",
-//     CHE: "bg-emerald-50 border-l-4 border-emerald-500",
-//     ECS: "bg-cyan-50 border-l-4 border-cyan-500",
-//     AEE: "bg-rose-50 border-l-4 border-rose-500",
-//     WRT: "bg-gray-50 border-l-4 border-gray-500",
-//   }
-
-//   return deptColors[deptCode] || "bg-gray-100"
-// }
-
-"use client"
-
-import { useState } from "react"
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
-import { Input } from "@/components/ui/input"
-import { Button } from "@/components/ui/button"
-import { Search, Plus } from "lucide-react"
-import type { Course, CourseSearchCriteria } from "@/lib/types"
-import { getDepartmentCode } from "@/lib/utils"
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
+const PREVIEW_DEBOUNCE_MS = 200;
+const AUTOCOMPLETE_MAX = 40;
 
 interface SearchPopupProps {
-  onClose: () => void
-  onSearch: (criteria: CourseSearchCriteria) => void
-  searchResults: Course[]
-  onAddCourse: (course: Course) => void
+  onClose: () => void;
+  onSearch: (criteria: CourseSearchCriteria) => void;
+  /** Updates result list while typing (no toast). */
+  onCriteriaPreview?: (criteria: CourseSearchCriteria) => void;
+  catalogCourses: Course[];
+  searchResults: Course[];
+  onAddCourse: (course: Course) => void;
 }
 
-export function SearchPopup({ onClose, onSearch, searchResults, onAddCourse }: SearchPopupProps) {
-  const [criteria, setCriteria] = useState<CourseSearchCriteria>({
-    query: "",
-    subject: "",
-    courseNumber: "",
-    instructor: "",
-    section: "",
-  })
+const emptyCriteria: CourseSearchCriteria = {
+  query: "",
+  subject: "",
+  courseNumber: "",
+  instructor: "",
+  section: "",
+};
+
+export function SearchPopup({
+  onClose,
+  onSearch,
+  onCriteriaPreview,
+  catalogCourses,
+  searchResults,
+  onAddCourse,
+}: SearchPopupProps) {
+  const [criteria, setCriteria] = useState<CourseSearchCriteria>({ ...emptyCriteria });
+  const [debouncedCriteria, setDebouncedCriteria] = useState<CourseSearchCriteria>({
+    ...emptyCriteria,
+  });
+  const [focusWithinForm, setFocusWithinForm] = useState(false);
+  const formRef = useRef<HTMLFormElement>(null);
+
+  useEffect(() => {
+    const id = window.setTimeout(() => setDebouncedCriteria(criteria), PREVIEW_DEBOUNCE_MS);
+    return () => window.clearTimeout(id);
+  }, [criteria]);
+
+  useEffect(() => {
+    onCriteriaPreview?.(debouncedCriteria);
+  }, [debouncedCriteria, onCriteriaPreview]);
+
+  const suggestions = useMemo(() => {
+    const q = buildSearchQueryFromCriteria(debouncedCriteria);
+    if (!q.trim()) return [];
+    return filterCoursesByCriteria(catalogCourses, debouncedCriteria).slice(0, AUTOCOMPLETE_MAX);
+  }, [catalogCourses, debouncedCriteria]);
 
   const handleSearch = (e: React.FormEvent) => {
-    e.preventDefault()
-    onSearch(criteria)
-  }
+    e.preventDefault();
+    onSearch(criteria);
+  };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === "Enter") {
-      onSearch(criteria)
+      onSearch(criteria);
     }
-  }
+  };
 
   const requestedCourseLabel = [criteria.subject, criteria.courseNumber]
     .filter(Boolean)
     .join(" ")
-    .trim()
+    .trim();
 
-  const hasInput = Object.values(criteria).some((value) => (value || "").trim().length > 0)
+  const hasInput = Object.values(criteria).some((value) => (value || "").trim().length > 0);
+
+  const showAutocomplete =
+    focusWithinForm &&
+    buildSearchQueryFromCriteria(debouncedCriteria).trim().length > 0 &&
+    suggestions.length > 0;
+
+  const pickSuggestion = (course: Course) => {
+    onAddCourse(course);
+  };
 
   return (
-    <Dialog open={true} onOpenChange={onClose}>
+    <Dialog open onOpenChange={onClose}>
       <DialogContent className="sm:max-w-[650px]">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Search className="h-5 w-5 text-primary" />
-            Search Courses
+            Search courses
           </DialogTitle>
         </DialogHeader>
 
-        <form onSubmit={handleSearch} className="mt-4">
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <Input
-              placeholder="Subject (e.g., CIS)"
-              value={criteria.subject}
-              onChange={(e) => setCriteria((prev) => ({ ...prev, subject: e.target.value }))}
-            />
-            <Input
-              placeholder="Course Number (e.g., 454)"
-              value={criteria.courseNumber}
-              onChange={(e) => setCriteria((prev) => ({ ...prev, courseNumber: e.target.value }))}
-            />
-            <Input
-              placeholder="Instructor"
-              value={criteria.instructor}
-              onChange={(e) => setCriteria((prev) => ({ ...prev, instructor: e.target.value }))}
-            />
-            <Input
-              placeholder="Section"
-              value={criteria.section}
-              onChange={(e) => setCriteria((prev) => ({ ...prev, section: e.target.value }))}
-            />
-            <div className="sm:col-span-2 relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
-              <Input
-                placeholder="Keyword (course code, room, days/times)"
-                value={criteria.query}
-                onChange={(e) => setCriteria((prev) => ({ ...prev, query: e.target.value }))}
-                onKeyDown={handleKeyDown}
-                className="pl-10 bg-white border-2 border-primary-200 focus:border-primary focus:ring-2 focus:ring-primary-100"
-              />
+        <form
+          ref={formRef}
+          onSubmit={handleSearch}
+          className="mt-4"
+          onFocusCapture={() => setFocusWithinForm(true)}
+          onBlurCapture={(e) => {
+            if (!formRef.current?.contains(e.relatedTarget as Node)) {
+              setFocusWithinForm(false);
+            }
+          }}
+        >
+          <div className="flex flex-col gap-3">
+            <div className="space-y-2">
+              <Label htmlFor="course-keyword-search">Keyword search</Label>
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                <Input
+                  id="course-keyword-search"
+                  placeholder='Try "CIS", instructor name, section, or room…'
+                  value={criteria.query}
+                  onChange={(e) =>
+                    setCriteria((prev) => ({ ...prev, query: e.target.value }))
+                  }
+                  onKeyDown={handleKeyDown}
+                  autoComplete="off"
+                  className="border-2 border-input bg-background pl-10 focus-visible:border-primary focus-visible:ring-primary/25"
+                />
+
+                {showAutocomplete && (
+                  <ul
+                    className="absolute left-0 right-0 top-full z-50 mt-1 max-h-56 overflow-y-auto rounded-md border border-border bg-popover p-1 text-popover-foreground shadow-lg"
+                    role="listbox"
+                    aria-label="Matching courses"
+                  >
+                    {suggestions.map((course, index) => (
+                      <li key={`${course.Class}-${course.Section}-${index}`} role="option">
+                        <button
+                          type="button"
+                          className={cn(
+                            "flex w-full items-center justify-between gap-2 rounded-sm px-3 py-2 text-left text-sm",
+                            "hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                          )}
+                          onMouseDown={(e) => {
+                            e.preventDefault();
+                            pickSuggestion(course);
+                          }}
+                        >
+                          <span className="min-w-0">
+                            <span className="font-medium">
+                              {course.Class || requestedCourseLabel || "Course"}{" "}
+                              <span className="text-muted-foreground">{course.Section}</span>
+                            </span>
+                            <span className="block truncate text-xs text-muted-foreground">
+                              {course.Instructor || "Instructor TBA"} · {course.DaysTimes || "TBA"}
+                            </span>
+                          </span>
+                          <Plus className="h-4 w-4 shrink-0 text-primary" aria-hidden />
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+              <div className="space-y-2">
+                <Label htmlFor="course-subject">Subject</Label>
+                <Input
+                  id="course-subject"
+                  placeholder="e.g., CIS"
+                  value={criteria.subject}
+                  onChange={(e) =>
+                    setCriteria((prev) => ({ ...prev, subject: e.target.value }))
+                  }
+                  autoComplete="off"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="course-number">Course number</Label>
+                <Input
+                  id="course-number"
+                  placeholder="e.g., 454"
+                  value={criteria.courseNumber}
+                  onChange={(e) =>
+                    setCriteria((prev) => ({ ...prev, courseNumber: e.target.value }))
+                  }
+                  autoComplete="off"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="course-instructor">Instructor</Label>
+                <Input
+                  id="course-instructor"
+                  placeholder="Name"
+                  value={criteria.instructor}
+                  onChange={(e) =>
+                    setCriteria((prev) => ({ ...prev, instructor: e.target.value }))
+                  }
+                  autoComplete="off"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="course-section">Section</Label>
+                <Input
+                  id="course-section"
+                  placeholder="Section"
+                  value={criteria.section}
+                  onChange={(e) =>
+                    setCriteria((prev) => ({ ...prev, section: e.target.value }))
+                  }
+                  autoComplete="off"
+                />
+              </div>
             </div>
           </div>
-          <div className="mt-3 flex justify-end">
-            <Button type="submit" className="bg-primary hover:bg-primary-600">
+
+          <div className="mt-4 flex justify-end">
+            <Button type="submit" className="bg-primary hover:bg-primary/90">
               Search
             </Button>
           </div>
         </form>
 
-        <div className="mt-4 max-h-[350px] overflow-y-auto border rounded-md border-gray-200">
+        <div className="mt-4 max-h-[350px] overflow-y-auto rounded-md border border-border">
           {searchResults.length === 0 ? (
-            <p className="text-center text-muted-foreground py-8 bg-gray-50">
-              {hasInput ? "No courses found matching your search." : "Enter course details to search."}
+            <p className="bg-muted/40 py-8 text-center text-sm text-muted-foreground">
+              {hasInput
+                ? "No courses found matching your search."
+                : "Type above to see suggestions, or use Search for the full result list."}
             </p>
           ) : (
             <div className="space-y-2 p-2">
               {searchResults.map((course, index) => {
-                const isNotAvailable = course.Section === "Not Available"
+                const isNotAvailable = course.Section === "Not Available";
                 return (
-                <div
-                  key={`${course.Class}-${course.Section}-${index}`}
-                  className={`flex justify-between items-center p-3 rounded-md ${getDepartmentCode(course.Class)} hover:shadow-md transition-shadow`}
-                >
-                  <div>
-                    <div className="font-medium">
-                      {course.Class || requestedCourseLabel || "Requested Course"} {course.Section}
-                    </div>
-                    <div className="text-sm text-muted-foreground">
-                      {course.DaysTimes || "TBA"} - 
-                      <TooltipProvider>
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-
-                            <span className="ml-1 px-2 py-1 rounded-md bg-gray-100  border-primary hover:bg-gray-200 transition-colors cursor-pointer inline-flex items-center gap-1 border border-gray-300">
-                              {course.Instructor || "N/A"}
-                            </span>
-                          </TooltipTrigger>
-                          <TooltipContent className="max-w-[300px]">
-                            <div className="space-y-2">
-                              <div className="flex items-center gap-2">
-                                <h4 className="font-semibold">{course.Instructor}</h4>
-                                <p className="text-sm">Rating: {course.RMP_Rating || "N/A"}/5</p>
-                              </div>
-                              {course.Reviews?.length ? (
-                                <ul className="list-disc pl-4 space-y-1">
-                                  {course.Reviews.map((review, i) => (
-                                    <li key={i}>{review}</li>
-                                  ))}
-                                </ul>
-                              ) : (
-                                <p>No reviews yet</p>
-                              )}
-                            </div>
-                          </TooltipContent>
-                        </Tooltip>
-                      </TooltipProvider>
-                    </div>
-                    <div className="text-xs text-muted-foreground">{course.Room || "TBA"}</div>
-                  </div>
-                  <Button
-                    size="sm"
-                    onClick={() => onAddCourse(course)}
-                    disabled={isNotAvailable}
-                    className="flex items-center gap-1 bg-primary hover:bg-primary-600"
+                  <div
+                    key={`${course.Class}-${course.Section}-${index}`}
+                    className="flex items-center justify-between rounded-md border border-border bg-card p-3 transition-shadow hover:shadow-md"
                   >
-                    <Plus className="h-4 w-4" />
-                    {isNotAvailable ? "Not Available" : "Add"}
-                  </Button>
-                </div>
-                )
+                    <div className="min-w-0">
+                      <div className="font-medium">
+                        {course.Class || requestedCourseLabel || "Requested course"} {course.Section}
+                      </div>
+                      <div className="text-sm text-muted-foreground">
+                        {course.DaysTimes || "TBA"} -
+                        <TooltipProvider>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <span className="ml-1 inline-flex cursor-pointer items-center gap-1 rounded-md border border-border bg-muted px-2 py-0.5 transition-colors hover:bg-muted/80">
+                                {course.Instructor || "N/A"}
+                              </span>
+                            </TooltipTrigger>
+                            <TooltipContent className="max-w-[300px]">
+                              <div className="space-y-2">
+                                <div className="flex items-center gap-2">
+                                  <h4 className="font-semibold">{course.Instructor}</h4>
+                                  <p className="text-sm">Rating: {course.RMP_Rating || "N/A"}/5</p>
+                                </div>
+                                {course.Reviews?.length ? (
+                                  <ul className="list-disc space-y-1 pl-4">
+                                    {course.Reviews.map((review, i) => (
+                                      <li key={i}>{review}</li>
+                                    ))}
+                                  </ul>
+                                ) : (
+                                  <p>No reviews yet</p>
+                                )}
+                              </div>
+                            </TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
+                      </div>
+                      <div className="text-xs text-muted-foreground">{course.Room || "TBA"}</div>
+                    </div>
+                    <Button
+                      size="sm"
+                      onClick={() => onAddCourse(course)}
+                      disabled={isNotAvailable}
+                      className="shrink-0 bg-primary hover:bg-primary/90"
+                    >
+                      <Plus className="h-4 w-4" />
+                      {isNotAvailable ? "Unavailable" : "Add"}
+                    </Button>
+                  </div>
+                );
               })}
             </div>
           )}
         </div>
       </DialogContent>
     </Dialog>
-  )
+  );
 }

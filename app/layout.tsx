@@ -6,8 +6,9 @@ import { Providers } from "./providers"
 const inter = Inter({ subsets: ["latin"] })
 
 export const metadata: Metadata = {
-  title: "Course Scheduler",
-  description: "Plan your academic schedule with ease",
+  title: "Syracuse Course Planner | Advisor Workspace",
+  description:
+    "Plan schedules, degree requirements, and academic imports for Syracuse University students.",
 }
 
 export default function RootLayout({
