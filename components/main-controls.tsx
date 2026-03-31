@@ -89,8 +89,7 @@ export function MainControls({
           <Button
             onClick={onOpenWhatIf}
             disabled={disabled}
-            variant="secondary"
-            className="flex items-center gap-2 border border-primary/20"
+            className="flex items-center gap-2 bg-primary-700 hover:bg-primary-800 text-white"
           >
             <FlaskConical className="h-4 w-4" />
             What-if planner
@@ -100,8 +99,7 @@ export function MainControls({
 
           <Button
             onClick={onResetSchedule}
-            variant="outline"
-            className="flex items-center gap-2 border-primary-200 text-primary-700 hover:bg-primary-50"
+            className="flex items-center gap-2 bg-primary-700 hover:bg-primary-800 text-white"
           >
             <Trash2 className="h-4 w-4" />
             Reset Schedule

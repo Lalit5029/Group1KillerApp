@@ -29,7 +29,7 @@ export function ScheduleImportModal({ onCoursesImported }: ScheduleImportModalPr
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>
-        <Button className="flex items-center gap-2">
+        <Button className="flex items-center gap-2 bg-primary-700 hover:bg-primary-800 text-white">
           <ScanText className="h-4 w-4" />
           Import from Image
         </Button>
