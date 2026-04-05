@@ -11,12 +11,14 @@ import {
   calculateTotalCredits,
   getGradeColor,
 } from "@/lib/academic-data"
+import { usePresentationPrivacy } from "@/components/presentation-privacy-provider"
 
 interface AcademicCalendarDisplayProps {
   courses: CourseData[] | null
 }
 
 export function AcademicCalendarDisplay({ courses }: AcademicCalendarDisplayProps) {
+  const { formatGrade, formatGpa, hideSensitiveAcademic } = usePresentationPrivacy()
   const [groupedCourses, setGroupedCourses] = useState<Record<string, CourseData[]>>({})
   const [sortedTerms, setSortedTerms] = useState<string[]>([])
   const [activeTab, setActiveTab] = useState<string>("timeline")
@@ -99,7 +101,7 @@ export function AcademicCalendarDisplay({ courses }: AcademicCalendarDisplayProp
                       <h3 className="text-lg font-medium">{term}</h3>
                       <div className="flex gap-4">
                         <Badge variant="outline">Credits: {calculateTotalCredits(termCourses)}</Badge>
-                        <Badge variant="outline">GPA: {calculateGPA(termCourses)}</Badge>
+                        <Badge variant="outline">GPA: {formatGpa(calculateGPA(termCourses))}</Badge>
                       </div>
                     </div>
 
@@ -111,8 +113,13 @@ export function AcademicCalendarDisplay({ courses }: AcademicCalendarDisplayProp
                           >
                             <div className="flex justify-between items-start">
                               <div className="font-medium">{course.course}</div>
-                              <div className="font-medium" style={{ color: getGradeColor(course.grade) }}>
-                                {course.grade}
+                              <div
+                                className="font-medium"
+                                style={hideSensitiveAcademic ? undefined : { color: getGradeColor(course.grade) }}
+                              >
+                                <span className={hideSensitiveAcademic ? "text-muted-foreground" : ""}>
+                                  {formatGrade(course.grade)}
+                                </span>
                               </div>
                             </div>
                             <div className="text-sm text-slate-600 truncate" title={course.title}>
@@ -140,7 +147,7 @@ export function AcademicCalendarDisplay({ courses }: AcademicCalendarDisplayProp
                     <h3 className="font-medium">Courses for {term}</h3>
                     <div className="flex gap-4">
                       <Badge variant="outline">Credits: {calculateTotalCredits(termCourses)}</Badge>
-                      <Badge variant="outline">GPA: {calculateGPA(termCourses)}</Badge>
+                      <Badge variant="outline">GPA: {formatGpa(calculateGPA(termCourses))}</Badge>
                     </div>
                   </div>
 
@@ -160,8 +167,11 @@ export function AcademicCalendarDisplay({ courses }: AcademicCalendarDisplayProp
                           <tr key={`${course.course}-${idx}`} className="border-t hover:bg-slate-50">
                             <td className="p-3 font-medium">{course.course}</td>
                             <td className="p-3">{course.title}</td>
-                            <td className="p-3 font-medium" style={{ color: getGradeColor(course.grade) }}>
-                              {course.grade}
+                            <td
+                              className={`p-3 font-medium ${hideSensitiveAcademic ? "text-muted-foreground" : ""}`}
+                              style={hideSensitiveAcademic ? undefined : { color: getGradeColor(course.grade) }}
+                            >
+                              {formatGrade(course.grade)}
                             </td>
                             <td className="p-3">{course.credits}</td>
                             <td className="p-3 text-sm">{course.requirementGroup || "General Education"}</td>

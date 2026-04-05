@@ -1,5 +1,8 @@
+"use client"
+
 import Link from "next/link"
 import { ThemeToggle } from "@/components/theme-toggle"
+import { PresentationPrivacyToggle } from "@/components/presentation-privacy-toggle"
 import { cn } from "@/lib/utils"
 
 interface SiteHeaderProps {
@@ -37,6 +40,7 @@ export function SiteHeader({ title, subtitle, children, className }: SiteHeaderP
         </div>
         <div className="flex shrink-0 items-center gap-2 sm:gap-3">
           {children}
+          <PresentationPrivacyToggle />
           <ThemeToggle />
         </div>
       </div>

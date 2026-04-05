@@ -10,12 +10,14 @@ import { Label } from "@/components/ui/label"
 import { Upload, X, FileText, Calendar, CheckCircle } from "lucide-react"
 import { type CourseData, processAcademicData, generateAcademicSummary } from "@/lib/academic-data"
 import { useToast } from "@/hooks/use-toast"
+import { usePresentationPrivacy } from "@/components/presentation-privacy-provider"
 
 interface AcademicFileProcessorProps {
   onDataProcessed: (data: CourseData[]) => void
 }
 
 export function AcademicFileProcessor({ onDataProcessed }: AcademicFileProcessorProps) {
+  const { formatGpa } = usePresentationPrivacy()
   const [file, setFile] = useState<File | null>(null)
   const [isProcessing, setIsProcessing] = useState(false)
   const [isProcessed, setIsProcessed] = useState(false)
@@ -140,7 +142,7 @@ export function AcademicFileProcessor({ onDataProcessed }: AcademicFileProcessor
               <div className="mt-2 space-y-1 text-slate-700">
                 <div>Courses: {summary.totalCourses}</div>
                 <div>Credits: {summary.totalCredits}</div>
-                <div>GPA: {summary.gpa}</div>
+                <div>GPA: {formatGpa(summary.gpa)}</div>
               </div>
             </div>
           )}

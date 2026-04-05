@@ -1,0 +1,1326 @@
+<?xml version='1.0' encoding='utf-8' ?>
+<PAGE id='SSR_CLSRCH_RSLT'><GENSCRIPT id='script'><![CDATA[var oWin=window;
+ var oDoc = window.document;
+oWin.strCurrUrl='https://cs92prod.ps.syr.edu/psc/CS92PROD/EMPLOYEE/SA/c/SA_LEARNER_SERVICES.CLASS_SEARCH.GBL?&PAGE=SSR_CLSRCH_RSLT';
+oWin.strReqURL='';
+bPTActEnterKey = false;
+]]></GENSCRIPT><GENSCRIPT id='script'><![CDATA[oWin.gridRowSelRgbColor_win0 ='rgb(212,219,217)';
+]]></GENSCRIPT><GENSCRIPT id='onloadScript'><![CDATA[var pt_pageinfo = document.getElementById('pt_pageinfo_win0');
+if (pt_pageinfo) {
+pt_pageinfo.setAttribute('Page', 'SSR_CLSRCH_RSLT');
+pt_pageinfo.setAttribute('Component', 'CLASS_SEARCH');
+pt_pageinfo.setAttribute('Menu', 'SA_LEARNER_SERVICES');
+pt_pageinfo.setAttribute('Mode', 'CLASSIC');
+}
+
+ g_bAccessibilityMode=false;
+var actn='';
+var oWin=window;
+var oDoc=document;
+actn=oDoc.win0.ICAction.value;
+oDoc.win0.ICAction.value='None';
+oDoc.win0.ICResubmit.value='0';
+oWin.nResubmit='0';
+oDoc.win0.ICStateNum.value=20;initVars_win0();
+if (typeof resetVars_win0 == "function")resetVars_win0();
+oDoc.win0.ICFocus.value='';
+setupTimeout2();
+if (!isCrossDomainTop()) top.document.title=document.title;
+ptEvent.add(window,'scroll',positionWAIT_win0);
+ptCommonObj2.generateABNSearchResults(document.win0);
+getGblSrchPageNum(actn);
+if (gSrchRsltPageNum <= 5) getAllRelatedActions();
+
+if (typeof(myAppsWindowOpenJS) != 'undefined' && myAppsWindowOpenJS != null && myAppsWindowOpenJS != '')
+ {
+try {eval(myAppsWindowOpenJS);} catch(e) {}
+  myAppsWindowOpenJS=null;
+}
+if (typeof(HelppopupObj_win0) != 'undefined' && HelppopupObj_win0 != null)
+ HelppopupObj_win0.StopPopup('win0');
+if (typeof(ptLongEditCounter) != 'undefined' && ptLongEditCounter != null)
+   ptLongEditCounter.onLoadLongEditCounter();
+ResetGlyph_win0();
+self.scroll(0,0);
+if (typeof ptGridObj_win0 != 'undefined' && ptGridObj_win0)
+ ptGridObj_win0.clearGridArr();
+objToBeFocus = null;
+if (bPTDrag) CancelDragAccessible();
+ bPTDrag = false;
+if (typeof oWin == 'undefined') setEventHandlers_win0('ICFirstAnchor_win0', 'ICLastAnchor_win0', false);
+ else
+ oWin.setEventHandlers_win0('ICFirstAnchor_win0', 'ICLastAnchor_win0', false);
+setFocus_win0('DERIVED_SSTSNAV_SSTS_NAV_TABS_DIS',-1);
+ptLoadingStatus_empty(0);
+setupTimeout2();
+processing_win0(0,3000);]]></GENSCRIPT>
+<FIELD id='win0divPSHIDDENFIELDS'><![CDATA[<input type='hidden' name='ICType' id='ICType' value='Panel' />
+<input type='hidden' name='ICElementNum' id='ICElementNum' value='0' />
+<input type='hidden' name='ICStateNum' id='ICStateNum' value='20' />
+<input type='hidden' name='ICAction' id='ICAction' value='None' />
+<input type='hidden' name='ICModelCancel' id='ICModelCancel' value='0' />
+<input type='hidden' name='ICXPos' id='ICXPos' value='0' />
+<input type='hidden' name='ICYPos' id='ICYPos' value='0' />
+<input type='hidden' name='ResponsetoDiffFrame' id='ResponsetoDiffFrame' value='-1' />
+<input type='hidden' name='TargetFrameName' id='TargetFrameName' value='None' />
+<input type='hidden' name='FacetPath' id='FacetPath' value='None' />
+<input type='hidden' name='ICFocus' id='ICFocus' value='' />
+<input type='hidden' name='ICSaveWarningFilter' id='ICSaveWarningFilter' value='0' />
+<input type='hidden' name='ICChanged' id='ICChanged' value='-1' />
+<input type='hidden' name='ICSkipPending' id='ICSkipPending' value='0' />
+<input type='hidden' name='ICAutoSave' id='ICAutoSave' value='0' />
+<input type='hidden' name='ICResubmit' id='ICResubmit' value='0' />
+<input type='hidden' name='ICSID' id='ICSID' value='tZHi0MYQVZqRbw49hkm7htEMHZXDTv+X697FB0/0aoE=' />
+<input type='hidden' name='ICActionPrompt' id='ICActionPrompt' value='false' />
+<input type='hidden' name='ICBcDomData' id='ICBcDomData' value='' />
+<input type='hidden' name='ICPanelName' id='ICPanelName' value='' />
+<input type='hidden' name='ICFind' id='ICFind' value='' />
+<input type='hidden' name='ICAddCount' id='ICAddCount' value='' />
+<input type='hidden' name='ICAppClsData' id='ICAppClsData' value='' />
+]]></FIELD>
+<FIELD id='win0divPAGEBAR'><![CDATA[]]></FIELD>
+<FIELD id='win0divPSPANELTABS'><![CDATA[]]></FIELD>
+<FIELD id='win0divPAGECONTAINER'><![CDATA[<table class='PSPAGECONTAINER' role='main' aria-labelledby='app_label'><tr><td>
+<DIV class='ps_pspagecontainer' id='win0divPSPAGECONTAINER'><table role='presentation'  border='0' id='ACE_width' cellpadding='0' cellspacing='0' class='PSPAGECONTAINER' cols='13' width='1200'>
+<tr>
+<td width='0' height='3'></td>
+<td width='5'></td>
+<td width='10'></td>
+<td width='6'></td>
+<td width='275'></td>
+<td width='211'></td>
+<td width='211'></td>
+<td width='10'></td>
+<td width='180'></td>
+<td width='85'></td>
+<td width='30'></td>
+<td width='166'></td>
+<td width='8'></td>
+</tr>
+<tr>
+<td height='110'></td>
+<td colspan='9'  valign='top' align='left'>
+<DIV    id='win0divDERIVED_CLSRCH_GROUPBOX1'><table cellpadding='2' cellspacing='0' cols='1'  class='PABACKGROUNDINVISIBLEWBO'  width='795'>
+<tr><td width='793'>
+<table role='presentation'  border='0' id='ACE_DERIVED_CLSRCH_GROUPBOX1' cellpadding='0' cellspacing='0' cols='3' width='816' class='PABACKGROUNDINVISIBLE PTCPGROUPBOXWBO' style='border-style:none' >
+<tr>
+<td width='3' height='0'></td>
+<td width='800'></td>
+<td width='12'></td>
+</tr>
+<tr>
+<td height='98'></td>
+<td  valign='top' align='left'>
+<DIV    id='win0divDERIVED_REGFRM1_GROUP_BOX'><table cellpadding='2' cellspacing='0' cols='1'  class='PABACKGROUNDINVISIBLEWBO'  width='776'>
+<tr><td width='773'>
+<table role='presentation'  border='0' id='ACE_DERIVED_REGFRM1_GROUP_BOX' cellpadding='0' cellspacing='0' cols='3' width='796' class='PABACKGROUNDINVISIBLE PTCPGROUPBOXWBO' style='border-style:none' >
+<tr>
+<td width='3' height='0'></td>
+<td width='11'></td>
+<td width='781'></td>
+</tr>
+<tr>
+<td height='70'></td>
+<td colspan='2'  valign='top' align='left'>
+<DIV    id='win0divDERIVED_SSTSNAV_GROUP_BOX'><table cellpadding='2' cellspacing='0' cols='1'  class='PABACKGROUNDINVISIBLEWBO'  width='785'>
+<tr><td width='783'>
+<table role='presentation'  border='0' id='ACE_DERIVED_SSTSNAV_GROUP_BOX' cellpadding='0' cellspacing='0' cols='4' width='806' class='PABACKGROUNDINVISIBLE PTCPGROUPBOXWBO' style='border-style:none' >
+<tr>
+<td width='8' height='0'></td>
+<td width='2'></td>
+<td width='757'></td>
+<td width='37'></td>
+</tr>
+<tr>
+<td height='24'></td>
+<td colspan='2'  valign='top' align='left'>
+<DIV    id='win0divDERIVED_SSTSNAV_SSTS_NAV_TABS_DIS'><div  style="width:791px; " >
+<!-- Begin HTML Area Name Undisclosed -->
+
+<!-- End HTML Area -->
+</div>
+</DIV></td>
+</tr>
+<tr>
+<td height='28'></td>
+<td colspan='2'  valign='top' align='left'>
+<DIV    id='win0divDERIVED_SSTSNAV_SSTS_NAV_STABS_DIS'><div  style="width:791px; " >
+<!-- Begin HTML Area Name Undisclosed -->
+
+<!-- End HTML Area -->
+</div>
+</DIV></td>
+</tr>
+<tr>
+<td height='13' colspan='2'></td>
+<td colspan='2'  valign='top' align='left'>
+<DIV    id='win0divDERIVED_REGFRM1_SS_TRANSACT_TITLE'><span role='heading' aria-level='1' class = 'PATRANSACTIONTITLE'id='DERIVED_REGFRM1_SS_TRANSACT_TITLE' >Search for Classes</span>
+</DIV></td>
+</tr>
+</table>
+</td></tr>
+</table>
+</DIV></td>
+</tr>
+<tr>
+<td height='7' colspan='3'></td>
+</tr>
+<tr>
+<td height='20' colspan='2'></td>
+<td  valign='top' align='left'>
+<DIV    id='win0divDERIVED_REGFRM1_TITLE1'><span  class='PAPAGETITLE' id='DERIVED_REGFRM1_TITLE1' >Search Results</span>
+</DIV></td>
+</tr>
+</table>
+</td></tr>
+</table>
+</DIV></td>
+</tr>
+<tr>
+<td height='7' colspan='3'></td>
+</tr>
+</table>
+</td></tr>
+</table>
+</DIV></td>
+</tr>
+<tr>
+<td height='4' colspan='13'></td>
+</tr>
+<tr>
+<td height='31' colspan='4'></td>
+<td colspan='9'  valign='top' align='left'>
+<DIV    id='win0divDERIVED_CLSRCH_SSS_PAGE_KEYDESCR'><span  class='SSSKEYTEXT' id='DERIVED_CLSRCH_SSS_PAGE_KEYDESCR' >Syracuse University | Fall 2026</span>
+</DIV></td>
+</tr>
+<tr>
+<td height='44' colspan='3'></td>
+<td colspan='5'  valign='top' align='left'>
+<DIV    id='win0div$ICField94'><table cellpadding='2' cellspacing='0' cols='1'  class='PABACKGROUNDINVISIBLEWBO'  width='692'>
+<tr><td width='690'>
+<table role='presentation'  border='0' id='ACE_$ICField94' cellpadding='0' cellspacing='0' cols='3' width='711' class='PABACKGROUNDINVISIBLE' style='border-style:none' >
+<tr>
+<td width='3' height='4'></td>
+<td width='694'></td>
+<td width='12'></td>
+</tr>
+<tr>
+<td height='38'></td>
+<td  valign='top' align='left'>
+<DIV    id='win0divDERIVED_CLSRCH_SSR_CLSRCH_CRIT'><div  style="width:723px; " >
+<!-- Begin HTML Area Name Undisclosed -->
+<table class="PSEDITBOX_DISPONLY"><tr><td>The following classes match your search criteria Course Subject: <strong>Philosophy</strong>,&nbsp;&nbsp;Course Number is exactly '<strong>251</strong>',&nbsp;&nbsp;Show Open Classes Only: <strong>Yes</strong></td></tr></table>
+<!-- End HTML Area -->
+</div>
+</DIV></td>
+</tr>
+</table>
+</td></tr>
+</table>
+</DIV></td>
+</tr>
+<tr>
+<td height='4' colspan='13'></td>
+</tr>
+<tr>
+<td height='29' colspan='2'></td>
+<td colspan='10'  valign='top' align='left'>
+<DIV    id='win0divDERIVED_REGFRM1_DESCR1'><table cellpadding='2' cellspacing='0' cols='1'  class='PSGROUPBOXWBO'  width='981'>
+<tr><td class='PAGROUPBOXLABELINVISIBLE'  align='left'>Descr</td></tr>
+<tr><td width='978'>
+<table role='presentation'  border='0' id='ACE_DERIVED_REGFRM1_DESCR1' cellpadding='0' cellspacing='0' cols='3' width='1008' class='PSGROUPBOX PTCPGROUPBOXWBO' style='border-style:none' >
+<tr>
+<td width='507' height='0'></td>
+<td width='478'></td>
+<td width='22'></td>
+</tr>
+<tr>
+<td height='19'></td>
+<td  valign='top' align='left'>
+<DIV    id='win0divDERIVED_REGFRM1_SSR_WAIT_LIST_ON'><table cellpadding='2' cellspacing='0' cols='1'  class='PABACKGROUNDINVISIBLEWBO'  width='463'>
+<tr><td width='460'>
+<table role='presentation'  border='0' id='ACE_DERIVED_REGFRM1_SSR_WAIT_LIST_ON' cellpadding='0' cellspacing='0' cols='10' width='474' class='PABACKGROUNDINVISIBLE PTCPGROUPBOXWBO' style='border-style:none' >
+<tr>
+<td width='3' height='0'></td>
+<td width='20'></td>
+<td width='55'></td>
+<td width='55'></td>
+<td width='20'></td>
+<td width='65'></td>
+<td width='70'></td>
+<td width='20'></td>
+<td width='146'></td>
+<td width='17'></td>
+</tr>
+<tr>
+<td height='17'></td>
+<td  valign='top' align='left'>
+<DIV    id='win0div$ICField2'><img src=/cs/CS92PROD/cache/3/PS_CS_STATUS_OPEN_ICN_1.gif width='16' height='16' alt='Open' title='Open' class='PSSTATICIMAGE' />
+</DIV></td>
+<td  valign='top' align='left'>
+<DIV    id='win0div$ICField3'><span  class='SSSKEYTEXT' >Open</span>
+</DIV></td>
+<td></td>
+<td  valign='top' align='left'>
+<DIV    id='win0div$ICField4'><img src=/cs/CS92PROD/cache/3/PS_CS_STATUS_CLOSED_ICN_1.gif width='16' height='16' alt='Closed' title='Closed' class='PSSTATICIMAGE' />
+</DIV></td>
+<td  valign='top' align='left'>
+<DIV    id='win0div$ICField5'><span  class='PSTEXT' >Closed</span>
+</DIV></td>
+<td></td>
+<td  valign='top' align='left'>
+<DIV    id='win0div$ICField6'><img src=/cs/CS92PROD/cache/3/PS_CS_STATUS_WAITLIST_ICN_1.JPG width='18' height='18' alt='Wait List' title='Wait List' class='PSSTATICIMAGE' />
+</DIV></td>
+<td  valign='top' align='left'>
+<DIV    id='win0div$ICField7'><span  class='SSSKEYTEXT' >Wait List</span>
+</DIV></td>
+</tr>
+</table>
+</td></tr>
+</table>
+</DIV></td>
+</tr>
+<tr>
+<td height='0' colspan='3'></td>
+</tr>
+</table>
+</td></tr>
+</table>
+</DIV></td>
+</tr>
+<tr>
+<td height='4' colspan='13'></td>
+</tr>
+<tr>
+<td height='42'></td>
+<td colspan='8'  valign='top' align='left'>
+<DIV    id='win0divDERIVED_CLSRCH_GROUP5'><table cellpadding='2' cellspacing='0' cols='1'  class='PABACKGROUNDINVISIBLEWBO'  width='712'>
+<tr><td width='710'>
+<table role='presentation'  border='0' id='ACE_DERIVED_CLSRCH_GROUP5' cellpadding='0' cellspacing='0' cols='4' width='731' class='PABACKGROUNDINVISIBLE PTCPGROUPBOXWBO' style='border-style:none' >
+<tr>
+<td width='295' height='0'></td>
+<td width='211'></td>
+<td width='211'></td>
+<td width='12'></td>
+</tr>
+<tr>
+<td height='28'></td>
+<td  valign='top' align='left'>
+<DIV    id='win0div$ICField$3$'><table cellpadding='2' cellspacing='0' cols='1'  class='PABACKGROUNDINVISIBLEWBO'  width='204'>
+<tr><td width='201'>
+<table role='presentation'  border='0' id='ACE_$ICField$3$' cellpadding='0' cellspacing='0' cols='2' width='207' class='PABACKGROUNDINVISIBLE PTCPGROUPBOXWBO' style='border-style:none' >
+<tr>
+<td width='3' height='0'></td>
+<td width='203'></td>
+</tr>
+<tr>
+<td height='23'></td>
+<td nowrap='nowrap'  valign='top' align='left'>
+<DIV    id='win0divCLASS_SRCH_WRK2_SSR_PB_NEW_SEARCH'><a role='presentation' class='PSPUSHBUTTON Left' onclick='javascript:if(event.target.id == this.firstChild.firstChild.id) { return true; } else return((this.firstChild &amp;&amp; this.firstChild.firstChild) != null ? this.firstChild.firstChild.click() : false);'><span style='background-Color: transparent;'><input type='button' name='CLASS_SRCH_WRK2_SSR_PB_NEW_SEARCH' id='CLASS_SRCH_WRK2_SSR_PB_NEW_SEARCH' tabindex='387' value='New Search'  class='PSPUSHBUTTON' style='width:185px; ' onclick="submitAction_win0(document.win0,this.id,event);" title='Start a New Search'  /></span></a></DIV></td>
+</tr>
+</table>
+</td></tr>
+</table>
+</DIV></td>
+<td  valign='top' align='left'>
+<DIV    id='win0div$ICField$5$'><table cellpadding='2' cellspacing='0' cols='1'  class='PABACKGROUNDINVISIBLEWBO'  width='204'>
+<tr><td width='201'>
+<table role='presentation'  border='0' id='ACE_$ICField$5$' cellpadding='0' cellspacing='0' cols='2' width='207' class='PABACKGROUNDINVISIBLE PTCPGROUPBOXWBO' style='border-style:none' >
+<tr>
+<td width='8' height='0'></td>
+<td width='198'></td>
+</tr>
+<tr>
+<td height='23'></td>
+<td nowrap='nowrap'  valign='top' align='left'>
+<DIV    id='win0divCLASS_SRCH_WRK2_SSR_PB_MODIFY'><a role='presentation' class='PSPUSHBUTTON Left' onclick='javascript:if(event.target.id == this.firstChild.firstChild.id) { return true; } else return((this.firstChild &amp;&amp; this.firstChild.firstChild) != null ? this.firstChild.firstChild.click() : false);'><span style='background-Color: transparent;'><input type='button' name='CLASS_SRCH_WRK2_SSR_PB_MODIFY' id='CLASS_SRCH_WRK2_SSR_PB_MODIFY' tabindex='388' value='Modify Search'  class='PSPUSHBUTTON' style='width:185px; ' onclick="submitAction_win0(document.win0,this.id,event);" /></span></a></DIV></td>
+</tr>
+</table>
+</td></tr>
+</table>
+</DIV></td>
+</tr>
+<tr>
+<td height='9' colspan='4'></td>
+</tr>
+</table>
+</td></tr>
+</table>
+</DIV></td>
+</tr>
+<tr>
+<td height='716'></td>
+<td colspan='8'  valign='top' align='left'>
+<DIV    id='win0divDERIVED_CLSRCH_GROUP6'><table cellpadding='2' cellspacing='0' cols='1'  class='PABACKGROUNDINVISIBLEWBO'  width='883'>
+<tr><td width='881'>
+<table role='presentation'  border='0' id='ACE_DERIVED_CLSRCH_GROUP6' cellpadding='0' cellspacing='0' cols='2' width='907' class='PABACKGROUNDINVISIBLE PTCPGROUPBOXWBO' style='border-style:none' >
+<tr>
+<td width='3' height='0'></td>
+<td width='903'></td>
+</tr>
+<tr>
+<td height='702'></td>
+<td  valign='top' align='left'>
+<DIV    id='win0divSSR_CLSRSLT_WRK_GROUPBOX1'><table cellpadding='2' cellspacing='0' cols='1'  class='PSGROUPBOXWBO'  width='878'>
+<tr><td class='PSGROUPBOXLABEL'  align='left'>10 class section(s) found</td></tr>
+<tr><td width='876'>
+<table role='presentation'  border='0' id='ACE_SSR_CLSRSLT_WRK_GROUPBOX1' cellpadding='0' cellspacing='0' cols='3' width='902' class='PSGROUPBOX PTCPGROUPBOXWBO' style='border-style:none' >
+<tr>
+<td width='0' height='0'></td>
+<td width='901'></td>
+<td width='2'></td>
+</tr>
+<tr>
+<td height='684'></td>
+<td  valign='top' align='left'>
+<DIV    id='win0div$ICField$4$$0'><table cellpadding='2' cellspacing='0' cols='1'  class='PABACKGROUNDINVISIBLEWBO'  id='$ICField$4$$scroll$0' onclick="getScrollTableId('$ICField$4$$scroll$0')" width='875'>
+<tr><td width='872'>
+<table role='presentation'  border='0' id='ACE_$ICField$4$$0' cellpadding='0' cellspacing='0' cols='3' width='898' class='PABACKGROUNDINVISIBLE' style='border-style:none' >
+<tr>
+<td width='0' height='0'></td>
+<td width='897'></td>
+<td width='2'></td>
+</tr>
+<tr>
+<td height='685'></td>
+<td  valign='top' align='left'>
+<DIV    id='win0divSSR_CLSRSLT_WRK_GROUPBOX2$0'><table cellpadding='2' cellspacing='0' cols='1'  class='PABACKGROUNDINVISIBLEWBO'  width='871'>
+<tr><td class='PAGROUPBOXLABELLEVEL1' onclick='javascript:if(event.target.id == this.firstElementChild.firstElementChild.id) { return true; } else return((this.firstElementChild &amp;&amp; this.firstElementChild.firstElementChild) != null ? this.firstElementChild.firstElementChild.click() : false);'  align='left'><DIV    id='win0divSSR_CLSRSLT_WRK_GROUPBOX2GP$0'><a class='PSHYPERLINK PTCOLLAPSE_ARROW' title='Collapse section PHI 251 - Logic' name='SSR_CLSRSLT_WRK_GROUPBOX2$0' id='SSR_CLSRSLT_WRK_GROUPBOX2$0' tabindex='403' href="javascript:submitAction_win0(document.win0,'SSR_CLSRSLT_WRK_GROUPBOX2$0');" aria-expanded='true' role='button'><img src='/cs/CS92PROD/cache/3/PT_TRANS_PIX_1.png' class='PTCOLLAPSE' alt='PHI 251 - Logic Collapsible section' border='0' /></a>&nbsp;PHI 251 - Logic&nbsp;</DIV></td></tr>
+<tr><td width='868'>
+<table role='presentation'  border='0' id='ACE_SSR_CLSRSLT_WRK_GROUPBOX2$0' cellpadding='0' cellspacing='0' cols='3' width='895' class='PABACKGROUNDINVISIBLE PTCPGROUPBOXWBO' style='border-style:none' >
+<tr>
+<td width='0' height='0'></td>
+<td width='893'></td>
+<td width='2'></td>
+</tr>
+<tr>
+<td height='670'></td>
+<td  valign='top' align='left'>
+<DIV    id='win0div$ICField48$0'><table cellpadding='2' cellspacing='0' cols='1'  class='PABACKGROUNDINVISIBLEWBO'  id='$ICField48$scroll$0' onclick="getScrollTableId('$ICField48$scroll$0')" width='867'>
+<tr><td width='865'>
+<table role='presentation'  border='0' id='ACE_$ICField48$0' cellpadding='0' cellspacing='0' cols='3' width='891' class='PABACKGROUNDINVISIBLE' style='border-style:none' >
+<tr>
+<td width='0' height='3'></td>
+<td width='889'></td>
+<td width='2'></td>
+</tr>
+<tr>
+<td height='63'></td>
+<td  valign='top' align='left'>
+<DIV    id='win0divSSR_CLSRSLT_WRK_GROUPBOX3$0'><table cellpadding='2' cellspacing='0' cols='1'  class='PABACKGROUNDINVISIBLEWBO'  width='864'>
+<tr><td width='861'>
+<table role='presentation'  border='0' id='ACE_SSR_CLSRSLT_WRK_GROUPBOX3$0' cellpadding='0' cellspacing='0' cols='3' width='887' class='PABACKGROUNDINVISIBLE PTCPGROUPBOXWBO' style='border-style:none' >
+<tr>
+<td width='0' height='0'></td>
+<td width='886'></td>
+<td width='2'></td>
+</tr>
+<tr>
+<td height='54'></td>
+<td  valign='top' align='left'>
+<DIV    id='win0divSSR_CLSRCH_MTG1$0'><div class='PTCPGRIDTITLE' onclick='javascript:if(event.target.id == this.firstElementChild.firstElementChild.id) { return true; } else return((this.firstElementChild &amp;&amp; this.firstElementChild.firstElementChild) != null ? this.firstElementChild.firstElementChild.click() : false);'  align='left' >  </div>
+<table cellspacing='0' class='PSLEVEL1GRIDNBONBO'  id='SSR_CLSRCH_MTG1$scroll$0' dir='ltr' cols='9' width='1085' cellpadding='2'>
+<tr>
+<th scope='col' width='21' align='CENTER' class='PSLEVEL1GRIDCOLUMNHDR' >&nbsp;</th>
+<th scope='col' width='30' align='left' class='PSLEVEL1GRIDCOLUMNHDR' ><a name='SSR_CLSRCH_MTG1$srt1$0' id='SSR_CLSRCH_MTG1$srt1$0' role='button' tabindex='433' class='PSLEVEL1GRIDCOLUMNHDR' href="javascript:submitAction_win0(document.win0,'SSR_CLSRCH_MTG1$srt1$0');" title="Click to sort ascending">Class</a></th>
+<th scope='col' width='80' align='left' class='PSLEVEL1GRIDCOLUMNHDR' ><a name='SSR_CLSRCH_MTG1$srt2$0' id='SSR_CLSRCH_MTG1$srt2$0' role='button' tabindex='434' class='PSLEVEL1GRIDCOLUMNHDR' href="javascript:submitAction_win0(document.win0,'SSR_CLSRCH_MTG1$srt2$0');" title="Click to sort ascending">Section</a></th>
+<th scope='col' width='98' align='left' class='PSLEVEL1GRIDCOLUMNHDR' ><a name='SSR_CLSRCH_MTG1$srt3$0' id='SSR_CLSRCH_MTG1$srt3$0' role='button' tabindex='435' class='PSLEVEL1GRIDCOLUMNHDR' href="javascript:submitAction_win0(document.win0,'SSR_CLSRCH_MTG1$srt3$0');" title="Click to sort ascending">Days &amp; Times</a></th>
+<th scope='col' width='91' align='left' class='PSLEVEL1GRIDCOLUMNHDR' ><a name='SSR_CLSRCH_MTG1$srt4$0' id='SSR_CLSRCH_MTG1$srt4$0' role='button' tabindex='436' class='PSLEVEL1GRIDCOLUMNHDR' href="javascript:submitAction_win0(document.win0,'SSR_CLSRCH_MTG1$srt4$0');" title="Click to sort ascending">Room</a></th>
+<th scope='col' width='98' align='left' class='PSLEVEL1GRIDCOLUMNHDR' ><a name='SSR_CLSRCH_MTG1$srt5$0' id='SSR_CLSRCH_MTG1$srt5$0' role='button' tabindex='437' class='PSLEVEL1GRIDCOLUMNHDR' href="javascript:submitAction_win0(document.win0,'SSR_CLSRCH_MTG1$srt5$0');" title="Click to sort ascending">Instructor</a></th>
+<th scope='col' width='94' align='left' class='PSLEVEL1GRIDCOLUMNHDR' ><a name='SSR_CLSRCH_MTG1$srt6$0' id='SSR_CLSRCH_MTG1$srt6$0' role='button' tabindex='438' class='PSLEVEL1GRIDCOLUMNHDR' href="javascript:submitAction_win0(document.win0,'SSR_CLSRCH_MTG1$srt6$0');" title="Click to sort ascending">Meeting Dates</a></th>
+<th scope='col' width='41' align='left' class='PSLEVEL1GRIDCOLUMNHDR' ><a name='SSR_CLSRCH_MTG1$srt7$0' id='SSR_CLSRCH_MTG1$srt7$0' role='button' tabindex='439' class='PSLEVEL1GRIDCOLUMNHDR' href="javascript:submitAction_win0(document.win0,'SSR_CLSRCH_MTG1$srt7$0');" title="Click to sort ascending">Status</a></th>
+<th scope='col' width='98' align='left' class='PSLEVEL1GRIDCOLUMNHDR' >&nbsp;</th>
+</tr>
+<tr id='trSSR_CLSRCH_MTG1$0_row1' bufnum='0' valign='center' onClick="HighLightTR('rgb(212,219,217)','','trSSR_CLSRCH_MTG1$0_row1');" onMouseOver="hoverLightTR('rgb(249,254,203)','',0,'trSSR_CLSRCH_MTG1$0_row1');" onmouseout="hoverLightTR('rgb(249,254,203)','',1,'trSSR_CLSRCH_MTG1$0_row1');">
+<td align='center'  style='white-space:nowrap;' height='35' class='PSLEVEL3GRIDODDROW' >
+<DIV    id='win0divDATESLINK$0'><a name='DATESLINK$0' id='DATESLINK$0' tabindex='446' onclick='javascript:cancelBubble(event);' href="javascript:submitAction_win0(document.win0,'DATESLINK$0');"><img src='/cs/CS92PROD/cache/3/PT_CALENDAR_1.gif' id='DATESLINK$IMG$0'  title='Dates and Deadlines' border='0' /></a></DIV></td>
+<td class='PSLEVEL3GRIDODDROW'  align='left'  class='PSLEVEL3GRIDODDROW' >
+<DIV    id='win0divMTG_CLASS_NBR$0'><span id='MTG_CLASS_NBR$span$0'  class='PSHYPERLINK'  title='Class Nbr' ><a name='MTG_CLASS_NBR$0' id='MTG_CLASS_NBR$0'  ptlinktgt='pt_peoplecode' tabindex='447' onclick='javascript:cancelBubble(event);' href="javascript:submitAction_win0(document.win0,'MTG_CLASS_NBR$0');"  class='PSHYPERLINK' >10723</a></span></DIV></td>
+<td class='PSLEVEL3GRIDODDROW'  align='left'  class='PSLEVEL3GRIDODDROW' >
+<DIV    id='win0divMTG_CLASSNAME$0'><span id='MTG_CLASSNAME$span$0'  class='PSHYPERLINK'  title='View Details' ><a name='MTG_CLASSNAME$0' id='MTG_CLASSNAME$0'  ptlinktgt='pt_peoplecode' tabindex='448' onclick='javascript:cancelBubble(event);' href="javascript:submitAction_win0(document.win0,'MTG_CLASSNAME$0');"  class='PSHYPERLINK' >M001-SEC<br />
+Regular</a></span></DIV></td>
+<td class='PSLEVEL3GRIDODDROW'  align='left'  class='PSLEVEL3GRIDODDROW' >
+<DIV    id='win0divMTG_DAYTIME$0'><span  class='PSLONGEDITBOX' id='MTG_DAYTIME$0' >TuTh 12:30PM - 1:50PM</span>
+</DIV></td>
+<td class='PSLEVEL3GRIDODDROW'  align='left'  class='PSLEVEL3GRIDODDROW' >
+<DIV    id='win0divMTG_ROOM$0'><span  class='PSLONGEDITBOX' id='MTG_ROOM$0' >HB CROUSE 323A</span>
+</DIV></td>
+<td class='PSLEVEL3GRIDODDROW'  align='left'  class='PSLEVEL3GRIDODDROW' >
+<DIV    id='win0divMTG_INSTR$0'><span  class='PSLONGEDITBOX' id='MTG_INSTR$0' >H. Shirmohammadi</span>
+</DIV></td>
+<td class='PSLEVEL3GRIDODDROW'  align='left'  class='PSLEVEL3GRIDODDROW' >
+<DIV    id='win0divMTG_TOPIC$0'><span  class='PSLONGEDITBOX' id='MTG_TOPIC$0' >08/25/2026 - 12/08/2026</span>
+</DIV></td>
+<td class='PSLEVEL3GRIDODDROW'  align='left'  class='PSLEVEL3GRIDODDROW' >
+<DIV    id='win0divDERIVED_CLSRCH_SSR_STATUS_LONG$0'><div  style="min-width:53px; " >
+<!-- Begin HTML Area Name Undisclosed -->
+<img src="/cs/CS92PROD/cache/3/PS_CS_STATUS_OPEN_ICN_1.gif" width="16" height="16" alt="Open" STYLE="vertical-align:middle;text-align:center;margin-left:12px">
+<!-- End HTML Area -->
+</div>
+</DIV></td>
+<td class='PSLEVEL3GRIDODDROW'  align='center'  style='white-space:nowrap;' class='PSLEVEL3GRIDODDROW' >
+&nbsp;
+</td>
+</tr>
+</table>
+</DIV>
+</td>
+</tr>
+<tr>
+<td height='3' colspan='3'></td>
+</tr>
+</table>
+</td></tr>
+</table>
+</DIV></td>
+</tr>
+<tr>
+<td height='4' colspan='3'></td>
+</tr>
+<tr>
+<td height='63'></td>
+<td  valign='top' align='left'>
+<DIV    id='win0divSSR_CLSRSLT_WRK_GROUPBOX3$1'><table cellpadding='2' cellspacing='0' cols='1'  class='PABACKGROUNDINVISIBLEWBO'  width='864'>
+<tr><td width='861'>
+<table role='presentation'  border='0' id='ACE_SSR_CLSRSLT_WRK_GROUPBOX3$1' cellpadding='0' cellspacing='0' cols='3' width='887' class='PABACKGROUNDINVISIBLE PTCPGROUPBOXWBO' style='border-style:none' >
+<tr>
+<td width='0' height='0'></td>
+<td width='886'></td>
+<td width='2'></td>
+</tr>
+<tr>
+<td height='54'></td>
+<td  valign='top' align='left'>
+<DIV    id='win0divSSR_CLSRCH_MTG1$1'><div class='PTCPGRIDTITLE' onclick='javascript:if(event.target.id == this.firstElementChild.firstElementChild.id) { return true; } else return((this.firstElementChild &amp;&amp; this.firstElementChild.firstElementChild) != null ? this.firstElementChild.firstElementChild.click() : false);'  align='left' >  </div>
+<table cellspacing='0' class='PSLEVEL1GRIDNBONBO'  id='SSR_CLSRCH_MTG1$scroll$1' dir='ltr' cols='9' width='1085' cellpadding='2'>
+<tr>
+<th scope='col' width='21' align='CENTER' class='PSLEVEL1GRIDCOLUMNHDR' >&nbsp;</th>
+<th scope='col' width='30' align='left' class='PSLEVEL1GRIDCOLUMNHDR' ><a name='SSR_CLSRCH_MTG1$srt1$1' id='SSR_CLSRCH_MTG1$srt1$1' role='button' tabindex='616' class='PSLEVEL1GRIDCOLUMNHDR' href="javascript:submitAction_win0(document.win0,'SSR_CLSRCH_MTG1$srt1$1');" title="Click to sort ascending">Class</a></th>
+<th scope='col' width='80' align='left' class='PSLEVEL1GRIDCOLUMNHDR' ><a name='SSR_CLSRCH_MTG1$srt2$1' id='SSR_CLSRCH_MTG1$srt2$1' role='button' tabindex='617' class='PSLEVEL1GRIDCOLUMNHDR' href="javascript:submitAction_win0(document.win0,'SSR_CLSRCH_MTG1$srt2$1');" title="Click to sort ascending">Section</a></th>
+<th scope='col' width='98' align='left' class='PSLEVEL1GRIDCOLUMNHDR' ><a name='SSR_CLSRCH_MTG1$srt3$1' id='SSR_CLSRCH_MTG1$srt3$1' role='button' tabindex='618' class='PSLEVEL1GRIDCOLUMNHDR' href="javascript:submitAction_win0(document.win0,'SSR_CLSRCH_MTG1$srt3$1');" title="Click to sort ascending">Days &amp; Times</a></th>
+<th scope='col' width='91' align='left' class='PSLEVEL1GRIDCOLUMNHDR' ><a name='SSR_CLSRCH_MTG1$srt4$1' id='SSR_CLSRCH_MTG1$srt4$1' role='button' tabindex='619' class='PSLEVEL1GRIDCOLUMNHDR' href="javascript:submitAction_win0(document.win0,'SSR_CLSRCH_MTG1$srt4$1');" title="Click to sort ascending">Room</a></th>
+<th scope='col' width='98' align='left' class='PSLEVEL1GRIDCOLUMNHDR' ><a name='SSR_CLSRCH_MTG1$srt5$1' id='SSR_CLSRCH_MTG1$srt5$1' role='button' tabindex='620' class='PSLEVEL1GRIDCOLUMNHDR' href="javascript:submitAction_win0(document.win0,'SSR_CLSRCH_MTG1$srt5$1');" title="Click to sort ascending">Instructor</a></th>
+<th scope='col' width='94' align='left' class='PSLEVEL1GRIDCOLUMNHDR' ><a name='SSR_CLSRCH_MTG1$srt6$1' id='SSR_CLSRCH_MTG1$srt6$1' role='button' tabindex='621' class='PSLEVEL1GRIDCOLUMNHDR' href="javascript:submitAction_win0(document.win0,'SSR_CLSRCH_MTG1$srt6$1');" title="Click to sort ascending">Meeting Dates</a></th>
+<th scope='col' width='41' align='left' class='PSLEVEL1GRIDCOLUMNHDR' ><a name='SSR_CLSRCH_MTG1$srt7$1' id='SSR_CLSRCH_MTG1$srt7$1' role='button' tabindex='622' class='PSLEVEL1GRIDCOLUMNHDR' href="javascript:submitAction_win0(document.win0,'SSR_CLSRCH_MTG1$srt7$1');" title="Click to sort ascending">Status</a></th>
+<th scope='col' width='98' align='left' class='PSLEVEL1GRIDCOLUMNHDR' >&nbsp;</th>
+</tr>
+<tr id='trSSR_CLSRCH_MTG1$1_row1' bufnum='0' valign='center' onClick="HighLightTR('rgb(212,219,217)','','trSSR_CLSRCH_MTG1$1_row1');" onMouseOver="hoverLightTR('rgb(249,254,203)','',0,'trSSR_CLSRCH_MTG1$1_row1');" onmouseout="hoverLightTR('rgb(249,254,203)','',1,'trSSR_CLSRCH_MTG1$1_row1');">
+<td align='center'  style='white-space:nowrap;' height='35' class='PSLEVEL3GRIDODDROW' >
+<DIV    id='win0divDATESLINK$1'><a name='DATESLINK$1' id='DATESLINK$1' tabindex='629' onclick='javascript:cancelBubble(event);' href="javascript:submitAction_win0(document.win0,'DATESLINK$1');"><img src='/cs/CS92PROD/cache/3/PT_CALENDAR_1.gif' id='DATESLINK$IMG$1'  title='Dates and Deadlines' border='0' /></a></DIV></td>
+<td class='PSLEVEL3GRIDODDROW'  align='left'  class='PSLEVEL3GRIDODDROW' >
+<DIV    id='win0divMTG_CLASS_NBR$1'><span id='MTG_CLASS_NBR$span$1'  class='PSHYPERLINK'  title='Class Nbr' ><a name='MTG_CLASS_NBR$1' id='MTG_CLASS_NBR$1'  ptlinktgt='pt_peoplecode' tabindex='630' onclick='javascript:cancelBubble(event);' href="javascript:submitAction_win0(document.win0,'MTG_CLASS_NBR$1');"  class='PSHYPERLINK' >11295</a></span></DIV></td>
+<td class='PSLEVEL3GRIDODDROW'  align='left'  class='PSLEVEL3GRIDODDROW' >
+<DIV    id='win0divMTG_CLASSNAME$1'><span id='MTG_CLASSNAME$span$1'  class='PSHYPERLINK'  title='View Details' ><a name='MTG_CLASSNAME$1' id='MTG_CLASSNAME$1'  ptlinktgt='pt_peoplecode' tabindex='631' onclick='javascript:cancelBubble(event);' href="javascript:submitAction_win0(document.win0,'MTG_CLASSNAME$1');"  class='PSHYPERLINK' >M002-SEC<br />
+Regular</a></span></DIV></td>
+<td class='PSLEVEL3GRIDODDROW'  align='left'  class='PSLEVEL3GRIDODDROW' >
+<DIV    id='win0divMTG_DAYTIME$1'><span  class='PSLONGEDITBOX' id='MTG_DAYTIME$1' >TuTh 2:00PM - 3:20PM</span>
+</DIV></td>
+<td class='PSLEVEL3GRIDODDROW'  align='left'  class='PSLEVEL3GRIDODDROW' >
+<DIV    id='win0divMTG_ROOM$1'><span  class='PSLONGEDITBOX' id='MTG_ROOM$1' >Shaffer Art Building 221D</span>
+</DIV></td>
+<td class='PSLEVEL3GRIDODDROW'  align='left'  class='PSLEVEL3GRIDODDROW' >
+<DIV    id='win0divMTG_INSTR$1'><span  class='PSLONGEDITBOX' id='MTG_INSTR$1' >H. Shirmohammadi</span>
+</DIV></td>
+<td class='PSLEVEL3GRIDODDROW'  align='left'  class='PSLEVEL3GRIDODDROW' >
+<DIV    id='win0divMTG_TOPIC$1'><span  class='PSLONGEDITBOX' id='MTG_TOPIC$1' >08/25/2026 - 12/08/2026</span>
+</DIV></td>
+<td class='PSLEVEL3GRIDODDROW'  align='left'  class='PSLEVEL3GRIDODDROW' >
+<DIV    id='win0divDERIVED_CLSRCH_SSR_STATUS_LONG$1'><div  style="min-width:53px; " >
+<!-- Begin HTML Area Name Undisclosed -->
+<img src="/cs/CS92PROD/cache/3/PS_CS_STATUS_OPEN_ICN_1.gif" width="16" height="16" alt="Open" STYLE="vertical-align:middle;text-align:center;margin-left:12px">
+<!-- End HTML Area -->
+</div>
+</DIV></td>
+<td class='PSLEVEL3GRIDODDROW'  align='center'  style='white-space:nowrap;' class='PSLEVEL3GRIDODDROW' >
+&nbsp;
+</td>
+</tr>
+</table>
+</DIV>
+</td>
+</tr>
+<tr>
+<td height='3' colspan='3'></td>
+</tr>
+</table>
+</td></tr>
+</table>
+</DIV></td>
+</tr>
+<tr>
+<td height='4' colspan='3'></td>
+</tr>
+<tr>
+<td height='63'></td>
+<td  valign='top' align='left'>
+<DIV    id='win0divSSR_CLSRSLT_WRK_GROUPBOX3$2'><table cellpadding='2' cellspacing='0' cols='1'  class='PABACKGROUNDINVISIBLEWBO'  width='864'>
+<tr><td width='861'>
+<table role='presentation'  border='0' id='ACE_SSR_CLSRSLT_WRK_GROUPBOX3$2' cellpadding='0' cellspacing='0' cols='3' width='887' class='PABACKGROUNDINVISIBLE PTCPGROUPBOXWBO' style='border-style:none' >
+<tr>
+<td width='0' height='0'></td>
+<td width='886'></td>
+<td width='2'></td>
+</tr>
+<tr>
+<td height='54'></td>
+<td  valign='top' align='left'>
+<DIV    id='win0divSSR_CLSRCH_MTG1$2'><div class='PTCPGRIDTITLE' onclick='javascript:if(event.target.id == this.firstElementChild.firstElementChild.id) { return true; } else return((this.firstElementChild &amp;&amp; this.firstElementChild.firstElementChild) != null ? this.firstElementChild.firstElementChild.click() : false);'  align='left' >  </div>
+<table cellspacing='0' class='PSLEVEL1GRIDNBONBO'  id='SSR_CLSRCH_MTG1$scroll$2' dir='ltr' cols='9' width='1085' cellpadding='2'>
+<tr>
+<th scope='col' width='21' align='CENTER' class='PSLEVEL1GRIDCOLUMNHDR' >&nbsp;</th>
+<th scope='col' width='30' align='left' class='PSLEVEL1GRIDCOLUMNHDR' ><a name='SSR_CLSRCH_MTG1$srt1$2' id='SSR_CLSRCH_MTG1$srt1$2' role='button' tabindex='799' class='PSLEVEL1GRIDCOLUMNHDR' href="javascript:submitAction_win0(document.win0,'SSR_CLSRCH_MTG1$srt1$2');" title="Click to sort ascending">Class</a></th>
+<th scope='col' width='80' align='left' class='PSLEVEL1GRIDCOLUMNHDR' ><a name='SSR_CLSRCH_MTG1$srt2$2' id='SSR_CLSRCH_MTG1$srt2$2' role='button' tabindex='800' class='PSLEVEL1GRIDCOLUMNHDR' href="javascript:submitAction_win0(document.win0,'SSR_CLSRCH_MTG1$srt2$2');" title="Click to sort ascending">Section</a></th>
+<th scope='col' width='98' align='left' class='PSLEVEL1GRIDCOLUMNHDR' ><a name='SSR_CLSRCH_MTG1$srt3$2' id='SSR_CLSRCH_MTG1$srt3$2' role='button' tabindex='801' class='PSLEVEL1GRIDCOLUMNHDR' href="javascript:submitAction_win0(document.win0,'SSR_CLSRCH_MTG1$srt3$2');" title="Click to sort ascending">Days &amp; Times</a></th>
+<th scope='col' width='91' align='left' class='PSLEVEL1GRIDCOLUMNHDR' ><a name='SSR_CLSRCH_MTG1$srt4$2' id='SSR_CLSRCH_MTG1$srt4$2' role='button' tabindex='802' class='PSLEVEL1GRIDCOLUMNHDR' href="javascript:submitAction_win0(document.win0,'SSR_CLSRCH_MTG1$srt4$2');" title="Click to sort ascending">Room</a></th>
+<th scope='col' width='98' align='left' class='PSLEVEL1GRIDCOLUMNHDR' ><a name='SSR_CLSRCH_MTG1$srt5$2' id='SSR_CLSRCH_MTG1$srt5$2' role='button' tabindex='803' class='PSLEVEL1GRIDCOLUMNHDR' href="javascript:submitAction_win0(document.win0,'SSR_CLSRCH_MTG1$srt5$2');" title="Click to sort ascending">Instructor</a></th>
+<th scope='col' width='94' align='left' class='PSLEVEL1GRIDCOLUMNHDR' ><a name='SSR_CLSRCH_MTG1$srt6$2' id='SSR_CLSRCH_MTG1$srt6$2' role='button' tabindex='804' class='PSLEVEL1GRIDCOLUMNHDR' href="javascript:submitAction_win0(document.win0,'SSR_CLSRCH_MTG1$srt6$2');" title="Click to sort ascending">Meeting Dates</a></th>
+<th scope='col' width='41' align='left' class='PSLEVEL1GRIDCOLUMNHDR' ><a name='SSR_CLSRCH_MTG1$srt7$2' id='SSR_CLSRCH_MTG1$srt7$2' role='button' tabindex='805' class='PSLEVEL1GRIDCOLUMNHDR' href="javascript:submitAction_win0(document.win0,'SSR_CLSRCH_MTG1$srt7$2');" title="Click to sort ascending">Status</a></th>
+<th scope='col' width='98' align='left' class='PSLEVEL1GRIDCOLUMNHDR' >&nbsp;</th>
+</tr>
+<tr id='trSSR_CLSRCH_MTG1$2_row1' bufnum='0' valign='center' onClick="HighLightTR('rgb(212,219,217)','','trSSR_CLSRCH_MTG1$2_row1');" onMouseOver="hoverLightTR('rgb(249,254,203)','',0,'trSSR_CLSRCH_MTG1$2_row1');" onmouseout="hoverLightTR('rgb(249,254,203)','',1,'trSSR_CLSRCH_MTG1$2_row1');">
+<td align='center'  style='white-space:nowrap;' height='35' class='PSLEVEL3GRIDODDROW' >
+<DIV    id='win0divDATESLINK$2'><a name='DATESLINK$2' id='DATESLINK$2' tabindex='812' onclick='javascript:cancelBubble(event);' href="javascript:submitAction_win0(document.win0,'DATESLINK$2');"><img src='/cs/CS92PROD/cache/3/PT_CALENDAR_1.gif' id='DATESLINK$IMG$2'  title='Dates and Deadlines' border='0' /></a></DIV></td>
+<td class='PSLEVEL3GRIDODDROW'  align='left'  class='PSLEVEL3GRIDODDROW' >
+<DIV    id='win0divMTG_CLASS_NBR$2'><span id='MTG_CLASS_NBR$span$2'  class='PSHYPERLINK'  title='Class Nbr' ><a name='MTG_CLASS_NBR$2' id='MTG_CLASS_NBR$2'  ptlinktgt='pt_peoplecode' tabindex='813' onclick='javascript:cancelBubble(event);' href="javascript:submitAction_win0(document.win0,'MTG_CLASS_NBR$2');"  class='PSHYPERLINK' >20377</a></span></DIV></td>
+<td class='PSLEVEL3GRIDODDROW'  align='left'  class='PSLEVEL3GRIDODDROW' >
+<DIV    id='win0divMTG_CLASSNAME$2'><span id='MTG_CLASSNAME$span$2'  class='PSHYPERLINK'  title='View Details' ><a name='MTG_CLASSNAME$2' id='MTG_CLASSNAME$2'  ptlinktgt='pt_peoplecode' tabindex='814' onclick='javascript:cancelBubble(event);' href="javascript:submitAction_win0(document.win0,'MTG_CLASSNAME$2');"  class='PSHYPERLINK' >M003-SEC<br />
+Regular</a></span></DIV></td>
+<td class='PSLEVEL3GRIDODDROW'  align='left'  class='PSLEVEL3GRIDODDROW' >
+<DIV    id='win0divMTG_DAYTIME$2'><span  class='PSLONGEDITBOX' id='MTG_DAYTIME$2' >MoWe 2:15PM - 3:35PM</span>
+</DIV></td>
+<td class='PSLEVEL3GRIDODDROW'  align='left'  class='PSLEVEL3GRIDODDROW' >
+<DIV    id='win0divMTG_ROOM$2'><span  class='PSLONGEDITBOX' id='MTG_ROOM$2' >Sims Hall 337</span>
+</DIV></td>
+<td class='PSLEVEL3GRIDODDROW'  align='left'  class='PSLEVEL3GRIDODDROW' >
+<DIV    id='win0divMTG_INSTR$2'><span  class='PSLONGEDITBOX' id='MTG_INSTR$2' >B. Probyn</span>
+</DIV></td>
+<td class='PSLEVEL3GRIDODDROW'  align='left'  class='PSLEVEL3GRIDODDROW' >
+<DIV    id='win0divMTG_TOPIC$2'><span  class='PSLONGEDITBOX' id='MTG_TOPIC$2' >08/24/2026 - 12/07/2026</span>
+</DIV></td>
+<td class='PSLEVEL3GRIDODDROW'  align='left'  class='PSLEVEL3GRIDODDROW' >
+<DIV    id='win0divDERIVED_CLSRCH_SSR_STATUS_LONG$2'><div  style="min-width:53px; " >
+<!-- Begin HTML Area Name Undisclosed -->
+<img src="/cs/CS92PROD/cache/3/PS_CS_STATUS_OPEN_ICN_1.gif" width="16" height="16" alt="Open" STYLE="vertical-align:middle;text-align:center;margin-left:12px">
+<!-- End HTML Area -->
+</div>
+</DIV></td>
+<td class='PSLEVEL3GRIDODDROW'  align='center'  style='white-space:nowrap;' class='PSLEVEL3GRIDODDROW' >
+&nbsp;
+</td>
+</tr>
+</table>
+</DIV>
+</td>
+</tr>
+<tr>
+<td height='3' colspan='3'></td>
+</tr>
+</table>
+</td></tr>
+</table>
+</DIV></td>
+</tr>
+<tr>
+<td height='4' colspan='3'></td>
+</tr>
+<tr>
+<td height='63'></td>
+<td  valign='top' align='left'>
+<DIV    id='win0divSSR_CLSRSLT_WRK_GROUPBOX3$3'><table cellpadding='2' cellspacing='0' cols='1'  class='PABACKGROUNDINVISIBLEWBO'  width='864'>
+<tr><td width='861'>
+<table role='presentation'  border='0' id='ACE_SSR_CLSRSLT_WRK_GROUPBOX3$3' cellpadding='0' cellspacing='0' cols='3' width='887' class='PABACKGROUNDINVISIBLE PTCPGROUPBOXWBO' style='border-style:none' >
+<tr>
+<td width='0' height='0'></td>
+<td width='886'></td>
+<td width='2'></td>
+</tr>
+<tr>
+<td height='54'></td>
+<td  valign='top' align='left'>
+<DIV    id='win0divSSR_CLSRCH_MTG1$3'><div class='PTCPGRIDTITLE' onclick='javascript:if(event.target.id == this.firstElementChild.firstElementChild.id) { return true; } else return((this.firstElementChild &amp;&amp; this.firstElementChild.firstElementChild) != null ? this.firstElementChild.firstElementChild.click() : false);'  align='left' >  </div>
+<table cellspacing='0' class='PSLEVEL1GRIDNBONBO'  id='SSR_CLSRCH_MTG1$scroll$3' dir='ltr' cols='9' width='1085' cellpadding='2'>
+<tr>
+<th scope='col' width='21' align='CENTER' class='PSLEVEL1GRIDCOLUMNHDR' >&nbsp;</th>
+<th scope='col' width='30' align='left' class='PSLEVEL1GRIDCOLUMNHDR' ><a name='SSR_CLSRCH_MTG1$srt1$3' id='SSR_CLSRCH_MTG1$srt1$3' role='button' tabindex='982' class='PSLEVEL1GRIDCOLUMNHDR' href="javascript:submitAction_win0(document.win0,'SSR_CLSRCH_MTG1$srt1$3');" title="Click to sort ascending">Class</a></th>
+<th scope='col' width='80' align='left' class='PSLEVEL1GRIDCOLUMNHDR' ><a name='SSR_CLSRCH_MTG1$srt2$3' id='SSR_CLSRCH_MTG1$srt2$3' role='button' tabindex='983' class='PSLEVEL1GRIDCOLUMNHDR' href="javascript:submitAction_win0(document.win0,'SSR_CLSRCH_MTG1$srt2$3');" title="Click to sort ascending">Section</a></th>
+<th scope='col' width='98' align='left' class='PSLEVEL1GRIDCOLUMNHDR' ><a name='SSR_CLSRCH_MTG1$srt3$3' id='SSR_CLSRCH_MTG1$srt3$3' role='button' tabindex='984' class='PSLEVEL1GRIDCOLUMNHDR' href="javascript:submitAction_win0(document.win0,'SSR_CLSRCH_MTG1$srt3$3');" title="Click to sort ascending">Days &amp; Times</a></th>
+<th scope='col' width='91' align='left' class='PSLEVEL1GRIDCOLUMNHDR' ><a name='SSR_CLSRCH_MTG1$srt4$3' id='SSR_CLSRCH_MTG1$srt4$3' role='button' tabindex='985' class='PSLEVEL1GRIDCOLUMNHDR' href="javascript:submitAction_win0(document.win0,'SSR_CLSRCH_MTG1$srt4$3');" title="Click to sort ascending">Room</a></th>
+<th scope='col' width='98' align='left' class='PSLEVEL1GRIDCOLUMNHDR' ><a name='SSR_CLSRCH_MTG1$srt5$3' id='SSR_CLSRCH_MTG1$srt5$3' role='button' tabindex='986' class='PSLEVEL1GRIDCOLUMNHDR' href="javascript:submitAction_win0(document.win0,'SSR_CLSRCH_MTG1$srt5$3');" title="Click to sort ascending">Instructor</a></th>
+<th scope='col' width='94' align='left' class='PSLEVEL1GRIDCOLUMNHDR' ><a name='SSR_CLSRCH_MTG1$srt6$3' id='SSR_CLSRCH_MTG1$srt6$3' role='button' tabindex='987' class='PSLEVEL1GRIDCOLUMNHDR' href="javascript:submitAction_win0(document.win0,'SSR_CLSRCH_MTG1$srt6$3');" title="Click to sort ascending">Meeting Dates</a></th>
+<th scope='col' width='41' align='left' class='PSLEVEL1GRIDCOLUMNHDR' ><a name='SSR_CLSRCH_MTG1$srt7$3' id='SSR_CLSRCH_MTG1$srt7$3' role='button' tabindex='988' class='PSLEVEL1GRIDCOLUMNHDR' href="javascript:submitAction_win0(document.win0,'SSR_CLSRCH_MTG1$srt7$3');" title="Click to sort ascending">Status</a></th>
+<th scope='col' width='98' align='left' class='PSLEVEL1GRIDCOLUMNHDR' >&nbsp;</th>
+</tr>
+<tr id='trSSR_CLSRCH_MTG1$3_row1' bufnum='0' valign='center' onClick="HighLightTR('rgb(212,219,217)','','trSSR_CLSRCH_MTG1$3_row1');" onMouseOver="hoverLightTR('rgb(249,254,203)','',0,'trSSR_CLSRCH_MTG1$3_row1');" onmouseout="hoverLightTR('rgb(249,254,203)','',1,'trSSR_CLSRCH_MTG1$3_row1');">
+<td align='center'  style='white-space:nowrap;' height='35' class='PSLEVEL3GRIDODDROW' >
+<DIV    id='win0divDATESLINK$3'><a name='DATESLINK$3' id='DATESLINK$3' tabindex='995' onclick='javascript:cancelBubble(event);' href="javascript:submitAction_win0(document.win0,'DATESLINK$3');"><img src='/cs/CS92PROD/cache/3/PT_CALENDAR_1.gif' id='DATESLINK$IMG$3'  title='Dates and Deadlines' border='0' /></a></DIV></td>
+<td class='PSLEVEL3GRIDODDROW'  align='left'  class='PSLEVEL3GRIDODDROW' >
+<DIV    id='win0divMTG_CLASS_NBR$3'><span id='MTG_CLASS_NBR$span$3'  class='PSHYPERLINK'  title='Class Nbr' ><a name='MTG_CLASS_NBR$3' id='MTG_CLASS_NBR$3'  ptlinktgt='pt_peoplecode' tabindex='996' onclick='javascript:cancelBubble(event);' href="javascript:submitAction_win0(document.win0,'MTG_CLASS_NBR$3');"  class='PSHYPERLINK' >11385</a></span></DIV></td>
+<td class='PSLEVEL3GRIDODDROW'  align='left'  class='PSLEVEL3GRIDODDROW' >
+<DIV    id='win0divMTG_CLASSNAME$3'><span id='MTG_CLASSNAME$span$3'  class='PSHYPERLINK'  title='View Details' ><a name='MTG_CLASSNAME$3' id='MTG_CLASSNAME$3'  ptlinktgt='pt_peoplecode' tabindex='997' onclick='javascript:cancelBubble(event);' href="javascript:submitAction_win0(document.win0,'MTG_CLASSNAME$3');"  class='PSHYPERLINK' >M004-SEC<br />
+Regular</a></span></DIV></td>
+<td class='PSLEVEL3GRIDODDROW'  align='left'  class='PSLEVEL3GRIDODDROW' >
+<DIV    id='win0divMTG_DAYTIME$3'><span  class='PSLONGEDITBOX' id='MTG_DAYTIME$3' >MoWe 3:45PM - 5:05PM</span>
+</DIV></td>
+<td class='PSLEVEL3GRIDODDROW'  align='left'  class='PSLEVEL3GRIDODDROW' >
+<DIV    id='win0divMTG_ROOM$3'><span  class='PSLONGEDITBOX' id='MTG_ROOM$3' >Eggers Hall 113</span>
+</DIV></td>
+<td class='PSLEVEL3GRIDODDROW'  align='left'  class='PSLEVEL3GRIDODDROW' >
+<DIV    id='win0divMTG_INSTR$3'><span  class='PSLONGEDITBOX' id='MTG_INSTR$3' >T. Pan</span>
+</DIV></td>
+<td class='PSLEVEL3GRIDODDROW'  align='left'  class='PSLEVEL3GRIDODDROW' >
+<DIV    id='win0divMTG_TOPIC$3'><span  class='PSLONGEDITBOX' id='MTG_TOPIC$3' >08/24/2026 - 12/07/2026</span>
+</DIV></td>
+<td class='PSLEVEL3GRIDODDROW'  align='left'  class='PSLEVEL3GRIDODDROW' >
+<DIV    id='win0divDERIVED_CLSRCH_SSR_STATUS_LONG$3'><div  style="min-width:53px; " >
+<!-- Begin HTML Area Name Undisclosed -->
+<img src="/cs/CS92PROD/cache/3/PS_CS_STATUS_OPEN_ICN_1.gif" width="16" height="16" alt="Open" STYLE="vertical-align:middle;text-align:center;margin-left:12px">
+<!-- End HTML Area -->
+</div>
+</DIV></td>
+<td class='PSLEVEL3GRIDODDROW'  align='center'  style='white-space:nowrap;' class='PSLEVEL3GRIDODDROW' >
+&nbsp;
+</td>
+</tr>
+</table>
+</DIV>
+</td>
+</tr>
+<tr>
+<td height='3' colspan='3'></td>
+</tr>
+</table>
+</td></tr>
+</table>
+</DIV></td>
+</tr>
+<tr>
+<td height='4' colspan='3'></td>
+</tr>
+<tr>
+<td height='63'></td>
+<td  valign='top' align='left'>
+<DIV    id='win0divSSR_CLSRSLT_WRK_GROUPBOX3$4'><table cellpadding='2' cellspacing='0' cols='1'  class='PABACKGROUNDINVISIBLEWBO'  width='864'>
+<tr><td width='861'>
+<table role='presentation'  border='0' id='ACE_SSR_CLSRSLT_WRK_GROUPBOX3$4' cellpadding='0' cellspacing='0' cols='3' width='887' class='PABACKGROUNDINVISIBLE PTCPGROUPBOXWBO' style='border-style:none' >
+<tr>
+<td width='0' height='0'></td>
+<td width='886'></td>
+<td width='2'></td>
+</tr>
+<tr>
+<td height='54'></td>
+<td  valign='top' align='left'>
+<DIV    id='win0divSSR_CLSRCH_MTG1$4'><div class='PTCPGRIDTITLE' onclick='javascript:if(event.target.id == this.firstElementChild.firstElementChild.id) { return true; } else return((this.firstElementChild &amp;&amp; this.firstElementChild.firstElementChild) != null ? this.firstElementChild.firstElementChild.click() : false);'  align='left' >  </div>
+<table cellspacing='0' class='PSLEVEL1GRIDNBONBO'  id='SSR_CLSRCH_MTG1$scroll$4' dir='ltr' cols='9' width='1085' cellpadding='2'>
+<tr>
+<th scope='col' width='21' align='CENTER' class='PSLEVEL1GRIDCOLUMNHDR' >&nbsp;</th>
+<th scope='col' width='30' align='left' class='PSLEVEL1GRIDCOLUMNHDR' ><a name='SSR_CLSRCH_MTG1$srt1$4' id='SSR_CLSRCH_MTG1$srt1$4' role='button' tabindex='1165' class='PSLEVEL1GRIDCOLUMNHDR' href="javascript:submitAction_win0(document.win0,'SSR_CLSRCH_MTG1$srt1$4');" title="Click to sort ascending">Class</a></th>
+<th scope='col' width='80' align='left' class='PSLEVEL1GRIDCOLUMNHDR' ><a name='SSR_CLSRCH_MTG1$srt2$4' id='SSR_CLSRCH_MTG1$srt2$4' role='button' tabindex='1166' class='PSLEVEL1GRIDCOLUMNHDR' href="javascript:submitAction_win0(document.win0,'SSR_CLSRCH_MTG1$srt2$4');" title="Click to sort ascending">Section</a></th>
+<th scope='col' width='98' align='left' class='PSLEVEL1GRIDCOLUMNHDR' ><a name='SSR_CLSRCH_MTG1$srt3$4' id='SSR_CLSRCH_MTG1$srt3$4' role='button' tabindex='1167' class='PSLEVEL1GRIDCOLUMNHDR' href="javascript:submitAction_win0(document.win0,'SSR_CLSRCH_MTG1$srt3$4');" title="Click to sort ascending">Days &amp; Times</a></th>
+<th scope='col' width='91' align='left' class='PSLEVEL1GRIDCOLUMNHDR' ><a name='SSR_CLSRCH_MTG1$srt4$4' id='SSR_CLSRCH_MTG1$srt4$4' role='button' tabindex='1168' class='PSLEVEL1GRIDCOLUMNHDR' href="javascript:submitAction_win0(document.win0,'SSR_CLSRCH_MTG1$srt4$4');" title="Click to sort ascending">Room</a></th>
+<th scope='col' width='98' align='left' class='PSLEVEL1GRIDCOLUMNHDR' ><a name='SSR_CLSRCH_MTG1$srt5$4' id='SSR_CLSRCH_MTG1$srt5$4' role='button' tabindex='1169' class='PSLEVEL1GRIDCOLUMNHDR' href="javascript:submitAction_win0(document.win0,'SSR_CLSRCH_MTG1$srt5$4');" title="Click to sort ascending">Instructor</a></th>
+<th scope='col' width='94' align='left' class='PSLEVEL1GRIDCOLUMNHDR' ><a name='SSR_CLSRCH_MTG1$srt6$4' id='SSR_CLSRCH_MTG1$srt6$4' role='button' tabindex='1170' class='PSLEVEL1GRIDCOLUMNHDR' href="javascript:submitAction_win0(document.win0,'SSR_CLSRCH_MTG1$srt6$4');" title="Click to sort ascending">Meeting Dates</a></th>
+<th scope='col' width='41' align='left' class='PSLEVEL1GRIDCOLUMNHDR' ><a name='SSR_CLSRCH_MTG1$srt7$4' id='SSR_CLSRCH_MTG1$srt7$4' role='button' tabindex='1171' class='PSLEVEL1GRIDCOLUMNHDR' href="javascript:submitAction_win0(document.win0,'SSR_CLSRCH_MTG1$srt7$4');" title="Click to sort ascending">Status</a></th>
+<th scope='col' width='98' align='left' class='PSLEVEL1GRIDCOLUMNHDR' >&nbsp;</th>
+</tr>
+<tr id='trSSR_CLSRCH_MTG1$4_row1' bufnum='0' valign='center' onClick="HighLightTR('rgb(212,219,217)','','trSSR_CLSRCH_MTG1$4_row1');" onMouseOver="hoverLightTR('rgb(249,254,203)','',0,'trSSR_CLSRCH_MTG1$4_row1');" onmouseout="hoverLightTR('rgb(249,254,203)','',1,'trSSR_CLSRCH_MTG1$4_row1');">
+<td align='center'  style='white-space:nowrap;' height='35' class='PSLEVEL3GRIDODDROW' >
+<DIV    id='win0divDATESLINK$4'><a name='DATESLINK$4' id='DATESLINK$4' tabindex='1178' onclick='javascript:cancelBubble(event);' href="javascript:submitAction_win0(document.win0,'DATESLINK$4');"><img src='/cs/CS92PROD/cache/3/PT_CALENDAR_1.gif' id='DATESLINK$IMG$4'  title='Dates and Deadlines' border='0' /></a></DIV></td>
+<td class='PSLEVEL3GRIDODDROW'  align='left'  class='PSLEVEL3GRIDODDROW' >
+<DIV    id='win0divMTG_CLASS_NBR$4'><span id='MTG_CLASS_NBR$span$4'  class='PSHYPERLINK'  title='Class Nbr' ><a name='MTG_CLASS_NBR$4' id='MTG_CLASS_NBR$4'  ptlinktgt='pt_peoplecode' tabindex='1179' onclick='javascript:cancelBubble(event);' href="javascript:submitAction_win0(document.win0,'MTG_CLASS_NBR$4');"  class='PSHYPERLINK' >10724</a></span></DIV></td>
+<td class='PSLEVEL3GRIDODDROW'  align='left'  class='PSLEVEL3GRIDODDROW' >
+<DIV    id='win0divMTG_CLASSNAME$4'><span id='MTG_CLASSNAME$span$4'  class='PSHYPERLINK'  title='View Details' ><a name='MTG_CLASSNAME$4' id='MTG_CLASSNAME$4'  ptlinktgt='pt_peoplecode' tabindex='1180' onclick='javascript:cancelBubble(event);' href="javascript:submitAction_win0(document.win0,'MTG_CLASSNAME$4');"  class='PSHYPERLINK' >M100-SEC<br />
+Regular</a></span></DIV></td>
+<td class='PSLEVEL3GRIDODDROW'  align='left'  class='PSLEVEL3GRIDODDROW' >
+<DIV    id='win0divMTG_DAYTIME$4'><span  class='PSLONGEDITBOX' id='MTG_DAYTIME$4' >MoWe 10:35AM - 11:30AM</span>
+</DIV></td>
+<td class='PSLEVEL3GRIDODDROW'  align='left'  class='PSLEVEL3GRIDODDROW' >
+<DIV    id='win0divMTG_ROOM$4'><span  class='PSLONGEDITBOX' id='MTG_ROOM$4' >Newhouse 3 141</span>
+</DIV></td>
+<td class='PSLEVEL3GRIDODDROW'  align='left'  class='PSLEVEL3GRIDODDROW' >
+<DIV    id='win0divMTG_INSTR$4'><span  class='PSLONGEDITBOX' id='MTG_INSTR$4' >J. Lee</span>
+</DIV></td>
+<td class='PSLEVEL3GRIDODDROW'  align='left'  class='PSLEVEL3GRIDODDROW' >
+<DIV    id='win0divMTG_TOPIC$4'><span  class='PSLONGEDITBOX' id='MTG_TOPIC$4' >08/24/2026 - 12/07/2026</span>
+</DIV></td>
+<td class='PSLEVEL3GRIDODDROW'  align='left'  class='PSLEVEL3GRIDODDROW' >
+<DIV    id='win0divDERIVED_CLSRCH_SSR_STATUS_LONG$4'><div  style="min-width:53px; " >
+<!-- Begin HTML Area Name Undisclosed -->
+<img src="/cs/CS92PROD/cache/3/PS_CS_STATUS_OPEN_ICN_1.gif" width="16" height="16" alt="Open" STYLE="vertical-align:middle;text-align:center;margin-left:12px">
+<!-- End HTML Area -->
+</div>
+</DIV></td>
+<td class='PSLEVEL3GRIDODDROW'  align='center'  style='white-space:nowrap;' class='PSLEVEL3GRIDODDROW' >
+&nbsp;
+</td>
+</tr>
+</table>
+</DIV>
+</td>
+</tr>
+<tr>
+<td height='3' colspan='3'></td>
+</tr>
+</table>
+</td></tr>
+</table>
+</DIV></td>
+</tr>
+<tr>
+<td height='4' colspan='3'></td>
+</tr>
+<tr>
+<td height='63'></td>
+<td  valign='top' align='left'>
+<DIV    id='win0divSSR_CLSRSLT_WRK_GROUPBOX3$5'><table cellpadding='2' cellspacing='0' cols='1'  class='PABACKGROUNDINVISIBLEWBO'  width='864'>
+<tr><td width='861'>
+<table role='presentation'  border='0' id='ACE_SSR_CLSRSLT_WRK_GROUPBOX3$5' cellpadding='0' cellspacing='0' cols='3' width='887' class='PABACKGROUNDINVISIBLE PTCPGROUPBOXWBO' style='border-style:none' >
+<tr>
+<td width='0' height='0'></td>
+<td width='886'></td>
+<td width='2'></td>
+</tr>
+<tr>
+<td height='54'></td>
+<td  valign='top' align='left'>
+<DIV    id='win0divSSR_CLSRCH_MTG1$5'><div class='PTCPGRIDTITLE' onclick='javascript:if(event.target.id == this.firstElementChild.firstElementChild.id) { return true; } else return((this.firstElementChild &amp;&amp; this.firstElementChild.firstElementChild) != null ? this.firstElementChild.firstElementChild.click() : false);'  align='left' >  </div>
+<table cellspacing='0' class='PSLEVEL1GRIDNBONBO'  id='SSR_CLSRCH_MTG1$scroll$5' dir='ltr' cols='9' width='1085' cellpadding='2'>
+<tr>
+<th scope='col' width='21' align='CENTER' class='PSLEVEL1GRIDCOLUMNHDR' >&nbsp;</th>
+<th scope='col' width='30' align='left' class='PSLEVEL1GRIDCOLUMNHDR' ><a name='SSR_CLSRCH_MTG1$srt1$5' id='SSR_CLSRCH_MTG1$srt1$5' role='button' tabindex='1348' class='PSLEVEL1GRIDCOLUMNHDR' href="javascript:submitAction_win0(document.win0,'SSR_CLSRCH_MTG1$srt1$5');" title="Click to sort ascending">Class</a></th>
+<th scope='col' width='80' align='left' class='PSLEVEL1GRIDCOLUMNHDR' ><a name='SSR_CLSRCH_MTG1$srt2$5' id='SSR_CLSRCH_MTG1$srt2$5' role='button' tabindex='1349' class='PSLEVEL1GRIDCOLUMNHDR' href="javascript:submitAction_win0(document.win0,'SSR_CLSRCH_MTG1$srt2$5');" title="Click to sort ascending">Section</a></th>
+<th scope='col' width='98' align='left' class='PSLEVEL1GRIDCOLUMNHDR' ><a name='SSR_CLSRCH_MTG1$srt3$5' id='SSR_CLSRCH_MTG1$srt3$5' role='button' tabindex='1350' class='PSLEVEL1GRIDCOLUMNHDR' href="javascript:submitAction_win0(document.win0,'SSR_CLSRCH_MTG1$srt3$5');" title="Click to sort ascending">Days &amp; Times</a></th>
+<th scope='col' width='91' align='left' class='PSLEVEL1GRIDCOLUMNHDR' ><a name='SSR_CLSRCH_MTG1$srt4$5' id='SSR_CLSRCH_MTG1$srt4$5' role='button' tabindex='1351' class='PSLEVEL1GRIDCOLUMNHDR' href="javascript:submitAction_win0(document.win0,'SSR_CLSRCH_MTG1$srt4$5');" title="Click to sort ascending">Room</a></th>
+<th scope='col' width='98' align='left' class='PSLEVEL1GRIDCOLUMNHDR' ><a name='SSR_CLSRCH_MTG1$srt5$5' id='SSR_CLSRCH_MTG1$srt5$5' role='button' tabindex='1352' class='PSLEVEL1GRIDCOLUMNHDR' href="javascript:submitAction_win0(document.win0,'SSR_CLSRCH_MTG1$srt5$5');" title="Click to sort ascending">Instructor</a></th>
+<th scope='col' width='94' align='left' class='PSLEVEL1GRIDCOLUMNHDR' ><a name='SSR_CLSRCH_MTG1$srt6$5' id='SSR_CLSRCH_MTG1$srt6$5' role='button' tabindex='1353' class='PSLEVEL1GRIDCOLUMNHDR' href="javascript:submitAction_win0(document.win0,'SSR_CLSRCH_MTG1$srt6$5');" title="Click to sort ascending">Meeting Dates</a></th>
+<th scope='col' width='41' align='left' class='PSLEVEL1GRIDCOLUMNHDR' ><a name='SSR_CLSRCH_MTG1$srt7$5' id='SSR_CLSRCH_MTG1$srt7$5' role='button' tabindex='1354' class='PSLEVEL1GRIDCOLUMNHDR' href="javascript:submitAction_win0(document.win0,'SSR_CLSRCH_MTG1$srt7$5');" title="Click to sort ascending">Status</a></th>
+<th scope='col' width='98' align='left' class='PSLEVEL1GRIDCOLUMNHDR' >&nbsp;</th>
+</tr>
+<tr id='trSSR_CLSRCH_MTG1$5_row1' bufnum='0' valign='center' onClick="HighLightTR('rgb(212,219,217)','','trSSR_CLSRCH_MTG1$5_row1');" onMouseOver="hoverLightTR('rgb(249,254,203)','',0,'trSSR_CLSRCH_MTG1$5_row1');" onmouseout="hoverLightTR('rgb(249,254,203)','',1,'trSSR_CLSRCH_MTG1$5_row1');">
+<td align='center'  style='white-space:nowrap;' height='35' class='PSLEVEL3GRIDODDROW' >
+&nbsp;
+</td>
+<td class='PSLEVEL3GRIDODDROW'  align='left'  class='PSLEVEL3GRIDODDROW' >
+<DIV    id='win0divMTG_CLASS_NBR$5'><span id='MTG_CLASS_NBR$span$5'  class='PSHYPERLINK'  title='Class Nbr' ><a name='MTG_CLASS_NBR$5' id='MTG_CLASS_NBR$5'  ptlinktgt='pt_peoplecode' tabindex='1362' onclick='javascript:cancelBubble(event);' href="javascript:submitAction_win0(document.win0,'MTG_CLASS_NBR$5');"  class='PSHYPERLINK' >10725</a></span></DIV></td>
+<td class='PSLEVEL3GRIDODDROW'  align='left'  class='PSLEVEL3GRIDODDROW' >
+<DIV    id='win0divMTG_CLASSNAME$5'><span id='MTG_CLASSNAME$span$5'  class='PSHYPERLINK'  title='View Details' ><a name='MTG_CLASSNAME$5' id='MTG_CLASSNAME$5'  ptlinktgt='pt_peoplecode' tabindex='1363' onclick='javascript:cancelBubble(event);' href="javascript:submitAction_win0(document.win0,'MTG_CLASSNAME$5');"  class='PSHYPERLINK' >M101-DIS<br />
+Regular</a></span></DIV></td>
+<td class='PSLEVEL3GRIDODDROW'  align='left'  class='PSLEVEL3GRIDODDROW' >
+<DIV    id='win0divMTG_DAYTIME$5'><span  class='PSLONGEDITBOX' id='MTG_DAYTIME$5' >Fr 10:35AM - 11:30AM</span>
+</DIV></td>
+<td class='PSLEVEL3GRIDODDROW'  align='left'  class='PSLEVEL3GRIDODDROW' >
+<DIV    id='win0divMTG_ROOM$5'><span  class='PSLONGEDITBOX' id='MTG_ROOM$5' >Hall of Languages 215</span>
+</DIV></td>
+<td class='PSLEVEL3GRIDODDROW'  align='left'  class='PSLEVEL3GRIDODDROW' >
+<DIV    id='win0divMTG_INSTR$5'><span  class='PSLONGEDITBOX' id='MTG_INSTR$5' >J. Kim</span>
+</DIV></td>
+<td class='PSLEVEL3GRIDODDROW'  align='left'  class='PSLEVEL3GRIDODDROW' >
+<DIV    id='win0divMTG_TOPIC$5'><span  class='PSLONGEDITBOX' id='MTG_TOPIC$5' >08/28/2026 - 12/04/2026</span>
+</DIV></td>
+<td class='PSLEVEL3GRIDODDROW'  align='left'  class='PSLEVEL3GRIDODDROW' >
+<DIV    id='win0divDERIVED_CLSRCH_SSR_STATUS_LONG$5'><div  style="min-width:53px; " >
+<!-- Begin HTML Area Name Undisclosed -->
+<img src="/cs/CS92PROD/cache/3/PS_CS_STATUS_OPEN_ICN_1.gif" width="16" height="16" alt="Open" STYLE="vertical-align:middle;text-align:center;margin-left:12px">
+<!-- End HTML Area -->
+</div>
+</DIV></td>
+<td class='PSLEVEL3GRIDODDROW'  align='center'  style='white-space:nowrap;' class='PSLEVEL3GRIDODDROW' >
+&nbsp;
+</td>
+</tr>
+</table>
+</DIV>
+</td>
+</tr>
+<tr>
+<td height='3' colspan='3'></td>
+</tr>
+</table>
+</td></tr>
+</table>
+</DIV></td>
+</tr>
+<tr>
+<td height='4' colspan='3'></td>
+</tr>
+<tr>
+<td height='63'></td>
+<td  valign='top' align='left'>
+<DIV    id='win0divSSR_CLSRSLT_WRK_GROUPBOX3$6'><table cellpadding='2' cellspacing='0' cols='1'  class='PABACKGROUNDINVISIBLEWBO'  width='864'>
+<tr><td width='861'>
+<table role='presentation'  border='0' id='ACE_SSR_CLSRSLT_WRK_GROUPBOX3$6' cellpadding='0' cellspacing='0' cols='3' width='887' class='PABACKGROUNDINVISIBLE PTCPGROUPBOXWBO' style='border-style:none' >
+<tr>
+<td width='0' height='0'></td>
+<td width='886'></td>
+<td width='2'></td>
+</tr>
+<tr>
+<td height='54'></td>
+<td  valign='top' align='left'>
+<DIV    id='win0divSSR_CLSRCH_MTG1$6'><div class='PTCPGRIDTITLE' onclick='javascript:if(event.target.id == this.firstElementChild.firstElementChild.id) { return true; } else return((this.firstElementChild &amp;&amp; this.firstElementChild.firstElementChild) != null ? this.firstElementChild.firstElementChild.click() : false);'  align='left' >  </div>
+<table cellspacing='0' class='PSLEVEL1GRIDNBONBO'  id='SSR_CLSRCH_MTG1$scroll$6' dir='ltr' cols='9' width='1085' cellpadding='2'>
+<tr>
+<th scope='col' width='21' align='CENTER' class='PSLEVEL1GRIDCOLUMNHDR' >&nbsp;</th>
+<th scope='col' width='30' align='left' class='PSLEVEL1GRIDCOLUMNHDR' ><a name='SSR_CLSRCH_MTG1$srt1$6' id='SSR_CLSRCH_MTG1$srt1$6' role='button' tabindex='1531' class='PSLEVEL1GRIDCOLUMNHDR' href="javascript:submitAction_win0(document.win0,'SSR_CLSRCH_MTG1$srt1$6');" title="Click to sort ascending">Class</a></th>
+<th scope='col' width='80' align='left' class='PSLEVEL1GRIDCOLUMNHDR' ><a name='SSR_CLSRCH_MTG1$srt2$6' id='SSR_CLSRCH_MTG1$srt2$6' role='button' tabindex='1532' class='PSLEVEL1GRIDCOLUMNHDR' href="javascript:submitAction_win0(document.win0,'SSR_CLSRCH_MTG1$srt2$6');" title="Click to sort ascending">Section</a></th>
+<th scope='col' width='98' align='left' class='PSLEVEL1GRIDCOLUMNHDR' ><a name='SSR_CLSRCH_MTG1$srt3$6' id='SSR_CLSRCH_MTG1$srt3$6' role='button' tabindex='1533' class='PSLEVEL1GRIDCOLUMNHDR' href="javascript:submitAction_win0(document.win0,'SSR_CLSRCH_MTG1$srt3$6');" title="Click to sort ascending">Days &amp; Times</a></th>
+<th scope='col' width='91' align='left' class='PSLEVEL1GRIDCOLUMNHDR' ><a name='SSR_CLSRCH_MTG1$srt4$6' id='SSR_CLSRCH_MTG1$srt4$6' role='button' tabindex='1534' class='PSLEVEL1GRIDCOLUMNHDR' href="javascript:submitAction_win0(document.win0,'SSR_CLSRCH_MTG1$srt4$6');" title="Click to sort ascending">Room</a></th>
+<th scope='col' width='98' align='left' class='PSLEVEL1GRIDCOLUMNHDR' ><a name='SSR_CLSRCH_MTG1$srt5$6' id='SSR_CLSRCH_MTG1$srt5$6' role='button' tabindex='1535' class='PSLEVEL1GRIDCOLUMNHDR' href="javascript:submitAction_win0(document.win0,'SSR_CLSRCH_MTG1$srt5$6');" title="Click to sort ascending">Instructor</a></th>
+<th scope='col' width='94' align='left' class='PSLEVEL1GRIDCOLUMNHDR' ><a name='SSR_CLSRCH_MTG1$srt6$6' id='SSR_CLSRCH_MTG1$srt6$6' role='button' tabindex='1536' class='PSLEVEL1GRIDCOLUMNHDR' href="javascript:submitAction_win0(document.win0,'SSR_CLSRCH_MTG1$srt6$6');" title="Click to sort ascending">Meeting Dates</a></th>
+<th scope='col' width='41' align='left' class='PSLEVEL1GRIDCOLUMNHDR' ><a name='SSR_CLSRCH_MTG1$srt7$6' id='SSR_CLSRCH_MTG1$srt7$6' role='button' tabindex='1537' class='PSLEVEL1GRIDCOLUMNHDR' href="javascript:submitAction_win0(document.win0,'SSR_CLSRCH_MTG1$srt7$6');" title="Click to sort ascending">Status</a></th>
+<th scope='col' width='98' align='left' class='PSLEVEL1GRIDCOLUMNHDR' >&nbsp;</th>
+</tr>
+<tr id='trSSR_CLSRCH_MTG1$6_row1' bufnum='0' valign='center' onClick="HighLightTR('rgb(212,219,217)','','trSSR_CLSRCH_MTG1$6_row1');" onMouseOver="hoverLightTR('rgb(249,254,203)','',0,'trSSR_CLSRCH_MTG1$6_row1');" onmouseout="hoverLightTR('rgb(249,254,203)','',1,'trSSR_CLSRCH_MTG1$6_row1');">
+<td align='center'  style='white-space:nowrap;' height='35' class='PSLEVEL3GRIDODDROW' >
+&nbsp;
+</td>
+<td class='PSLEVEL3GRIDODDROW'  align='left'  class='PSLEVEL3GRIDODDROW' >
+<DIV    id='win0divMTG_CLASS_NBR$6'><span id='MTG_CLASS_NBR$span$6'  class='PSHYPERLINK'  title='Class Nbr' ><a name='MTG_CLASS_NBR$6' id='MTG_CLASS_NBR$6'  ptlinktgt='pt_peoplecode' tabindex='1545' onclick='javascript:cancelBubble(event);' href="javascript:submitAction_win0(document.win0,'MTG_CLASS_NBR$6');"  class='PSHYPERLINK' >20410</a></span></DIV></td>
+<td class='PSLEVEL3GRIDODDROW'  align='left'  class='PSLEVEL3GRIDODDROW' >
+<DIV    id='win0divMTG_CLASSNAME$6'><span id='MTG_CLASSNAME$span$6'  class='PSHYPERLINK'  title='View Details' ><a name='MTG_CLASSNAME$6' id='MTG_CLASSNAME$6'  ptlinktgt='pt_peoplecode' tabindex='1546' onclick='javascript:cancelBubble(event);' href="javascript:submitAction_win0(document.win0,'MTG_CLASSNAME$6');"  class='PSHYPERLINK' >M102-DIS<br />
+Regular</a></span></DIV></td>
+<td class='PSLEVEL3GRIDODDROW'  align='left'  class='PSLEVEL3GRIDODDROW' >
+<DIV    id='win0divMTG_DAYTIME$6'><span  class='PSLONGEDITBOX' id='MTG_DAYTIME$6' >Fr 10:35AM - 11:30AM</span>
+</DIV></td>
+<td class='PSLEVEL3GRIDODDROW'  align='left'  class='PSLEVEL3GRIDODDROW' >
+<DIV    id='win0divMTG_ROOM$6'><span  class='PSLONGEDITBOX' id='MTG_ROOM$6' >Life Science Building 156</span>
+</DIV></td>
+<td class='PSLEVEL3GRIDODDROW'  align='left'  class='PSLEVEL3GRIDODDROW' >
+<DIV    id='win0divMTG_INSTR$6'><span  class='PSLONGEDITBOX' id='MTG_INSTR$6' >J. Lee</span>
+</DIV></td>
+<td class='PSLEVEL3GRIDODDROW'  align='left'  class='PSLEVEL3GRIDODDROW' >
+<DIV    id='win0divMTG_TOPIC$6'><span  class='PSLONGEDITBOX' id='MTG_TOPIC$6' >08/28/2026 - 12/04/2026</span>
+</DIV></td>
+<td class='PSLEVEL3GRIDODDROW'  align='left'  class='PSLEVEL3GRIDODDROW' >
+<DIV    id='win0divDERIVED_CLSRCH_SSR_STATUS_LONG$6'><div  style="min-width:53px; " >
+<!-- Begin HTML Area Name Undisclosed -->
+<img src="/cs/CS92PROD/cache/3/PS_CS_STATUS_OPEN_ICN_1.gif" width="16" height="16" alt="Open" STYLE="vertical-align:middle;text-align:center;margin-left:12px">
+<!-- End HTML Area -->
+</div>
+</DIV></td>
+<td class='PSLEVEL3GRIDODDROW'  align='center'  style='white-space:nowrap;' class='PSLEVEL3GRIDODDROW' >
+&nbsp;
+</td>
+</tr>
+</table>
+</DIV>
+</td>
+</tr>
+<tr>
+<td height='3' colspan='3'></td>
+</tr>
+</table>
+</td></tr>
+</table>
+</DIV></td>
+</tr>
+<tr>
+<td height='4' colspan='3'></td>
+</tr>
+<tr>
+<td height='63'></td>
+<td  valign='top' align='left'>
+<DIV    id='win0divSSR_CLSRSLT_WRK_GROUPBOX3$7'><table cellpadding='2' cellspacing='0' cols='1'  class='PABACKGROUNDINVISIBLEWBO'  width='864'>
+<tr><td width='861'>
+<table role='presentation'  border='0' id='ACE_SSR_CLSRSLT_WRK_GROUPBOX3$7' cellpadding='0' cellspacing='0' cols='3' width='887' class='PABACKGROUNDINVISIBLE PTCPGROUPBOXWBO' style='border-style:none' >
+<tr>
+<td width='0' height='0'></td>
+<td width='886'></td>
+<td width='2'></td>
+</tr>
+<tr>
+<td height='54'></td>
+<td  valign='top' align='left'>
+<DIV    id='win0divSSR_CLSRCH_MTG1$7'><div class='PTCPGRIDTITLE' onclick='javascript:if(event.target.id == this.firstElementChild.firstElementChild.id) { return true; } else return((this.firstElementChild &amp;&amp; this.firstElementChild.firstElementChild) != null ? this.firstElementChild.firstElementChild.click() : false);'  align='left' >  </div>
+<table cellspacing='0' class='PSLEVEL1GRIDNBONBO'  id='SSR_CLSRCH_MTG1$scroll$7' dir='ltr' cols='9' width='1085' cellpadding='2'>
+<tr>
+<th scope='col' width='21' align='CENTER' class='PSLEVEL1GRIDCOLUMNHDR' >&nbsp;</th>
+<th scope='col' width='30' align='left' class='PSLEVEL1GRIDCOLUMNHDR' ><a name='SSR_CLSRCH_MTG1$srt1$7' id='SSR_CLSRCH_MTG1$srt1$7' role='button' tabindex='1714' class='PSLEVEL1GRIDCOLUMNHDR' href="javascript:submitAction_win0(document.win0,'SSR_CLSRCH_MTG1$srt1$7');" title="Click to sort ascending">Class</a></th>
+<th scope='col' width='80' align='left' class='PSLEVEL1GRIDCOLUMNHDR' ><a name='SSR_CLSRCH_MTG1$srt2$7' id='SSR_CLSRCH_MTG1$srt2$7' role='button' tabindex='1715' class='PSLEVEL1GRIDCOLUMNHDR' href="javascript:submitAction_win0(document.win0,'SSR_CLSRCH_MTG1$srt2$7');" title="Click to sort ascending">Section</a></th>
+<th scope='col' width='98' align='left' class='PSLEVEL1GRIDCOLUMNHDR' ><a name='SSR_CLSRCH_MTG1$srt3$7' id='SSR_CLSRCH_MTG1$srt3$7' role='button' tabindex='1716' class='PSLEVEL1GRIDCOLUMNHDR' href="javascript:submitAction_win0(document.win0,'SSR_CLSRCH_MTG1$srt3$7');" title="Click to sort ascending">Days &amp; Times</a></th>
+<th scope='col' width='91' align='left' class='PSLEVEL1GRIDCOLUMNHDR' ><a name='SSR_CLSRCH_MTG1$srt4$7' id='SSR_CLSRCH_MTG1$srt4$7' role='button' tabindex='1717' class='PSLEVEL1GRIDCOLUMNHDR' href="javascript:submitAction_win0(document.win0,'SSR_CLSRCH_MTG1$srt4$7');" title="Click to sort ascending">Room</a></th>
+<th scope='col' width='98' align='left' class='PSLEVEL1GRIDCOLUMNHDR' ><a name='SSR_CLSRCH_MTG1$srt5$7' id='SSR_CLSRCH_MTG1$srt5$7' role='button' tabindex='1718' class='PSLEVEL1GRIDCOLUMNHDR' href="javascript:submitAction_win0(document.win0,'SSR_CLSRCH_MTG1$srt5$7');" title="Click to sort ascending">Instructor</a></th>
+<th scope='col' width='94' align='left' class='PSLEVEL1GRIDCOLUMNHDR' ><a name='SSR_CLSRCH_MTG1$srt6$7' id='SSR_CLSRCH_MTG1$srt6$7' role='button' tabindex='1719' class='PSLEVEL1GRIDCOLUMNHDR' href="javascript:submitAction_win0(document.win0,'SSR_CLSRCH_MTG1$srt6$7');" title="Click to sort ascending">Meeting Dates</a></th>
+<th scope='col' width='41' align='left' class='PSLEVEL1GRIDCOLUMNHDR' ><a name='SSR_CLSRCH_MTG1$srt7$7' id='SSR_CLSRCH_MTG1$srt7$7' role='button' tabindex='1720' class='PSLEVEL1GRIDCOLUMNHDR' href="javascript:submitAction_win0(document.win0,'SSR_CLSRCH_MTG1$srt7$7');" title="Click to sort ascending">Status</a></th>
+<th scope='col' width='98' align='left' class='PSLEVEL1GRIDCOLUMNHDR' >&nbsp;</th>
+</tr>
+<tr id='trSSR_CLSRCH_MTG1$7_row1' bufnum='0' valign='center' onClick="HighLightTR('rgb(212,219,217)','','trSSR_CLSRCH_MTG1$7_row1');" onMouseOver="hoverLightTR('rgb(249,254,203)','',0,'trSSR_CLSRCH_MTG1$7_row1');" onmouseout="hoverLightTR('rgb(249,254,203)','',1,'trSSR_CLSRCH_MTG1$7_row1');">
+<td align='center'  style='white-space:nowrap;' height='35' class='PSLEVEL3GRIDODDROW' >
+&nbsp;
+</td>
+<td class='PSLEVEL3GRIDODDROW'  align='left'  class='PSLEVEL3GRIDODDROW' >
+<DIV    id='win0divMTG_CLASS_NBR$7'><span id='MTG_CLASS_NBR$span$7'  class='PSHYPERLINK'  title='Class Nbr' ><a name='MTG_CLASS_NBR$7' id='MTG_CLASS_NBR$7'  ptlinktgt='pt_peoplecode' tabindex='1728' onclick='javascript:cancelBubble(event);' href="javascript:submitAction_win0(document.win0,'MTG_CLASS_NBR$7');"  class='PSHYPERLINK' >10726</a></span></DIV></td>
+<td class='PSLEVEL3GRIDODDROW'  align='left'  class='PSLEVEL3GRIDODDROW' >
+<DIV    id='win0divMTG_CLASSNAME$7'><span id='MTG_CLASSNAME$span$7'  class='PSHYPERLINK'  title='View Details' ><a name='MTG_CLASSNAME$7' id='MTG_CLASSNAME$7'  ptlinktgt='pt_peoplecode' tabindex='1729' onclick='javascript:cancelBubble(event);' href="javascript:submitAction_win0(document.win0,'MTG_CLASSNAME$7');"  class='PSHYPERLINK' >M103-DIS<br />
+Regular</a></span></DIV></td>
+<td class='PSLEVEL3GRIDODDROW'  align='left'  class='PSLEVEL3GRIDODDROW' >
+<DIV    id='win0divMTG_DAYTIME$7'><span  class='PSLONGEDITBOX' id='MTG_DAYTIME$7' >Fr 11:40AM - 12:35PM</span>
+</DIV></td>
+<td class='PSLEVEL3GRIDODDROW'  align='left'  class='PSLEVEL3GRIDODDROW' >
+<DIV    id='win0divMTG_ROOM$7'><span  class='PSLONGEDITBOX' id='MTG_ROOM$7' >Hall of Languages 105</span>
+</DIV></td>
+<td class='PSLEVEL3GRIDODDROW'  align='left'  class='PSLEVEL3GRIDODDROW' >
+<DIV    id='win0divMTG_INSTR$7'><span  class='PSLONGEDITBOX' id='MTG_INSTR$7' >J. Kim</span>
+</DIV></td>
+<td class='PSLEVEL3GRIDODDROW'  align='left'  class='PSLEVEL3GRIDODDROW' >
+<DIV    id='win0divMTG_TOPIC$7'><span  class='PSLONGEDITBOX' id='MTG_TOPIC$7' >08/28/2026 - 12/04/2026</span>
+</DIV></td>
+<td class='PSLEVEL3GRIDODDROW'  align='left'  class='PSLEVEL3GRIDODDROW' >
+<DIV    id='win0divDERIVED_CLSRCH_SSR_STATUS_LONG$7'><div  style="min-width:53px; " >
+<!-- Begin HTML Area Name Undisclosed -->
+<img src="/cs/CS92PROD/cache/3/PS_CS_STATUS_OPEN_ICN_1.gif" width="16" height="16" alt="Open" STYLE="vertical-align:middle;text-align:center;margin-left:12px">
+<!-- End HTML Area -->
+</div>
+</DIV></td>
+<td class='PSLEVEL3GRIDODDROW'  align='center'  style='white-space:nowrap;' class='PSLEVEL3GRIDODDROW' >
+&nbsp;
+</td>
+</tr>
+</table>
+</DIV>
+</td>
+</tr>
+<tr>
+<td height='3' colspan='3'></td>
+</tr>
+</table>
+</td></tr>
+</table>
+</DIV></td>
+</tr>
+<tr>
+<td height='4' colspan='3'></td>
+</tr>
+<tr>
+<td height='63'></td>
+<td  valign='top' align='left'>
+<DIV    id='win0divSSR_CLSRSLT_WRK_GROUPBOX3$8'><table cellpadding='2' cellspacing='0' cols='1'  class='PABACKGROUNDINVISIBLEWBO'  width='864'>
+<tr><td width='861'>
+<table role='presentation'  border='0' id='ACE_SSR_CLSRSLT_WRK_GROUPBOX3$8' cellpadding='0' cellspacing='0' cols='3' width='887' class='PABACKGROUNDINVISIBLE PTCPGROUPBOXWBO' style='border-style:none' >
+<tr>
+<td width='0' height='0'></td>
+<td width='886'></td>
+<td width='2'></td>
+</tr>
+<tr>
+<td height='54'></td>
+<td  valign='top' align='left'>
+<DIV    id='win0divSSR_CLSRCH_MTG1$8'><div class='PTCPGRIDTITLE' onclick='javascript:if(event.target.id == this.firstElementChild.firstElementChild.id) { return true; } else return((this.firstElementChild &amp;&amp; this.firstElementChild.firstElementChild) != null ? this.firstElementChild.firstElementChild.click() : false);'  align='left' >  </div>
+<table cellspacing='0' class='PSLEVEL1GRIDNBONBO'  id='SSR_CLSRCH_MTG1$scroll$8' dir='ltr' cols='9' width='1085' cellpadding='2'>
+<tr>
+<th scope='col' width='21' align='CENTER' class='PSLEVEL1GRIDCOLUMNHDR' >&nbsp;</th>
+<th scope='col' width='30' align='left' class='PSLEVEL1GRIDCOLUMNHDR' ><a name='SSR_CLSRCH_MTG1$srt1$8' id='SSR_CLSRCH_MTG1$srt1$8' role='button' tabindex='1897' class='PSLEVEL1GRIDCOLUMNHDR' href="javascript:submitAction_win0(document.win0,'SSR_CLSRCH_MTG1$srt1$8');" title="Click to sort ascending">Class</a></th>
+<th scope='col' width='80' align='left' class='PSLEVEL1GRIDCOLUMNHDR' ><a name='SSR_CLSRCH_MTG1$srt2$8' id='SSR_CLSRCH_MTG1$srt2$8' role='button' tabindex='1898' class='PSLEVEL1GRIDCOLUMNHDR' href="javascript:submitAction_win0(document.win0,'SSR_CLSRCH_MTG1$srt2$8');" title="Click to sort ascending">Section</a></th>
+<th scope='col' width='98' align='left' class='PSLEVEL1GRIDCOLUMNHDR' ><a name='SSR_CLSRCH_MTG1$srt3$8' id='SSR_CLSRCH_MTG1$srt3$8' role='button' tabindex='1899' class='PSLEVEL1GRIDCOLUMNHDR' href="javascript:submitAction_win0(document.win0,'SSR_CLSRCH_MTG1$srt3$8');" title="Click to sort ascending">Days &amp; Times</a></th>
+<th scope='col' width='91' align='left' class='PSLEVEL1GRIDCOLUMNHDR' ><a name='SSR_CLSRCH_MTG1$srt4$8' id='SSR_CLSRCH_MTG1$srt4$8' role='button' tabindex='1900' class='PSLEVEL1GRIDCOLUMNHDR' href="javascript:submitAction_win0(document.win0,'SSR_CLSRCH_MTG1$srt4$8');" title="Click to sort ascending">Room</a></th>
+<th scope='col' width='98' align='left' class='PSLEVEL1GRIDCOLUMNHDR' ><a name='SSR_CLSRCH_MTG1$srt5$8' id='SSR_CLSRCH_MTG1$srt5$8' role='button' tabindex='1901' class='PSLEVEL1GRIDCOLUMNHDR' href="javascript:submitAction_win0(document.win0,'SSR_CLSRCH_MTG1$srt5$8');" title="Click to sort ascending">Instructor</a></th>
+<th scope='col' width='94' align='left' class='PSLEVEL1GRIDCOLUMNHDR' ><a name='SSR_CLSRCH_MTG1$srt6$8' id='SSR_CLSRCH_MTG1$srt6$8' role='button' tabindex='1902' class='PSLEVEL1GRIDCOLUMNHDR' href="javascript:submitAction_win0(document.win0,'SSR_CLSRCH_MTG1$srt6$8');" title="Click to sort ascending">Meeting Dates</a></th>
+<th scope='col' width='41' align='left' class='PSLEVEL1GRIDCOLUMNHDR' ><a name='SSR_CLSRCH_MTG1$srt7$8' id='SSR_CLSRCH_MTG1$srt7$8' role='button' tabindex='1903' class='PSLEVEL1GRIDCOLUMNHDR' href="javascript:submitAction_win0(document.win0,'SSR_CLSRCH_MTG1$srt7$8');" title="Click to sort ascending">Status</a></th>
+<th scope='col' width='98' align='left' class='PSLEVEL1GRIDCOLUMNHDR' >&nbsp;</th>
+</tr>
+<tr id='trSSR_CLSRCH_MTG1$8_row1' bufnum='0' valign='center' onClick="HighLightTR('rgb(212,219,217)','','trSSR_CLSRCH_MTG1$8_row1');" onMouseOver="hoverLightTR('rgb(249,254,203)','',0,'trSSR_CLSRCH_MTG1$8_row1');" onmouseout="hoverLightTR('rgb(249,254,203)','',1,'trSSR_CLSRCH_MTG1$8_row1');">
+<td align='center'  style='white-space:nowrap;' height='35' class='PSLEVEL3GRIDODDROW' >
+&nbsp;
+</td>
+<td class='PSLEVEL3GRIDODDROW'  align='left'  class='PSLEVEL3GRIDODDROW' >
+<DIV    id='win0divMTG_CLASS_NBR$8'><span id='MTG_CLASS_NBR$span$8'  class='PSHYPERLINK'  title='Class Nbr' ><a name='MTG_CLASS_NBR$8' id='MTG_CLASS_NBR$8'  ptlinktgt='pt_peoplecode' tabindex='1911' onclick='javascript:cancelBubble(event);' href="javascript:submitAction_win0(document.win0,'MTG_CLASS_NBR$8');"  class='PSHYPERLINK' >20411</a></span></DIV></td>
+<td class='PSLEVEL3GRIDODDROW'  align='left'  class='PSLEVEL3GRIDODDROW' >
+<DIV    id='win0divMTG_CLASSNAME$8'><span id='MTG_CLASSNAME$span$8'  class='PSHYPERLINK'  title='View Details' ><a name='MTG_CLASSNAME$8' id='MTG_CLASSNAME$8'  ptlinktgt='pt_peoplecode' tabindex='1912' onclick='javascript:cancelBubble(event);' href="javascript:submitAction_win0(document.win0,'MTG_CLASSNAME$8');"  class='PSHYPERLINK' >M104-DIS<br />
+Regular</a></span></DIV></td>
+<td class='PSLEVEL3GRIDODDROW'  align='left'  class='PSLEVEL3GRIDODDROW' >
+<DIV    id='win0divMTG_DAYTIME$8'><span  class='PSLONGEDITBOX' id='MTG_DAYTIME$8' >Fr 12:45PM - 1:40PM</span>
+</DIV></td>
+<td class='PSLEVEL3GRIDODDROW'  align='left'  class='PSLEVEL3GRIDODDROW' >
+<DIV    id='win0divMTG_ROOM$8'><span  class='PSLONGEDITBOX' id='MTG_ROOM$8' >Marshall Square Mall 202A</span>
+</DIV></td>
+<td class='PSLEVEL3GRIDODDROW'  align='left'  class='PSLEVEL3GRIDODDROW' >
+<DIV    id='win0divMTG_INSTR$8'><span  class='PSLONGEDITBOX' id='MTG_INSTR$8' >J. Lee</span>
+</DIV></td>
+<td class='PSLEVEL3GRIDODDROW'  align='left'  class='PSLEVEL3GRIDODDROW' >
+<DIV    id='win0divMTG_TOPIC$8'><span  class='PSLONGEDITBOX' id='MTG_TOPIC$8' >08/28/2026 - 12/04/2026</span>
+</DIV></td>
+<td class='PSLEVEL3GRIDODDROW'  align='left'  class='PSLEVEL3GRIDODDROW' >
+<DIV    id='win0divDERIVED_CLSRCH_SSR_STATUS_LONG$8'><div  style="min-width:53px; " >
+<!-- Begin HTML Area Name Undisclosed -->
+<img src="/cs/CS92PROD/cache/3/PS_CS_STATUS_OPEN_ICN_1.gif" width="16" height="16" alt="Open" STYLE="vertical-align:middle;text-align:center;margin-left:12px">
+<!-- End HTML Area -->
+</div>
+</DIV></td>
+<td class='PSLEVEL3GRIDODDROW'  align='center'  style='white-space:nowrap;' class='PSLEVEL3GRIDODDROW' >
+&nbsp;
+</td>
+</tr>
+</table>
+</DIV>
+</td>
+</tr>
+<tr>
+<td height='3' colspan='3'></td>
+</tr>
+</table>
+</td></tr>
+</table>
+</DIV></td>
+</tr>
+<tr>
+<td height='4' colspan='3'></td>
+</tr>
+<tr>
+<td height='62'></td>
+<td  valign='top' align='left'>
+<DIV    id='win0divSSR_CLSRSLT_WRK_GROUPBOX3$9'><table cellpadding='2' cellspacing='0' cols='1'  class='PABACKGROUNDINVISIBLEWBO'  width='864'>
+<tr><td width='861'>
+<table role='presentation'  border='0' id='ACE_SSR_CLSRSLT_WRK_GROUPBOX3$9' cellpadding='0' cellspacing='0' cols='3' width='887' class='PABACKGROUNDINVISIBLE PTCPGROUPBOXWBO' style='border-style:none' >
+<tr>
+<td width='0' height='0'></td>
+<td width='886'></td>
+<td width='2'></td>
+</tr>
+<tr>
+<td height='54'></td>
+<td  valign='top' align='left'>
+<DIV    id='win0divSSR_CLSRCH_MTG1$9'><div class='PTCPGRIDTITLE' onclick='javascript:if(event.target.id == this.firstElementChild.firstElementChild.id) { return true; } else return((this.firstElementChild &amp;&amp; this.firstElementChild.firstElementChild) != null ? this.firstElementChild.firstElementChild.click() : false);'  align='left' >  </div>
+<table cellspacing='0' class='PSLEVEL1GRIDNBONBO'  id='SSR_CLSRCH_MTG1$scroll$9' dir='ltr' cols='9' width='1085' cellpadding='2'>
+<tr>
+<th scope='col' width='21' align='CENTER' class='PSLEVEL1GRIDCOLUMNHDR' >&nbsp;</th>
+<th scope='col' width='30' align='left' class='PSLEVEL1GRIDCOLUMNHDR' ><a name='SSR_CLSRCH_MTG1$srt1$9' id='SSR_CLSRCH_MTG1$srt1$9' role='button' tabindex='2080' class='PSLEVEL1GRIDCOLUMNHDR' href="javascript:submitAction_win0(document.win0,'SSR_CLSRCH_MTG1$srt1$9');" title="Click to sort ascending">Class</a></th>
+<th scope='col' width='80' align='left' class='PSLEVEL1GRIDCOLUMNHDR' ><a name='SSR_CLSRCH_MTG1$srt2$9' id='SSR_CLSRCH_MTG1$srt2$9' role='button' tabindex='2081' class='PSLEVEL1GRIDCOLUMNHDR' href="javascript:submitAction_win0(document.win0,'SSR_CLSRCH_MTG1$srt2$9');" title="Click to sort ascending">Section</a></th>
+<th scope='col' width='98' align='left' class='PSLEVEL1GRIDCOLUMNHDR' ><a name='SSR_CLSRCH_MTG1$srt3$9' id='SSR_CLSRCH_MTG1$srt3$9' role='button' tabindex='2082' class='PSLEVEL1GRIDCOLUMNHDR' href="javascript:submitAction_win0(document.win0,'SSR_CLSRCH_MTG1$srt3$9');" title="Click to sort ascending">Days &amp; Times</a></th>
+<th scope='col' width='91' align='left' class='PSLEVEL1GRIDCOLUMNHDR' ><a name='SSR_CLSRCH_MTG1$srt4$9' id='SSR_CLSRCH_MTG1$srt4$9' role='button' tabindex='2083' class='PSLEVEL1GRIDCOLUMNHDR' href="javascript:submitAction_win0(document.win0,'SSR_CLSRCH_MTG1$srt4$9');" title="Click to sort ascending">Room</a></th>
+<th scope='col' width='98' align='left' class='PSLEVEL1GRIDCOLUMNHDR' ><a name='SSR_CLSRCH_MTG1$srt5$9' id='SSR_CLSRCH_MTG1$srt5$9' role='button' tabindex='2084' class='PSLEVEL1GRIDCOLUMNHDR' href="javascript:submitAction_win0(document.win0,'SSR_CLSRCH_MTG1$srt5$9');" title="Click to sort ascending">Instructor</a></th>
+<th scope='col' width='94' align='left' class='PSLEVEL1GRIDCOLUMNHDR' ><a name='SSR_CLSRCH_MTG1$srt6$9' id='SSR_CLSRCH_MTG1$srt6$9' role='button' tabindex='2085' class='PSLEVEL1GRIDCOLUMNHDR' href="javascript:submitAction_win0(document.win0,'SSR_CLSRCH_MTG1$srt6$9');" title="Click to sort ascending">Meeting Dates</a></th>
+<th scope='col' width='41' align='left' class='PSLEVEL1GRIDCOLUMNHDR' ><a name='SSR_CLSRCH_MTG1$srt7$9' id='SSR_CLSRCH_MTG1$srt7$9' role='button' tabindex='2086' class='PSLEVEL1GRIDCOLUMNHDR' href="javascript:submitAction_win0(document.win0,'SSR_CLSRCH_MTG1$srt7$9');" title="Click to sort ascending">Status</a></th>
+<th scope='col' width='98' align='left' class='PSLEVEL1GRIDCOLUMNHDR' >&nbsp;</th>
+</tr>
+<tr id='trSSR_CLSRCH_MTG1$9_row1' bufnum='0' valign='center' onClick="HighLightTR('rgb(212,219,217)','','trSSR_CLSRCH_MTG1$9_row1');" onMouseOver="hoverLightTR('rgb(249,254,203)','',0,'trSSR_CLSRCH_MTG1$9_row1');" onmouseout="hoverLightTR('rgb(249,254,203)','',1,'trSSR_CLSRCH_MTG1$9_row1');">
+<td align='center'  style='white-space:nowrap;' height='35' class='PSLEVEL3GRIDODDROW' >
+<DIV    id='win0divDATESLINK$9'><a name='DATESLINK$9' id='DATESLINK$9' tabindex='2093' onclick='javascript:cancelBubble(event);' href="javascript:submitAction_win0(document.win0,'DATESLINK$9');"><img src='/cs/CS92PROD/cache/3/PT_CALENDAR_1.gif' id='DATESLINK$IMG$9'  title='Dates and Deadlines' border='0' /></a></DIV></td>
+<td class='PSLEVEL3GRIDODDROW'  align='left'  class='PSLEVEL3GRIDODDROW' >
+<DIV    id='win0divMTG_CLASS_NBR$9'><span id='MTG_CLASS_NBR$span$9'  class='PSHYPERLINK'  title='Class Nbr' ><a name='MTG_CLASS_NBR$9' id='MTG_CLASS_NBR$9'  ptlinktgt='pt_peoplecode' tabindex='2094' onclick='javascript:cancelBubble(event);' href="javascript:submitAction_win0(document.win0,'MTG_CLASS_NBR$9');"  class='PSHYPERLINK' >20492</a></span></DIV></td>
+<td class='PSLEVEL3GRIDODDROW'  align='left'  class='PSLEVEL3GRIDODDROW' >
+<DIV    id='win0divMTG_CLASSNAME$9'><span id='MTG_CLASSNAME$span$9'  class='PSHYPERLINK'  title='View Details' ><a name='MTG_CLASSNAME$9' id='MTG_CLASSNAME$9'  ptlinktgt='pt_peoplecode' tabindex='2095' onclick='javascript:cancelBubble(event);' href="javascript:submitAction_win0(document.win0,'MTG_CLASSNAME$9');"  class='PSHYPERLINK' >M800-SEC<br />
+Regular</a></span></DIV></td>
+<td class='PSLEVEL3GRIDODDROW'  align='left'  class='PSLEVEL3GRIDODDROW' >
+<DIV    id='win0divMTG_DAYTIME$9'><span  class='PSLONGEDITBOX' id='MTG_DAYTIME$9' >TBA</span>
+</DIV></td>
+<td class='PSLEVEL3GRIDODDROW'  align='left'  class='PSLEVEL3GRIDODDROW' >
+<DIV    id='win0divMTG_ROOM$9'><span  class='PSLONGEDITBOX' id='MTG_ROOM$9' >ONLINE ASYNCHRONOUS</span>
+</DIV></td>
+<td class='PSLEVEL3GRIDODDROW'  align='left'  class='PSLEVEL3GRIDODDROW' >
+<DIV    id='win0divMTG_INSTR$9'><span  class='PSLONGEDITBOX' id='MTG_INSTR$9' >J. Lee</span>
+</DIV></td>
+<td class='PSLEVEL3GRIDODDROW'  align='left'  class='PSLEVEL3GRIDODDROW' >
+<DIV    id='win0divMTG_TOPIC$9'><span  class='PSLONGEDITBOX' id='MTG_TOPIC$9' >08/24/2026 - 12/08/2026</span>
+</DIV></td>
+<td class='PSLEVEL3GRIDODDROW'  align='left'  class='PSLEVEL3GRIDODDROW' >
+<DIV    id='win0divDERIVED_CLSRCH_SSR_STATUS_LONG$9'><div  style="min-width:53px; " >
+<!-- Begin HTML Area Name Undisclosed -->
+<img src="/cs/CS92PROD/cache/3/PS_CS_STATUS_OPEN_ICN_1.gif" width="16" height="16" alt="Open" STYLE="vertical-align:middle;text-align:center;margin-left:12px">
+<!-- End HTML Area -->
+</div>
+</DIV></td>
+<td class='PSLEVEL3GRIDODDROW'  align='center'  style='white-space:nowrap;' class='PSLEVEL3GRIDODDROW' >
+&nbsp;
+</td>
+</tr>
+</table>
+</DIV>
+</td>
+</tr>
+<tr>
+<td height='3' colspan='3'></td>
+</tr>
+</table>
+</td></tr>
+</table>
+</DIV></td>
+</tr>
+</table>
+</td></tr>
+</table>
+</DIV></td>
+</tr>
+<tr>
+<td height='3' colspan='3'></td>
+</tr>
+</table>
+</td></tr>
+</table>
+</DIV></td>
+</tr>
+</table>
+</td></tr>
+</table>
+</DIV></td>
+</tr>
+</table>
+</td></tr>
+</table>
+</DIV></td>
+</tr>
+<tr>
+<td height='9' colspan='2'></td>
+</tr>
+</table>
+</td></tr>
+</table>
+</DIV></td>
+</tr>
+<tr>
+<td height='8' colspan='13'></td>
+</tr>
+<tr>
+<td height='28' colspan='5'></td>
+<td  valign='top' align='left'>
+<DIV    id='win0div$ICField$6$'><table cellpadding='2' cellspacing='0' cols='1'  class='PABACKGROUNDINVISIBLEWBO'  width='204'>
+<tr><td width='201'>
+<table role='presentation'  border='0' id='ACE_$ICField$6$' cellpadding='0' cellspacing='0' cols='2' width='207' class='PABACKGROUNDINVISIBLE PTCPGROUPBOXWBO' style='border-style:none' >
+<tr>
+<td width='3' height='0'></td>
+<td width='203'></td>
+</tr>
+<tr>
+<td height='23'></td>
+<td nowrap='nowrap'  valign='top' align='left'>
+<DIV    id='win0divCLASS_SRCH_WRK2_SSR_PB_NEW_SEARCH$3$'><a role='presentation' class='PSPUSHBUTTON Left' onclick='javascript:if(event.target.id == this.firstChild.firstChild.id) { return true; } else return((this.firstChild &amp;&amp; this.firstChild.firstChild) != null ? this.firstChild.firstChild.click() : false);'><span style='background-Color: transparent;'><input type='button' name='CLASS_SRCH_WRK2_SSR_PB_NEW_SEARCH$3$' id='CLASS_SRCH_WRK2_SSR_PB_NEW_SEARCH$3$' tabindex='2277' value='New Search'  class='PSPUSHBUTTON' style='width:185px; ' onclick="submitAction_win0(document.win0,this.id,event);" title='Start a New Search'  /></span></a></DIV></td>
+</tr>
+</table>
+</td></tr>
+</table>
+</DIV></td>
+<td  valign='top' align='left'>
+<DIV    id='win0div$ICField$7$'><table cellpadding='2' cellspacing='0' cols='1'  class='PABACKGROUNDINVISIBLEWBO'  width='204'>
+<tr><td width='201'>
+<table role='presentation'  border='0' id='ACE_$ICField$7$' cellpadding='0' cellspacing='0' cols='2' width='207' class='PABACKGROUNDINVISIBLE PTCPGROUPBOXWBO' style='border-style:none' >
+<tr>
+<td width='8' height='0'></td>
+<td width='198'></td>
+</tr>
+<tr>
+<td height='23'></td>
+<td nowrap='nowrap'  valign='top' align='left'>
+<DIV    id='win0divCLASS_SRCH_WRK2_SSR_PB_MODIFY$5$'><a role='presentation' class='PSPUSHBUTTON Left' onclick='javascript:if(event.target.id == this.firstChild.firstChild.id) { return true; } else return((this.firstChild &amp;&amp; this.firstChild.firstChild) != null ? this.firstChild.firstChild.click() : false);'><span style='background-Color: transparent;'><input type='button' name='CLASS_SRCH_WRK2_SSR_PB_MODIFY$5$' id='CLASS_SRCH_WRK2_SSR_PB_MODIFY$5$' tabindex='2278' value='Modify Search'  class='PSPUSHBUTTON' style='width:185px; ' onclick="submitAction_win0(document.win0,this.id,event);" /></span></a></DIV></td>
+</tr>
+</table>
+</td></tr>
+</table>
+</DIV></td>
+</tr>
+<tr>
+<td height='10' colspan='13'></td>
+</tr>
+<tr>
+<td height='86' colspan='2'></td>
+<td colspan='9'  valign='top' align='left'>
+<DIV    id='win0divDERIVED_CLSRCH_SSR_GROUP_FTR1'><table cellpadding='2' cellspacing='0' cols='1'  class='PABACKGROUNDINVISIBLEWBO'  width='820'>
+<tr><td width='817'>
+<table role='presentation'  border='0' id='ACE_DERIVED_CLSRCH_SSR_GROUP_FTR1' cellpadding='0' cellspacing='0' cols='3' width='842' class='PABACKGROUNDINVISIBLE PTCPGROUPBOXWBO' style='border-style:none' >
+<tr>
+<td width='3' height='0'></td>
+<td width='820'></td>
+<td width='17'></td>
+</tr>
+<tr>
+<td height='64'></td>
+<td  valign='top' align='left'>
+<DIV    id='win0divDERIVED_SSTSNAV_GROUP_BOX$19$'><table cellpadding='2' cellspacing='0' cols='1'  class='PABACKGROUNDINVISIBLEWBO'  width='795'>
+<tr><td width='793'>
+<table role='presentation'  border='0' id='ACE_DERIVED_SSTSNAV_GROUP_BOX$19$' cellpadding='0' cellspacing='0' cols='9' width='816' class='PABACKGROUNDINVISIBLE PTCPGROUPBOXWBO' style='border-style:none' >
+<tr>
+<td width='6' height='0'></td>
+<td width='2'></td>
+<td width='1'></td>
+<td width='1'></td>
+<td width='45'></td>
+<td width='730'></td>
+<td width='2'></td>
+<td width='1'></td>
+<td width='26'></td>
+</tr>
+<tr>
+<td height='13'></td>
+<td colspan='5'  valign='top' align='left'>
+<hr width='100%' align='left'  class='PSHORIZONTALRULE' />
+</td>
+</tr>
+<tr>
+<td height='20' colspan='2'></td>
+<td colspan='5'  valign='top' align='left'>
+<DIV    id='win0divDERIVED_SSTSNAV_SSS_FOOTER_LNK_DIS'><div  style="width:812px; " >
+<!-- Begin HTML Area Name Undisclosed -->
+
+<!-- End HTML Area -->
+</div>
+</DIV></td>
+</tr>
+<tr>
+<td height='19' colspan='2'></td>
+<td rowspan='3'  valign='top' align='left'>
+<DIV    id='win0divDERIVED_SSTSNAV_SSS_SUBFOT_LNK_DIS'><div  style="width:1px; " >
+<!-- Begin HTML Area Name Undisclosed -->
+
+<!-- End HTML Area -->
+</div>
+</DIV></td>
+<td colspan='5'  valign='top' align='left'>
+<DIV    id='win0divDERIVED_SSTSNAV_SSS_SUBFOOT_LINKS'><div  style="width:812px; " >
+<!-- Begin HTML Area Name Undisclosed -->
+
+<!-- End HTML Area -->
+</div>
+</DIV></td>
+</tr>
+<tr>
+<td height='8' colspan='2'></td>
+<td rowspan='2'></td>
+<td  valign='top' align='left'>
+<DIV    id='win0div$ICField$15$'><table cellpadding='2' cellspacing='0' cols='1'  class='PABACKGROUNDINVISIBLEWBO'  width='43'>
+<tr><td width='41' height='6'>
+</td></tr>
+</table>
+</DIV></td>
+</tr>
+<tr>
+<td height='0' colspan='2'></td>
+</tr>
+</table>
+</td></tr>
+</table>
+</DIV></td>
+</tr>
+<tr>
+<td height='9' colspan='3'></td>
+</tr>
+</table>
+</td></tr>
+</table>
+</DIV></td>
+</tr>
+<tr>
+<td height='4' colspan='13'></td>
+</tr>
+</table>
+</DIV>
+</td></tr>
+</table>
+<div id='pt_dragtxt' class='PSLEVEL1GRIDCOLUMNHDR'></div><div onmouseup='ptGridResizeObj_win0.TDselUp();' onmousemove='ptGridResizeObj_win0.TDselMove();' id='pt_dragResize' onmouseout='ptGridResizeObj_win0.dragTD=false;' onmbouseover='ptGridResizeObj_win0.dragTD=true;'></div>]]></FIELD>
+<FIELD id='win0divPSPANELTABLINKS'><![CDATA[]]></FIELD>
+<SYSVAR id='sysvar'><![CDATA[nMaxSavedStates=10;
+sHistURL="https://cs92prod.ps.syr.edu/psc/CS92PROD/EMPLOYEE/SA/c/SA_LEARNER_SERVICES.CLASS_SEARCH.GBL?page=SSR_CLSRCH_RSLT&";
+bCloseModal = false;
+bICList = false;
+bHtml5Doc = true;
+bClearBackState=false;
+bPageTransfered=true;
+bTransferAnimate=false;
+UpdateHistory('', '', 'returntolastpage@0', 'SSR_CLSRCH_RSLT', 0, '', 1, 0);
+AddToHistory('Search Results', '', 'returntolastpage@0', 'SSR_CLSRCH_RSLT', 20, 0, 1, 0,'', 1, '', 0);
+corsHistoryTansaction();
+bCleanHtml = false;
+bDefer = true;
+document.hiddenFldArr_win0 =new Array('ICType','ICElementNum','ICStateNum','ICAction','ICModelCancel','ICXPos','ICYPos','ResponsetoDiffFrame','TargetFrameName','FacetPath','ICFocus','ICSaveWarningFilter','ICChanged','ICSkipPending','ICAutoSave','ICResubmit','ICSID','ICActionPrompt','ICBcDomData','ICPanelName','ICFind','ICAddCount','ICAppClsData');
+document.chgFldArr_win0 = new Array();
+bCDATA = false;
+bAccessibleLayout = false;
+bGenDomInfo = false;
+]]></SYSVAR></PAGE>

@@ -42,18 +42,27 @@ const CS_CORE = [
 
 const WRITING_REQUIRED = ["WRT 105", "WRT 205"];
 const PRESENTATIONAL_OPTIONS = ["CRS 225", "CRS 325", "IST 344"];
+
+/** Courses counted toward ECS / Math / Science GPA in the advisor reference (subset; confirm with catalog). */
+const ECS_MATH_SCIENCE_GPA_CODES = [
+  "ECS 101",
+  "CIS 151",
+  "MAT 295",
+  "MAT 296",
+  "MAT 397",
+  "MAT 331",
+  "CIS 321",
+  "PHY 211",
+  "CHE 106",
+];
 const MATH_REQUIRED_GROUPS = [
   ["MAT 295"],
   ["MAT 296"],
-  ["MAT 397", "MAT 331"], // either Calculus III or Linear Algebra
+  ["MAT 397", "MAT 331"],
   ["CIS 321"],
 ];
-const SCIENCE_REQUIRED = ["PHY 211", "PHY 221"];
-const SCIENCE_SECOND_SEQUENCE_OPTIONS = [
-  ["PHY 212", "PHY 222"],
-  ["CHE 106", "CHE 107"],
-  ["BIO 121", "BIO 122"],
-];
+/** Natural sciences (8 cr): PHY 211 + CHE 106 per CS BS reference in app data. */
+const SCIENCE_REQUIRED = ["PHY 211", "CHE 106"];
 
 function normalizeCode(code?: string) {
   return (code || "").trim().toUpperCase().replace(/\s+/g, " ");
@@ -79,7 +88,7 @@ export function evaluateCsGraduationReadiness(courses: CourseData[]): AdvisorAle
   const completedByCode = new Map<string, CourseData[]>();
 
   courses.forEach((c) => {
-    const code = normalizeCode(c.code || c.course);
+    const code = normalizeCode(c.code);
     if (!code) return;
     if (!completedByCode.has(code)) completedByCode.set(code, []);
     completedByCode.get(code)?.push(c);
@@ -153,26 +162,20 @@ export function evaluateCsGraduationReadiness(courses: CourseData[]): AdvisorAle
   });
 
   // 5) Science sequence completion
-  const missingScienceBase = SCIENCE_REQUIRED.filter((code) => !hasCompleted(code));
-  const hasSecondScienceSequence = SCIENCE_SECOND_SEQUENCE_OPTIONS.some((sequence) =>
-    sequence.every((code) => hasCompleted(code)),
-  );
-  const scienceLevel: AlertLevel =
-    missingScienceBase.length > 0 ? "critical" : hasSecondScienceSequence ? "on_track" : "warning";
+  const missingScience = SCIENCE_REQUIRED.filter((code) => !hasCompleted(code));
+  const scienceLevel: AlertLevel = missingScience.length > 0 ? "critical" : "on_track";
   alerts.push({
     id: "science-sequence",
-    title: "Natural Science Sequence",
+    title: "Natural Sciences (PHY 211 + CHE 106)",
     level: scienceLevel,
     detail:
-      missingScienceBase.length > 0
-        ? `Missing required base science course(s): ${missingScienceBase.join(", ")}`
-        : hasSecondScienceSequence
-          ? "Science sequence requirement is satisfied."
-          : "Second science sequence not found (PHY 212/222 or CHE 106/107 or BIO 121/122).",
+      missingScience.length > 0
+        ? `Missing natural science course(s): ${missingScience.join(", ")}`
+        : "PHY 211 and CHE 106 are both completed.",
     nextAction:
       scienceLevel === "on_track"
         ? "No action needed."
-        : "Recommend selecting and completing one approved second science sequence.",
+        : "Schedule remaining natural science course(s) to reach 8 credits in this track.",
   });
 
   // 6) Grade policy checks: below C- in required areas
@@ -184,6 +187,12 @@ export function evaluateCsGraduationReadiness(courses: CourseData[]): AdvisorAle
     "MAT 397",
     "MAT 331",
     "CIS 321",
+    "ECS 101",
+    "CIS 151",
+    "PHY 211",
+    "CHE 106",
+    "IST 344",
+    "ECS 392",
   ];
   const belowCMinus = new Set<string>();
   requiredForCMinusPolicy.forEach((code) => {
@@ -225,14 +234,46 @@ export function evaluateCsGraduationReadiness(courses: CourseData[]): AdvisorAle
     });
   });
   const coreGpa = totalCoreCredits > 0 ? totalCorePoints / totalCoreCredits : 0;
+  let totalEmsPoints = 0;
+  let totalEmsCredits = 0;
+  ECS_MATH_SCIENCE_GPA_CODES.forEach((code) => {
+    const entries = completedByCode.get(normalizeCode(code)) || [];
+    entries.forEach((c) => {
+      const grade = (c.grade || "").toUpperCase();
+      if (!isCompletedGrade(grade)) return;
+      const points = GRADE_POINTS[grade];
+      if (points === undefined) return;
+      const credits = parseCredits(c.credits || "3");
+      if (credits <= 0) return;
+      totalEmsPoints += points * credits;
+      totalEmsCredits += credits;
+    });
+  });
+  const emsGpa = totalEmsCredits > 0 ? totalEmsPoints / totalEmsCredits : 0;
+  alerts.push({
+    id: "ems-gpa",
+    title: "ECS / Math / Science GPA (2.0 minimum)",
+    level: totalEmsCredits === 0 ? "warning" : emsGpa < 2.0 ? "critical" : "on_track",
+    detail:
+      totalEmsCredits === 0
+        ? "Not enough completed ECS/math/science courses in the tracked set to estimate this GPA yet."
+        : `Estimated ECS/math/science GPA: ${emsGpa.toFixed(2)} (${emsGpa < 2.0 ? "below 2.0" : "meets or exceeds 2.0"}).`,
+    nextAction:
+      totalEmsCredits === 0
+        ? "Re-evaluate as math and science courses complete."
+        : emsGpa < 2.0
+          ? "Discuss grade recovery options for courses in this bucket."
+          : "No action needed.",
+  });
+
   alerts.push({
     id: "core-gpa",
-    title: "CS Core GPA Check (B- minimum)",
+    title: "CS Core GPA Check (2.667 minimum)",
     level: totalCoreCredits === 0 ? "warning" : coreGpa < 2.667 ? "critical" : "on_track",
     detail:
       totalCoreCredits === 0
         ? "Not enough completed CS core courses to calculate core GPA yet."
-        : `Estimated CS core GPA: ${coreGpa.toFixed(2)} (${coreGpa < 2.667 ? "below B-" : "meets/exceeds B-"}).`,
+        : `Estimated CS core GPA: ${coreGpa.toFixed(2)} (${coreGpa < 2.667 ? "below 2.667" : "meets or exceeds 2.667"}).`,
     nextAction:
       totalCoreCredits === 0
         ? "Re-evaluate once core courses are completed."
