@@ -1,341 +1,420 @@
-# Course Scheduler
+# Group1KillerApp
 
-A modern course scheduling application built with Next.js for university students. Easily browse courses, plan your semester schedule, and manage your academic path.
+Advisor-focused course planning application built with Next.js, Prisma, MongoDB Atlas, and a Python-backed PyReason recommendation layer.
 
-## Features
+The app supports:
+- advisor login
+- advisor-owned student records
+- student-specific academic data and schedules
+- MySlice academic record import
+- rule-based course recommendation
+- schedule generation from the live course catalog
 
-- **Course Catalog:** Browse and search through available courses
-- **Interactive Calendar:** View your schedule in a weekly calendar format
-- **Image Import:** Import schedule screenshots directly using OCR
-- **Notification System:** Receive alerts about schedule conflicts and changes
-- **Responsive Design:** Works seamlessly on mobile and desktop devices
-- **User Authentication:** Secure login and registration system
-- **Course Auto-save:** Automatic saving of course selections
-- **Academic Progress Tracking:** Monitor your degree requirements
-- **MySlice Integration:** Import course history directly from MySlice
+## What The App Does
+
+The intended workflow is:
+1. advisor logs in
+2. advisor selects a student
+3. the app loads that student's saved academic history, degree data, and planned schedule
+4. the advisor can:
+   - import academic records from MySlice
+   - review degree requirements
+   - search and add courses manually
+   - generate suggested courses
+   - build a schedule from recommended courses
+
+Important:
+- schedules, academic courses, and degree requirements are stored under the selected `Student`
+- the logged-in `User` is the advisor account
+- data is associated by references in MongoDB, not embedded nested documents
+
+## Current Architecture
+
+High-level flow:
+
+1. `User` logs in with NextAuth
+2. advisor selects a `Student`
+3. transcript + degree data + catalog + requirements are loaded
+4. PyReason is used as a recommendation layer
+5. ranked recommendations are passed into the existing schedule generator
+6. the schedule generator still handles:
+   - section selection
+   - conflict detection
+   - credit limits
+   - room/time placement
+
+PyReason does not replace schedule generation. It improves which courses are recommended first.
+
+## Main Features
+
+- Advisor/student workflow
+- Student picker after login
+- Student-scoped schedule persistence
+- Student-scoped academic record persistence
+- Degree requirement tracking
+- MySlice academic import
+- Course search and add
+- Suggested courses with workload selection
+- Weekly calendar schedule view
+- Image import for schedules
+- PyReason-backed recommendation reasoning
 
 ## Tech Stack
 
-- **Frontend:** Next.js, React, TypeScript
-- **Styling:** Tailwind CSS, shadcn/ui components
-- **OCR Integration:** Tesseract.js for image text recognition
-- **State Management:** React hooks and context API
-- **Database:** Prisma ORM with MongoDB Atlas
-- **Authentication:** NextAuth.js
-- **API:** Next.js API Routes
-- **Browser Automation:** Puppeteer
-- **HTTP Client:** Axios
-- **HTML Parsing:** Cheerio
+- Frontend: Next.js, React, TypeScript
+- UI: Tailwind CSS, shadcn/ui
+- Authentication: NextAuth.js
+- Database: Prisma + MongoDB Atlas
+- Browser automation: Puppeteer
+- HTML parsing: Cheerio
+- OCR: Tesseract.js
+- Reasoning layer: Python + PyReason
 
-## Database Configuration
+## Project Data Model
 
-The application uses **Prisma ORM with MongoDB Atlas**. The schema is in `prisma/schema.prisma`.
+The app is modeled like this:
 
-### MongoDB Atlas Setup
-
-The app is configured for **MongoDB Atlas** so anyone can run it without installing MongoDB locally.
-
-1. Copy the example env file and add your Atlas connection string:
-   ```bash
-   cp .env.example .env
-   ```
-   Edit `.env` and set `DATABASE_URL` to your [MongoDB Atlas](https://www.mongodb.com/cloud/atlas) connection string.
-
-2. Full step-by-step instructions: **[docs/MONGODB_SETUP.md](docs/MONGODB_SETUP.md)**.
-
-3. Then from the project root:
-   ```bash
-   npx prisma generate
-   npx prisma db push
-   npm run db:seed   # optional: demo user + sample data
-   npm run dev
-   ```
-
-## Environment Configuration
-
-Create a `.env` file in the root directory (see `.env.example`). Required:
-
-```env
-# MongoDB Atlas (required)
-DATABASE_URL="mongodb+srv://USER:PASSWORD@cluster.xxxxx.mongodb.net/group1killerapp?retryWrites=true&w=majority"
-
-# NextAuth
-NEXTAUTH_URL="http://localhost:3000"
-NEXTAUTH_SECRET="your-secret-key"
-
-# Optional: Google OAuth
-# GOOGLE_CLIENT_ID="..."
-# GOOGLE_CLIENT_SECRET="..."
+```text
+User (advisor)
+  -> Student
+      -> SelectedCourse
+      -> AcademicCourse
+      -> DegreeRequirement
 ```
 
-## API Endpoints
+Meaning:
+- `User` is the advisor account
+- `Student` belongs to a `User`
+- each `Student` owns their own imported academic data, degree data, and planned courses
 
-### Authentication
-- `POST /api/auth/[...nextauth]` - NextAuth.js authentication routes
-- `POST /api/register` - User registration
+## Setup
 
-### Course Management
-- `GET /api/courses` - Get user's saved courses
-- `POST /api/courses` - Save user's courses
-- `GET /api/requirements` - Get degree requirements
-- `GET /api/sample-courses` - Get sample course data
-
-## MySlice Integration
-
-### Overview
-The application integrates with Syracuse University's MySlice system to automatically import course history and academic records.
-
-### Features
-- **Course History Import:** Automatically fetches and parses course history
-- **Microsoft Account Login:** Supports SU Microsoft account authentication
-- **2FA Support:** Handles two-factor authentication
-- **Session Management:** Maintains persistent sessions with cookies
-- **Data Parsing:** Extracts detailed course information including:
-  - Course code and title
-  - Semester information
-  - Grades and credits
-  - Course status
-
-### Environment Configuration
-
-#### 1. Environment Variables
-Create a `.env` file in the root directory with the following configuration:
-
-```env
-# Environment
-NODE_ENV=development # Change to 'test' for testing mode
-
-# Database (MongoDB Atlas)
-DATABASE_URL="mongodb+srv://USER:PASSWORD@cluster.xxxxx.mongodb.net/group1killerapp?retryWrites=true&w=majority"
-
-# NextAuth
-NEXTAUTH_URL="http://localhost:3000"
-NEXTAUTH_SECRET="your-secret-key"
-
-# Optional: Google OAuth (if using Google authentication)
-GOOGLE_CLIENT_ID="your-google-client-id"
-GOOGLE_CLIENT_SECRET="your-google-client-secret"
-
-# Chrome Configuration
-CHROME_DEBUG_PORT=9222
-CHROME_DEBUG_URL="http://localhost:9222"
-```
-
-#### 2. Test Environment (Sandbox Mode)
-For testing and development purposes, use Chrome in debug mode:
+### 1. Install dependencies
 
 ```bash
-# Set environment to test mode
-export NODE_ENV=test
-
-# Start Chrome in debug mode
-# macOS
-/Applications/Google\ Chrome.app/Contents/MacOS/Google\ Chrome --remote-debugging-port=9222
-
-# Windows
-"C:\Program Files\Google\Chrome\Application\chrome.exe" --remote-debugging-port=9222
-
-# Linux
-google-chrome --remote-debugging-port=9222
+npm install
 ```
 
-Test environment features:
-- Visual debugging
-- Manual intervention capability
-- Step-by-step process inspection
-- Real-time browser interaction
+### 2. Create `.env`
 
-#### 3. Production Environment
-In production, the application creates new browser instances automatically:
+Required values:
+
+```env
+DATABASE_URL="mongodb+srv://USER:PASSWORD@cluster.xxxxx.mongodb.net/group1killerapp?retryWrites=true&w=majority"
+NEXTAUTH_URL="http://localhost:3000"
+NEXTAUTH_SECRET="your-generated-secret"
+```
+
+Optional:
+
+```env
+GOOGLE_CLIENT_ID="..."
+GOOGLE_CLIENT_SECRET="..."
+```
+
+Generate a secret with:
 
 ```bash
-# Set environment to production
-export NODE_ENV=production
+openssl rand -base64 32
+```
 
-# Start the application
+### 3. Prepare the database
+
+```bash
+npx prisma generate
+npx prisma db push
+npm run db:seed
+```
+
+### 4. Start the app
+
+```bash
 npm run dev
 ```
 
-Production environment features:
-- Headless browser operation
-- Automatic browser instance management
-- Optimized performance
-- Resource-efficient operation
+Open:
 
-### Browser Configuration
-
-#### Test Environment
-```javascript
-browser = await puppeteer.connect({
-  browserURL: "http://localhost:9222",
-  defaultViewport: null,
-});
+```text
+http://localhost:3000
 ```
 
-#### Production Environment
-```javascript
-browser = await puppeteer.launch({
-  headless: true,
-  args: [
-    '--no-sandbox',
-    '--disable-setuid-sandbox',
-    '--disable-dev-shm-usage',
-    '--disable-accelerated-2d-canvas',
-    '--disable-gpu'
-  ]
-});
+## Seeded Demo Account
+
+If the seed succeeds, use:
+
+```text
+Email: demo@group1.local
+Password: demo123
 ```
 
-### Running the Application
+## Common Commands
 
-1. **Test Mode**
-   ```bash
-   # Set test environment
-   export NODE_ENV=test
-   
-   # Start Chrome in debug mode
-   /Applications/Google\ Chrome.app/Contents/MacOS/Google\ Chrome --remote-debugging-port=9222
-   
-   # Run test scripts
-   node test_login.js
-   node get_courses.js
-   ```
-
-2. **Production Mode**
-   ```bash
-   # Set production environment
-   export NODE_ENV=production
-   
-   # Start the application
-   npm run dev
-   ```
-
-### Troubleshooting
-
-#### Test Environment Issues
-1. **Chrome Debug Connection**
-   ```bash
-   # Check if Chrome is running in debug mode
-   lsof -i :9222
-   
-   # Kill existing Chrome processes if needed
-   pkill -f "chrome.*remote-debugging-port"
-   ```
-
-2. **Connection Refused**
-   - Ensure Chrome is running in debug mode
-   - Verify the correct port is being used
-   - Check for firewall restrictions
-
-#### Production Environment Issues
-1. **Browser Launch Failures**
-   - Verify Chrome installation
-   - Check system resources
-   - Ensure proper permissions
-
-2. **Memory Issues**
-   - Monitor browser process memory usage
-   - Implement proper cleanup in finally blocks
-   - Use appropriate browser arguments
-
-### Security Considerations
-
-1. **Test Environment**
-   - Keep debug port secure
-   - Use localhost only
-   - Implement proper error handling
-
-2. **Production Environment**
-   - Use headless mode
-   - Implement proper sandboxing
-   - Follow security best practices
-   - Monitor resource usage
-
-### API Endpoints
-
-1. **Login to MySlice**
-   ```javascript
-   POST /api/myslice
-   {
-     "username": "your_netid@syr.edu",
-     "password": "your_password"
-   }
-   ```
-
-2. **Scrape Academic Record**
-   ```javascript
-   POST /api/scrape-academic-record
-   {
-     "username": "your_netid@syr.edu",
-     "password": "your_password"
-   }
-   ```
-
-## Getting Started
-
-### Prerequisites
-
-- Node.js 18+ and npm
-- MongoDB Atlas account (free tier is enough)
-- Git
-
-### Installation
-
-1. Clone the repository:
-   ```bash
-   git clone https://github.com/peterCheng123321/group15.git
-   cd group15
-   ```
-
-2. Install dependencies:
-   ```bash
-   npm install
-   ```
-
-3. Configure environment variables (required for MongoDB Atlas):
-   ```bash
-   cp .env.example .env
-   # Edit .env and set DATABASE_URL to your Atlas connection string (see docs/MONGODB_SETUP.md)
-   ```
-
-4. Set up the database:
-   ```bash
-   npx prisma generate
-   npx prisma db push
-   npm run db:seed   # optional: demo user + sample data
-   ```
-
-5. Run the development server:
-   ```bash
-   npm run dev
-   ```
-
-6. Open [http://localhost:3000](http://localhost:3000) in your browser to see the application.
-
-### Building for Production
+Run app:
 
 ```bash
-npm run build
-npm start
+npm run dev
 ```
 
-## Usage
+Run academic scraper API:
 
-1. **Course Search:** Use the search functionality to find courses by department, code, or instructor
-2. **Calendar View:** Visualize your weekly schedule with color-coded course blocks
-3. **Image Import:** Upload an image of your schedule to automatically extract course information
-4. **Major Requirements:** View courses required for your major/degree program
-5. **User Account:** Register and login to save your course selections
-6. **Notifications:** Receive alerts about schedule conflicts and changes
+```bash
+npm run api
+```
 
-## Contributing
+Generate Prisma client:
 
-1. Fork the repository
-2. Create your feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add some amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
+```bash
+npm run db:generate
+```
 
-## License
+Push schema:
 
-This project is licensed under the MIT License - see the LICENSE file for details. 
+```bash
+npm run db:push
+```
+
+Seed demo data:
+
+```bash
+npm run db:seed
+```
+
+Run recommendation tests:
+
+```bash
+npm test -- --runTestsByPath lib/recommendation/build-pyreason-payload.test.ts lib/recommendation/rank-recommendations.test.ts
+```
+
+## Authentication Notes
+
+- the app now defaults to `/login`
+- unauthenticated users should be redirected to login before using protected pages
+- authenticated advisors are expected to choose a student before using the scheduler
+
+## Student Workflow Notes
+
+Good to know:
+- each student has isolated data
+- switching students should switch context, not merge data
+- imported academic records and degree requirements are saved under the student
+- suggested courses should be based on the selected student only
+
+## MySlice Import Notes
+
+The MySlice flow is manual-login friendly.
+
+Important behavior:
+- the user should log into real `https://myslice.ps.syr.edu`
+- do not manually open copied Microsoft SSO links
+- raw Microsoft login links can fail with SAML errors like `AADSTS750054`
+
+Recommended flow:
+1. click import
+2. if prompted, open MySlice directly
+3. complete login and any 2FA there
+4. return to the app
+5. let the scraper continue
+
+Known caveats:
+- PeopleSoft/MySlice can reject deep-linked components depending on account permissions
+- some accounts may see authorization errors like:
+  - `You are not authorized to access this component (40,20)`
+- when that happens, the issue is usually MySlice authorization, not MongoDB or NextAuth
+
+## Course Recommendation Flow
+
+Current recommendation pipeline:
+
+1. load selected student transcript
+2. load saved degree requirement blocks
+3. load major requirement plan
+4. load course catalog
+5. build a reasoning payload
+6. run PyReason
+7. if PyReason fails or returns unusable output, fall back to a deterministic local reasoner
+8. rank recommendations
+9. pass recommended courses into the existing scheduler
+
+The recommendation output includes:
+- recommended courses
+- blocked courses
+- reasons
+- missing prerequisites
+- priority score
+
+## PyReason Notes
+
+PyReason is used to infer labels such as:
+- `eligible_now`
+- `blocked`
+- `missing_prereq`
+- `missing_coreq`
+- `offered_this_term`
+- `satisfies_needed_requirement`
+- `high_priority`
+- `bottleneck_course`
+- `recommended`
+
+Important:
+- PyReason is not the scheduler
+- it is the reasoning layer before schedule generation
+
+### Recommendation logic priorities
+
+The recommender is now more focused on closest path to graduation than simple academic year.
+
+It prioritizes:
+- unfinished degree requirements
+- courses the student is eligible to take now
+- courses offered this term
+- bottleneck courses
+- courses that unlock future required courses
+
+Academic year is only a secondary hint, not the main driver.
+
+### PyReason debug mode
+
+Run with verbose reasoning debug:
+
+```bash
+PYREASON_DEBUG=1 npm run dev
+```
+
+Save graph artifacts too:
+
+```bash
+PYREASON_DEBUG=1 PYREASON_SAVE_GRAPH=1 npm run dev
+```
+
+Artifacts are written to:
+
+[backend/src/reasoning/debug_artifacts](/Users/akhereedoro/Coding%20Projects/Group1KillerApp/backend/src/reasoning/debug_artifacts)
+
+Saved files include:
+- `reasoning_graph.graphml`
+- `reasoning_graph.json`
+- `inferred_labels.json`
+
+## Viewing The Reasoning Graph
+
+Simplest option:
+- open the generated `.graphml` in yEd Graph Editor
+
+Then in yEd:
+1. `Layout -> Organic`
+2. `View -> Fit Content`
+
+If you just want raw data:
+- inspect `reasoning_graph.json`
+- inspect `inferred_labels.json`
+
+## Current Recommendation Debugging Tips
+
+If `/api/recommendations` returns:
+
+```json
+{
+  "recommendedCourses": [],
+  "blockedCourses": [],
+  "debug": {
+    "engine": "pyreason",
+    "candidateCount": 0
+  }
+}
+```
+
+that means:
+- PyReason ran
+- but there were no candidate courses to reason over
+
+Possible reasons:
+- the student may already be near completion
+- remaining requirements may not map to concrete course codes
+- remaining work may be electives or buckets not yet represented in the data
+
+If the terminal shows a fallback message, PyReason may have:
+- timed out
+- failed to import
+- returned no usable inferred labels
+
+In those cases the app falls back to the deterministic TypeScript reasoner so recommendation still works.
+
+## Troubleshooting
+
+### NextAuth configuration error
+
+If you see:
+- `NO_SECRET`
+- `NEXTAUTH_URL` warnings
+
+make sure `.env` includes:
+
+```env
+NEXTAUTH_URL="http://localhost:3000"
+NEXTAUTH_SECRET="your-generated-secret"
+```
+
+### MongoDB connection issues
+
+If Prisma cannot connect:
+- verify `DATABASE_URL`
+- make sure your Atlas database user is correct
+- make sure your Atlas network access allows your IP
+- for development, `0.0.0.0/0` can be used temporarily
+
+### Login fails even with correct password
+
+Possible causes:
+- user was never created
+- seed failed
+- database connection is pointed at the wrong cluster/database
+
+Try:
+
+```bash
+npm run db:seed
+```
+
+### Suggested courses look wrong
+
+Check:
+- selected student
+- imported transcript data
+- degree requirements for that student
+- whether PyReason used `engine: "pyreason"` or fallback
+
+### MySlice import seems stuck
+
+Check:
+- `npm run api` is running if you rely on the separate scraper API
+- you completed login in the real MySlice flow
+- PeopleSoft did not block the requested component
+
+## Testing Notes
+
+Focused tests currently exist for the recommendation layer:
+- ranking behavior
+- candidate filtering
+- completed/in-progress exclusion
+- degree requirement prioritization
+
+Run:
+
+```bash
+npm test -- --runTestsByPath lib/recommendation/build-pyreason-payload.test.ts lib/recommendation/rank-recommendations.test.ts
+```
+
+## Good Things To Know Before Editing
+
+- recommendation and schedule generation are intentionally separate
+- student data is scoped by `studentId`
+- advisor context is scoped by authenticated `user`
+- PyReason output is converted into ranked TypeScript objects before scheduling
+- the fallback reasoner exists on purpose and should not be removed unless PyReason is fully stable in all environments
+
+## Suggested Next Improvements
+
+- improve requirement modeling for electives and one-of groups
+- improve graph export styling for easier visualization
+- expose recommendation engine/debug info directly in the UI for advisors
+- add more major-specific prerequisite data to the dependency catalog
