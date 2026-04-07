@@ -30,10 +30,14 @@ export async function POST(req: Request) {
     const constraints = parseScheduleConstraintsFromText(message)
     let reply = ""
     let scheduleSuggestion: SelectedCourse[] | undefined
+    let assistantMode: "catalog" | "schedule" | "help" | "llm" | "fallback" = "fallback"
+    const llmAvailable = Boolean(getGeminiApiKey() || process.env.HUGGINGFACE_API_KEY || process.env.HF_TOKEN)
 
     if (isCatalogLookupQuestion(message)) {
+      assistantMode = "catalog"
       reply = answerCatalogLookup(catalog, message)
     } else if (shouldAttemptScheduleSolve(message)) {
+      assistantMode = "schedule"
       const result = solveSchedule(catalog, constraints)
       scheduleSuggestion = result.ok ? result.selection : undefined
 
@@ -57,6 +61,7 @@ export async function POST(req: Request) {
     } else {
       const help = matchHelpAnswer(message)
       if (help) {
+        assistantMode = "help"
         reply = help
       } else {
         const history = Array.isArray(body.history) ? body.history.slice(-8) : []
@@ -72,8 +77,10 @@ export async function POST(req: Request) {
             message,
           )
           if ("text" in out) {
+            assistantMode = "llm"
             reply = out.text
           } else {
+            assistantMode = "fallback"
             reply = `Gemini is unavailable (${out.error}). You can still use **catalog lookups**, **term checks**, and **schedule building**, or set **HUGGINGFACE_API_KEY** as a fallback.`
           }
         } else {
@@ -102,10 +109,13 @@ export async function POST(req: Request) {
                 typeof text === "string" && text.trim()
                   ? text.trim()
                   : "I could not read the model response. Try again or rephrase."
+              assistantMode = "llm"
             } catch (e) {
+              assistantMode = "fallback"
               reply = `The AI model is unavailable (${e instanceof Error ? e.message : "error"}). You can still ask me to **schedule specific courses** with rules (e.g. no Fridays, end by 6 PM).`
             }
           } else {
+            assistantMode = "fallback"
             reply =
               "I can **look up rooms, times, instructors**, check **whether a course appears for a term** using catalog meeting dates (e.g. “Can CIS 375 be taken Fall 2026?”), **build schedules** with rules (no Fridays, end by 6 PM), and answer **imports / conflicts / tabs**. For other open-ended questions, set **GEMINI_API_KEY** (Google AI Studio) or **HUGGINGFACE_API_KEY** / **HF_TOKEN** on the server."
           }
@@ -113,7 +123,7 @@ export async function POST(req: Request) {
       }
     }
 
-    return NextResponse.json({ reply, scheduleSuggestion })
+    return NextResponse.json({ reply, scheduleSuggestion, assistantMode, llmAvailable })
   } catch (e) {
     const msg = e instanceof Error ? e.message : "Error"
     if (msg === "Unauthorized") {

@@ -26,6 +26,16 @@ import { Button } from "@/components/ui/button"
 import { useToast } from "@/components/ui/use-toast"
 import { Label } from "@/components/ui/label"
 import { Badge } from "@/components/ui/badge"
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog"
 import { evaluateCsGraduationReadiness } from "@/lib/graduation-readiness"
 import { GraduationPathTimeline } from "@/components/graduation-path-timeline"
 import { CLASS_YEARS, normalizeAcademicYearLabel, type ClassYear } from "@/lib/class-year"
@@ -140,6 +150,7 @@ export default function CourseScheduler({
   const [importLogs, setImportLogs] = useState<string[]>([])
   const [importStatus, setImportStatus] = useState<"idle" | "running" | "success" | "error">("idle")
   const [importStatusMessage, setImportStatusMessage] = useState("")
+  const [isConfirmClearImportOpen, setIsConfirmClearImportOpen] = useState(false)
   const { toast } = useToast()
   const [courseData, setCourseData] = useState<CourseData[]>([])
   const [calendarCourses, setCalendarCourses] = useState<SelectedCourse[]>([])
@@ -1114,6 +1125,24 @@ export default function CourseScheduler({
     }
   }
 
+  const handleClearImportedCourses = useCallback(async () => {
+    if (isLoading) return
+    try {
+      setIsLoading(true)
+      await persistImportedAcademicCourses([])
+      setAcademicCourses([])
+      setImportStatus("idle")
+      setImportStatusMessage("")
+      setImportLogs([])
+      showNotification("Cleared imported academic courses", "success")
+    } catch (error) {
+      console.error("Failed to clear imported academic courses:", error)
+      showNotification("Failed to clear imported academic courses", "error")
+    } finally {
+      setIsLoading(false)
+    }
+  }, [isLoading, persistImportedAcademicCourses])
+
   const persistImportedDegreeRequirements = async (blocksToPersist: BlockData[]) => {
     const response = await fetch(withStudentId('/api/courses/degree-requirements'), {
       method: 'POST',
@@ -1668,6 +1697,41 @@ export default function CourseScheduler({
                       >
                         {isLoading ? "Importing..." : "Import from MySlice"}
                       </Button>
+                      <Button
+                        className="w-full"
+                        variant="destructive"
+                        onClick={() => setIsConfirmClearImportOpen(true)}
+                        disabled={isLoading || academicCourses.length === 0}
+                      >
+                        Delete imported courses
+                      </Button>
+                      <AlertDialog
+                        open={isConfirmClearImportOpen}
+                        onOpenChange={setIsConfirmClearImportOpen}
+                      >
+                        <AlertDialogContent>
+                          <AlertDialogHeader>
+                            <AlertDialogTitle>Delete imported courses?</AlertDialogTitle>
+                            <AlertDialogDescription>
+                              This removes all imported MySlice academic courses for this student. You can
+                              import again later.
+                            </AlertDialogDescription>
+                          </AlertDialogHeader>
+                          <AlertDialogFooter>
+                            <AlertDialogCancel disabled={isLoading}>Cancel</AlertDialogCancel>
+                            <AlertDialogAction
+                              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                              disabled={isLoading}
+                              onClick={() => {
+                                setIsConfirmClearImportOpen(false)
+                                void handleClearImportedCourses()
+                              }}
+                            >
+                              Delete courses
+                            </AlertDialogAction>
+                          </AlertDialogFooter>
+                        </AlertDialogContent>
+                      </AlertDialog>
                       {importStatus !== "idle" && (
                         <div
                           className={`rounded-md border p-4 text-sm ${

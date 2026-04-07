@@ -1,7 +1,7 @@
 "use client"
 
 import { useCallback, useRef, useState } from "react"
-import { MessageCircle, Send, Sparkles, X } from "lucide-react"
+import { Clipboard, MessageCircle, Send, Sparkles, X } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
 import {
@@ -21,6 +21,7 @@ type ChatMessage = {
   role: ChatRole
   content: string
   scheduleSuggestion?: SelectedCourse[]
+  isIssue?: boolean
 }
 
 type ScheduleAssistantChatProps = {
@@ -31,6 +32,7 @@ export function ScheduleAssistantChat({ onApplySchedule }: ScheduleAssistantChat
   const [open, setOpen] = useState(false)
   const [input, setInput] = useState("")
   const [loading, setLoading] = useState(false)
+  const [llmAvailable, setLlmAvailable] = useState<boolean | null>(null)
   const [messages, setMessages] = useState<ChatMessage[]>([
     {
       role: "assistant",
@@ -39,6 +41,9 @@ export function ScheduleAssistantChat({ onApplySchedule }: ScheduleAssistantChat
     },
   ])
   const scrollRef = useRef<HTMLDivElement>(null)
+
+  const isIssueMessage = (text: string) =>
+    /\bunavailable\b|\berror\b|\bfailed\b|\bcould not\b|\bmissing\b/i.test(text)
 
   const send = useCallback(async () => {
     const text = input.trim()
@@ -74,9 +79,12 @@ export function ScheduleAssistantChat({ onApplySchedule }: ScheduleAssistantChat
       const scheduleSuggestion = Array.isArray(data.scheduleSuggestion)
         ? (data.scheduleSuggestion as SelectedCourse[])
         : undefined
+      if (typeof data.llmAvailable === "boolean") {
+        setLlmAvailable(data.llmAvailable)
+      }
       setMessages((prev) => [
         ...prev,
-        { role: "assistant", content: reply, scheduleSuggestion },
+        { role: "assistant", content: reply, scheduleSuggestion, isIssue: isIssueMessage(reply) },
       ])
     } catch {
       setMessages((prev) => [
@@ -84,6 +92,7 @@ export function ScheduleAssistantChat({ onApplySchedule }: ScheduleAssistantChat
         {
           role: "assistant",
           content: "Network error. Try again in a moment.",
+          isIssue: true,
         },
       ])
     } finally {
@@ -100,7 +109,7 @@ export function ScheduleAssistantChat({ onApplySchedule }: ScheduleAssistantChat
         type="button"
         size="icon"
         className={cn(
-          "fixed bottom-6 right-6 z-40 h-14 w-14 rounded-full shadow-lg",
+          "fixed bottom-4 right-4 z-40 h-12 w-12 rounded-full shadow-lg sm:bottom-6 sm:right-6 sm:h-14 sm:w-14",
           "bg-primary text-primary-foreground hover:bg-primary/90",
         )}
         onClick={() => setOpen(true)}
@@ -112,15 +121,25 @@ export function ScheduleAssistantChat({ onApplySchedule }: ScheduleAssistantChat
       <Sheet open={open} onOpenChange={setOpen}>
         <SheetContent side="right" className="flex w-full flex-col gap-0 p-0 sm:max-w-md">
           <SheetHeader className="space-y-1 border-b px-6 py-4 text-left">
-            <SheetTitle className="flex items-center gap-2">
+            <SheetTitle className="flex items-center justify-between gap-2">
+              <span className="flex items-center gap-2">
               <Sparkles className="h-5 w-5 text-primary" />
               Schedule assistant
+              </span>
+              {llmAvailable === false && (
+                <span className="rounded-full border border-amber-300 bg-amber-50 px-2 py-0.5 text-xs font-medium text-amber-800">
+                  Catalog mode only
+                </span>
+              )}
             </SheetTitle>
             <SheetDescription>
               Catalog-backed scheduling plus optional AI for general questions (set{" "}
               <code className="text-xs">GEMINI_API_KEY</code> or{" "}
               <code className="text-xs">HUGGINGFACE_API_KEY</code> on the server).
             </SheetDescription>
+            <p className="text-xs text-muted-foreground">
+              Best results: include course codes and constraints (e.g. <code>CIS 375, no Friday, end by 6 PM</code>).
+            </p>
           </SheetHeader>
 
           <ScrollArea className="min-h-0 flex-1 px-4 py-3">
@@ -132,10 +151,30 @@ export function ScheduleAssistantChat({ onApplySchedule }: ScheduleAssistantChat
                     "rounded-lg px-3 py-2 text-sm",
                     m.role === "user"
                       ? "ml-6 bg-primary text-primary-foreground"
-                      : "mr-4 bg-muted",
+                      : m.isIssue
+                        ? "mr-4 border border-amber-300 bg-amber-50"
+                        : "mr-4 bg-muted",
                   )}
                 >
                   <p className="whitespace-pre-wrap">{m.content}</p>
+                  {m.role === "assistant" && m.isIssue && (
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="outline"
+                      className="mt-2"
+                      onClick={async () => {
+                        try {
+                          await navigator.clipboard.writeText(m.content)
+                        } catch {
+                          // no-op in unsupported clipboard contexts
+                        }
+                      }}
+                    >
+                      <Clipboard className="mr-1 h-4 w-4" />
+                      Copy issue details
+                    </Button>
+                  )}
                   {m.role === "assistant" &&
                     m.scheduleSuggestion &&
                     m.scheduleSuggestion.length > 0 && (
@@ -174,7 +213,7 @@ export function ScheduleAssistantChat({ onApplySchedule }: ScheduleAssistantChat
                 }
               }}
             />
-            <div className="flex justify-end gap-2">
+            <div className="flex flex-wrap justify-end gap-2">
               <Button type="button" variant="outline" size="sm" onClick={() => setOpen(false)}>
                 <X className="mr-1 h-4 w-4" />
                 Close
