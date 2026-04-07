@@ -151,6 +151,10 @@ export function solveSchedule(catalog: Course[], constraints: ScheduleConstraint
 
 export function shouldAttemptScheduleSolve(message: string): boolean {
   const lower = message.toLowerCase()
+  const looksLikeRecommendationRequest =
+    /\b(recommend|suggest|next\s+course|next\s+courses|what\s+should\s+i\s+take)\b/.test(lower) &&
+    /\b(completed|already\s+took|already\s+completed|finished|passed|done)\b/.test(lower)
+  if (looksLikeRecommendationRequest) return false
   if (/\bwhat\s+is\b|\babout\b|\bdefine\b|\bexplain\b|\bdescribe\b/.test(lower) && !/\bschedule\b|\bregister\b|\bplan\b/.test(lower)) {
     const codes = extractCourseCodesFromText(message)
     if (codes.length <= 1) return false

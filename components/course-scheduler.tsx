@@ -1947,7 +1947,14 @@ export default function CourseScheduler({
         />
       )}
 
-      <ScheduleAssistantChat onApplySchedule={applyAssistantSchedule} />
+      <ScheduleAssistantChat
+        onApplySchedule={applyAssistantSchedule}
+        studentId={selectedStudentId}
+        selectedMajor={selectedMajor}
+        selectedYear={selectedYear}
+        requirementsForMajor={(requirements[selectedMajor] || {}) as Record<string, string[]>}
+        catalogCourses={courses}
+      />
 
       <NotificationArea notifications={notifications} onRemove={removeNotification} />
     </div>

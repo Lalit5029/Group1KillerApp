@@ -1,22 +1,30 @@
 import { NextResponse } from "next/server"
 import fs from "fs/promises"
 import path from "path"
-import { requireAdvisorSession } from "@/lib/server-auth"
+import prisma from "@/lib/prisma"
+import { getAuthorizedStudent, requireAdvisorSession } from "@/lib/server-auth"
 import { answerCatalogLookup, isCatalogLookupQuestion } from "@/lib/assistant-catalog-lookup"
 import {
+  extractCourseCodesFromText,
   parseScheduleConstraintsFromText,
   solveSchedule,
   shouldAttemptScheduleSolve,
 } from "@/lib/assistant-schedule-engine"
 import { generateGeminiAssistantReply, getGeminiApiKey } from "@/lib/assistant-gemini"
 import { matchHelpAnswer, ASSISTANT_SYSTEM_PRIMER } from "@/lib/assistant-help"
+import { COURSE_DEPENDENCY_CATALOG } from "@/lib/recommendation/course-dependency-catalog"
+import { buildPyReasonPayload } from "@/lib/recommendation/build-pyreason-payload"
+import { runFallbackReasoner } from "@/lib/recommendation/fallback-reasoner"
+import { rankRecommendations } from "@/lib/recommendation/rank-recommendations"
+import { runPyReason } from "@/lib/recommendation/run-pyreason"
+import type { CatalogSectionRecord, RequirementBlockRecord } from "@/lib/recommendation/types"
 import type { Course, SelectedCourse } from "@/lib/types"
 
 export const runtime = "nodejs"
 
 export async function POST(req: Request) {
   try {
-    await requireAdvisorSession()
+    const session = await requireAdvisorSession()
     const body = await req.json()
     const message = String(body.message || "").trim()
     if (!message) {
@@ -32,10 +40,142 @@ export async function POST(req: Request) {
     let scheduleSuggestion: SelectedCourse[] | undefined
     let assistantMode: "catalog" | "schedule" | "help" | "llm" | "fallback" = "fallback"
     const llmAvailable = Boolean(getGeminiApiKey() || process.env.HUGGINGFACE_API_KEY || process.env.HF_TOKEN)
+    const codesInMessage = extractCourseCodesFromText(message)
+    const prereqQuestion =
+      codesInMessage.length > 0 &&
+      /\b(prereq|prerequisite|pre-req|requirements?\s+for|needed\s+for|require\s+for)\b/i.test(message)
+    const recommendationIntent =
+      /\b(recommend|suggest|next\s+course|next\s+courses|what\s+should\s+i\s+take)\b/i.test(message) &&
+      /\b(completed|already\s+took|already\s+completed|finished|passed|done)\b/i.test(message)
 
     if (isCatalogLookupQuestion(message)) {
       assistantMode = "catalog"
       reply = answerCatalogLookup(catalog, message)
+    } else if (prereqQuestion) {
+      assistantMode = "catalog"
+      const lines: string[] = []
+      for (const code of codesInMessage) {
+        const def = COURSE_DEPENDENCY_CATALOG[code]
+        if (!def?.prerequisites || def.prerequisites.length === 0) {
+          lines.push(`• **${code}** — no prerequisite rule is currently defined in this app.`)
+          continue
+        }
+        const formatted = def.prerequisites
+          .map((g) => (g.type === "oneOf" ? g.courses.join(" or ") : g.courses.join(" and ")))
+          .join(" and ")
+        lines.push(`• **${code}** — ${formatted}`)
+      }
+      reply = `From the app's curated prerequisite map:\n${lines.join("\n")}`
+    } else if (recommendationIntent) {
+      const studentId = String(body.studentId || "")
+      const selectedMajor = String(body.selectedMajor || "").trim()
+      const selectedYear = String(body.selectedYear || "").trim()
+      const requirementsForMajor = body.requirementsForMajor || {}
+      const catalogCourses = Array.isArray(body.catalogCourses)
+        ? (body.catalogCourses as CatalogSectionRecord[])
+        : []
+      if (!studentId) {
+        assistantMode = "fallback"
+        reply = "Please select a student first so I can generate personalized recommendations."
+      } else {
+        const student = await getAuthorizedStudent(studentId, session.user.id)
+        const [academicCourses, degreeRequirements] = await Promise.all([
+          prisma.academicCourse.findMany({
+            where: { studentId: student.id },
+            orderBy: { createdAt: "asc" },
+          }),
+          prisma.degreeRequirement.findMany({
+            where: { studentId: student.id },
+            orderBy: { createdAt: "asc" },
+          }),
+        ])
+        const payload = buildPyReasonPayload({
+          studentId: student.id,
+          studentName: student.name,
+          selectedMajor: selectedMajor || student.major || "",
+          selectedYear: selectedYear || student.academicYear || "",
+          term: "Current Catalog",
+          requirementsForMajor,
+          academicCourses,
+          degreeRequirements: degreeRequirements.map((block) => ({
+            title: block.title,
+            status: block.status,
+            courses: Array.isArray(block.courses)
+              ? (block.courses as unknown as RequirementBlockRecord["courses"])
+              : [],
+          })),
+          catalogCourses,
+        })
+        let inferredResults
+        let engine: "pyreason" | "fallback" = "pyreason"
+        try {
+          const pyreasonResponse = await runPyReason(payload)
+          inferredResults = pyreasonResponse.results
+        } catch {
+          engine = "fallback"
+          inferredResults = runFallbackReasoner(payload)
+        }
+        const ranked = rankRecommendations(payload.candidateCourses, inferredResults)
+        const candidateByCode = new Map(payload.candidateCourses.map((c) => [c.courseCode, c]))
+        const formatMissingFromGroups = (
+          groups: Array<{ type: "allOf" | "oneOf"; courses: string[] }>,
+          missing: string[],
+        ) => {
+          const missingSet = new Set(missing)
+          const unmetGroups = groups.filter((g) =>
+            g.type === "oneOf"
+              ? g.courses.every((c) => missingSet.has(c))
+              : g.courses.some((c) => missingSet.has(c)),
+          )
+          if (unmetGroups.length === 0) return ""
+          return unmetGroups
+            .map((g) => (g.type === "oneOf" ? g.courses.join(" or ") : g.courses.join(" and ")))
+            .join(" and ")
+        }
+        const recommended = ranked.filter((r) => !r.blocked).slice(0, 6)
+        const blocked = ranked.filter((r) => r.blocked).slice(0, 3)
+        if (recommended.length === 0) {
+          assistantMode = "fallback"
+          reply =
+            "I could not find clear next-course recommendations from your current record. Try importing more academic history or adjusting major/year."
+        } else {
+          assistantMode = "llm"
+          const lines = recommended.map(
+            (r) => `• **${r.courseCode}** — ${r.reasons.slice(0, 2).join("; ") || "eligible next option"}`,
+          )
+          const blockedLine =
+            blocked.length > 0
+              ? `\n\nBlocked for now:\n${blocked
+                  .map((b) => {
+                    const candidate = candidateByCode.get(b.courseCode)
+                    const prereqText =
+                      candidate && b.missingPrereqs?.length
+                        ? formatMissingFromGroups(candidate.prerequisiteGroups, b.missingPrereqs)
+                        : ""
+                    const coreqText =
+                      candidate && b.missingCoreqs?.length
+                        ? formatMissingFromGroups(candidate.corequisiteGroups, b.missingCoreqs)
+                        : ""
+                    const prereq = prereqText
+                      ? `missing prereq: ${prereqText}`
+                      : b.missingPrereqs?.length
+                        ? `missing prereq: ${b.missingPrereqs.join(", ")}`
+                        : ""
+                    const coreq = coreqText
+                      ? `missing coreq: ${coreqText}`
+                      : b.missingCoreqs?.length
+                        ? `missing coreq: ${b.missingCoreqs.join(", ")}`
+                        : ""
+                    const why = [prereq, coreq].filter(Boolean).join("; ")
+                    return `• **${b.courseCode}** — ${why || b.reasons.slice(0, 1).join("; ") || "currently blocked"}`
+                  })
+                  .join("\n")}`
+              : ""
+          reply = `Based on completed coursework, here are recommended next courses (${engine} engine):\n${lines.join(
+            "\n",
+          )}${blockedLine}`
+        }
+      }
     } else if (shouldAttemptScheduleSolve(message)) {
       assistantMode = "schedule"
       const result = solveSchedule(catalog, constraints)

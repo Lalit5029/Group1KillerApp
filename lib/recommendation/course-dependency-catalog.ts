@@ -11,60 +11,51 @@ import type { CourseDependencyDefinition } from "./types";
  * for a future authoritative prerequisite feed.
  */
 export const COURSE_DEPENDENCY_CATALOG: Record<string, CourseDependencyDefinition> = {
-  "CIS 453": {
-    prerequisites: [{ type: "allOf", courses: ["CIS 351"] }],
-    source: "sample_data",
-  },
-  "CIS 467": {
-    prerequisites: [{ type: "allOf", courses: ["CIS 351"] }],
-    source: "sample_data",
-  },
-  "CIS 400": {
-    prerequisites: [{ type: "allOf", courses: ["CIS 321", "MAT 331"] }],
-    source: "sample_data",
-  },
-  "CIS 486": {
-    prerequisites: [{ type: "allOf", courses: ["CIS 341"] }],
-    source: "sample_data",
-  },
-  "CSE 486": {
-    prerequisites: [{ type: "allOf", courses: ["CIS 341"] }],
-    source: "curated",
-  },
-  "CIS 454": {
-    prerequisites: [{ type: "allOf", courses: ["CIS 341"] }],
-    source: "curated",
-  },
-  "CIS 473": {
-    prerequisites: [{ type: "allOf", courses: ["CIS 341"] }],
-    source: "curated",
-  },
-  "CIS 477": {
-    prerequisites: [{ type: "allOf", courses: ["CIS 453"] }],
-    source: "curated",
-  },
-  "CSE 384": {
-    prerequisites: [{ type: "allOf", courses: ["CIS 252"] }],
-    source: "curated",
-  },
-  "CIS 351": {
-    prerequisites: [{ type: "allOf", courses: ["CIS 252"] }],
-    source: "curated",
-  },
-  "CIS 352": {
-    prerequisites: [{ type: "allOf", courses: ["CIS 252"] }],
-    source: "curated",
-  },
-  "CIS 375": {
-    prerequisites: [{ type: "allOf", courses: ["CIS 252"] }],
+  "CIS 252": {
+    prerequisites: [{ type: "oneOf", courses: ["CIS 151", "CPS 196"] }],
     source: "curated",
   },
   "CIS 341": {
-    prerequisites: [{ type: "allOf", courses: ["CIS 252"] }],
+    prerequisites: [{ type: "allOf", courses: ["CIS 351"] }],
     source: "curated",
   },
-  "CIS 252": {
-    prerequisites: [{ type: "allOf", courses: ["CIS 151"] }],
+  "CIS 351": {
+    prerequisites: [{ type: "oneOf", courses: ["CIS 252", "CSE 283"] }],
+    source: "curated",
+  },
+  "CIS 352": {
+    prerequisites: [{ type: "allOf", courses: ["CIS 252", "CIS 375", "CIS 351"] }],
+    source: "curated",
+  },
+  "CIS 375": {
+    prerequisites: [{ type: "allOf", courses: ["PHI 251"] }],
+    source: "curated",
+  },
+  "CIS 453": {
+    prerequisites: [{ type: "oneOf", courses: ["CIS 351", "CSE 382"] }],
+    source: "curated",
+  },
+  "CIS 454": {
+    prerequisites: [{ type: "allOf", courses: ["CIS 453"] }],
+    source: "curated",
+  },
+  "CIS 473": {
+    prerequisites: [{ type: "oneOf", courses: ["CIS 375", "MAT 375"] }],
+    source: "curated",
+  },
+  "CIS 477": {
+    prerequisites: [{ type: "allOf", courses: ["CIS 375", "CIS 351"] }],
+    source: "curated",
+  },
+  "CSE 384": {
+    prerequisites: [{ type: "oneOf", courses: ["CSE 283", "CIS 351"] }],
+    source: "curated",
+  },
+  "CSE 486": {
+    prerequisites: [
+      { type: "oneOf", courses: ["CIS 341", "CSE 381"] },
+      { type: "allOf", courses: ["CSE 384", "CIS 351"] },
+    ],
     source: "curated",
   },
   "MAT 397": {

@@ -26,9 +26,29 @@ type ChatMessage = {
 
 type ScheduleAssistantChatProps = {
   onApplySchedule: (sections: SelectedCourse[]) => void
+  studentId: string
+  selectedMajor?: string
+  selectedYear?: string
+  requirementsForMajor?: Record<string, string[]>
+  catalogCourses: Array<{
+    id?: string
+    Class?: string
+    Section?: string
+    DaysTimes?: string
+    Room?: string
+    Instructor?: string
+    MeetingDates?: string
+  }>
 }
 
-export function ScheduleAssistantChat({ onApplySchedule }: ScheduleAssistantChatProps) {
+export function ScheduleAssistantChat({
+  onApplySchedule,
+  studentId,
+  selectedMajor,
+  selectedYear,
+  requirementsForMajor,
+  catalogCourses,
+}: ScheduleAssistantChatProps) {
   const [open, setOpen] = useState(false)
   const [input, setInput] = useState("")
   const [loading, setLoading] = useState(false)
@@ -59,6 +79,11 @@ export function ScheduleAssistantChat({ onApplySchedule }: ScheduleAssistantChat
         body: JSON.stringify({
           message: text,
           history: messages.map((m) => ({ role: m.role, content: m.content })),
+          studentId,
+          selectedMajor,
+          selectedYear,
+          requirementsForMajor: requirementsForMajor || {},
+          catalogCourses,
         }),
       })
       const data = await res.json().catch(() => ({}))
@@ -101,7 +126,7 @@ export function ScheduleAssistantChat({ onApplySchedule }: ScheduleAssistantChat
         scrollRef.current?.scrollIntoView({ behavior: "smooth", block: "end" })
       })
     }
-  }, [input, loading, messages])
+  }, [input, loading, messages, studentId, selectedMajor, selectedYear, requirementsForMajor, catalogCourses])
 
   return (
     <>
