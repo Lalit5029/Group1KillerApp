@@ -9,8 +9,6 @@ import { CourseDetailsModal } from "./course-details-modal"
 import { CourseNotesModal } from "./course-notes-modal"
 import { NotificationArea } from "./notification-area"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { AcademicDataVisualizer } from "./academic-data-visualizer"
-import { DegreeRequirementsView } from "./degree-requirements-view"
 import { Calendar, GraduationCap, BookOpen, Download, Upload } from "lucide-react"
 import type { Course, SelectedCourse, Notification, Major, Requirements, CourseData, CourseSearchCriteria } from "@/lib/types"
 import { fetchCourses, fetchRequirements } from "@/lib/data-utils"
@@ -31,6 +29,8 @@ import { Badge } from "@/components/ui/badge"
 import { evaluateCsGraduationReadiness } from "@/lib/graduation-readiness"
 import { GraduationPathTimeline } from "@/components/graduation-path-timeline"
 import { CLASS_YEARS, normalizeAcademicYearLabel, type ClassYear } from "@/lib/class-year"
+import { usePresentationPrivacy } from "@/components/presentation-privacy-provider"
+import { ScheduleAssistantChat } from "@/components/schedule-assistant-chat"
 
 interface RequirementGroup {
   name: string;
@@ -161,6 +161,7 @@ export default function CourseScheduler({
     roadmap: Record<string, string[]>;
   } | null>(null)
   const advisorAlerts = useMemo(() => evaluateCsGraduationReadiness(academicCourses), [academicCourses])
+  const { sanitizeAdvisorAlert, formatGrade, hideSensitiveAcademic } = usePresentationPrivacy()
 
   const withStudentId = (path: string) => {
     const separator = path.includes("?") ? "&" : "?"
@@ -766,6 +767,43 @@ export default function CourseScheduler({
     setNotifications((prev) => prev.filter((n) => n.id !== id))
   }
 
+  const applyAssistantSchedule = useCallback(
+    (suggestion: SelectedCourse[]) => {
+      const norm = (c?: string) =>
+        String(c || "")
+          .trim()
+          .replace(/\s+/g, " ")
+          .toUpperCase()
+      const suggestedClasses = new Set(suggestion.map((s) => norm(s.Class)))
+      setSelectedCourses((prev) => {
+        const kept = prev.filter((p) => !suggestedClasses.has(norm(p.Class)))
+        const next: SelectedCourse[] = [...kept]
+        const skipped: string[] = []
+        for (const c of suggestion) {
+          const asCourse: Course = { ...c }
+          if (hasConflict(asCourse, next)) {
+            skipped.push(`${c.Class} ${c.Section || ""}`.trim())
+            continue
+          }
+          next.push(c)
+        }
+        if (skipped.length > 0) {
+          toast({
+            title: "Some sections not added",
+            description: `Time conflict with your current schedule: ${skipped.join(", ")}`,
+            variant: "destructive",
+          })
+        }
+        return next
+      })
+      showNotification(
+        "Assistant sections added; existing sections for those course codes were replaced.",
+        "success",
+      )
+    },
+    [toast],
+  )
+
   // Mock data for testing
   const getMockStatusData = () => {
     return {
@@ -1342,8 +1380,12 @@ export default function CourseScheduler({
                           <span className="text-muted-foreground">{course.status || 'N/A'}</span>
                         </div>
                         <div className="col-span-2">
-                          <span className={`font-medium ${getGradeColor(course.grade || '')}`}>
-                            {course.grade || 'N/A'}
+                          <span
+                            className={`font-medium ${
+                              hideSensitiveAcademic ? "text-muted-foreground" : getGradeColor(course.grade || "")
+                            }`}
+                          >
+                            {formatGrade(course.grade) || "—"}
                           </span>
                         </div>
                       </div>
@@ -1493,8 +1535,12 @@ export default function CourseScheduler({
                         <span className="text-muted-foreground ml-2">{course.title}</span>
                       </div>
                       <div className="flex items-center space-x-4">
-                        <span className={getGradeColor(course.grade)}>
-                          {course.grade}
+                        <span
+                          className={
+                            hideSensitiveAcademic ? "text-muted-foreground" : getGradeColor(course.grade)
+                          }
+                        >
+                          {formatGrade(course.grade)}
                         </span>
                         <span className="text-muted-foreground">{course.credits} credits</span>
                         <span className="text-muted-foreground">{course.term}</span>
@@ -1671,7 +1717,8 @@ export default function CourseScheduler({
                   </CardHeader>
                   <CardContent>
                     <div className="space-y-3">
-                      {advisorAlerts.map((alert) => {
+                      {advisorAlerts.map((raw) => {
+                        const alert = sanitizeAdvisorAlert(raw)
                         const tone =
                           alert.level === "critical"
                             ? "border-red-200 bg-red-50 text-red-900"
@@ -1835,6 +1882,8 @@ export default function CourseScheduler({
           course={selectedCourses.find((c) => c.id === currentNotesCourseId) || null}
         />
       )}
+
+      <ScheduleAssistantChat onApplySchedule={applyAssistantSchedule} />
 
       <NotificationArea notifications={notifications} onRemove={removeNotification} />
     </div>

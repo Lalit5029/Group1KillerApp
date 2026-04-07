@@ -25,6 +25,19 @@ function parseArgs(argv) {
         .map((s) => s.trim())
         .filter(Boolean)
         .map((p) => path.resolve(p))
+    } else if (token === "--inputs-dir") {
+      const dir = path.resolve(argv[++i])
+      if (!fs.existsSync(dir) || !fs.statSync(dir).isDirectory()) {
+        throw new Error(`--inputs-dir is not a directory: ${dir}`)
+      }
+      args.inputs = fs
+        .readdirSync(dir)
+        .filter((f) => f.toLowerCase().endsWith(".xml"))
+        .sort()
+        .map((f) => path.join(dir, f))
+      if (args.inputs.length === 0) {
+        throw new Error(`No .xml files found in ${dir}`)
+      }
     } else if (token === "--json-out") {
       args.jsonOut = path.resolve(argv[++i])
     } else if (token === "--jsonl-out") {

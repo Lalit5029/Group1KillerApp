@@ -4,7 +4,7 @@ export interface CsSemesterColumn {
   id: string;
   shortLabel: string;
   fullLabel: string;
-  /** Display lines (may include "MAT 397 / MAT 331 (one)"). */
+  /** Display lines for suggested-term roadmap (matched to transcript course codes). */
   rows: { key: string; display: string; matchCodes: string[] }[];
 }
 
@@ -31,9 +31,8 @@ export const CS_GRADUATION_SEMESTERS: CsSemesterColumn[] = [
     rows: [
       { key: "cis252", display: "CIS 252", matchCodes: ["CIS 252"] },
       { key: "mat296", display: "MAT 296", matchCodes: ["MAT 296"] },
-      { key: "phi251", display: "PHI 251", matchCodes: ["PHI 251"] },
-      { key: "phy211", display: "PHY 211", matchCodes: ["PHY 211"] },
-      { key: "phy221", display: "PHY 221", matchCodes: ["PHY 221"] },
+      { key: "phi251", display: "PHI 251 (SSH)", matchCodes: ["PHI 251"] },
+      { key: "phy211", display: "PHY 211 (Natural Science)", matchCodes: ["PHY 211"] },
     ],
   },
   {
@@ -45,10 +44,11 @@ export const CS_GRADUATION_SEMESTERS: CsSemesterColumn[] = [
       { key: "cis351", display: "CIS 351", matchCodes: ["CIS 351"] },
       {
         key: "mat397331",
-        display: "MAT 397 / MAT 331 (one)",
+        display: "MAT 397 (Calculus III) / MAT 331 (Linear Algebra)",
         matchCodes: ["MAT 397", "MAT 331"],
       },
-      { key: "phy212", display: "PHY 212 (sci. seq.)", matchCodes: ["PHY 212", "CHE 106", "BIO 121"] },
+      { key: "che106", display: "CHE 106 (Natural Science)", matchCodes: ["CHE 106"] },
+      { key: "ist344", display: "IST 344 (Presentation Skills)", matchCodes: ["IST 344"] },
     ],
   },
   {
@@ -61,7 +61,6 @@ export const CS_GRADUATION_SEMESTERS: CsSemesterColumn[] = [
       { key: "cis352", display: "CIS 352", matchCodes: ["CIS 352"] },
       { key: "cse384", display: "CSE 384", matchCodes: ["CSE 384"] },
       { key: "wrt205", display: "WRT 205", matchCodes: ["WRT 205"] },
-      { key: "phy222", display: "PHY 222 / CHE 107 / BIO 122", matchCodes: ["PHY 222", "CHE 107", "BIO 122"] },
     ],
   },
   {
@@ -96,7 +95,8 @@ export const CS_GRADUATION_SEMESTERS: CsSemesterColumn[] = [
     rows: [
       {
         key: "ud",
-        display: "UD CIS/CSE + electives (per checklist)",
+        display:
+          "Upper division (18 cr): CIS 400 topics (Social Media & Data Mining, Data Visualization, Android, Applied NLP, Quantum Algorithms) + CIS 442 — confirm sections in catalog",
         matchCodes: [],
       },
     ],

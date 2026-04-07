@@ -35,6 +35,7 @@ export function MainControls({
   const [isWorkloadDialogOpen, setIsWorkloadDialogOpen] = useState(false)
 
   const handleWorkloadSelect = (workload: WorkloadLevel) => {
+    console.log("[SuggestedCourses] Workload selected:", workload)
     onGenerateSchedule(workload)
     setIsWorkloadDialogOpen(false)
   }
@@ -69,7 +70,10 @@ export function MainControls({
       <div className="bg-gradient-to-br from-primary-50 to-white p-6 rounded-xl shadow-sm mb-6">
         <div className="flex flex-wrap gap-3 justify-center">
           <Button
-            onClick={() => setIsWorkloadDialogOpen(true)}
+            onClick={() => {
+              console.log("[SuggestedCourses] Add Suggested Courses clicked")
+              setIsWorkloadDialogOpen(true)
+            }}
             disabled={disabled}
             className="flex items-center gap-2 bg-gradient-primary hover:opacity-90 transition-opacity"
           >

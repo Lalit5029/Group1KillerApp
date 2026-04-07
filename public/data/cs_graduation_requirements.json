@@ -9,58 +9,66 @@
       "FYS 101",
       "CIS 252",
       "MAT 296",
-      "PHI 251",
       "PHY 211",
-      "PHY 221"
+      "PHI 251"
     ],
-    "Sophomore": [
+    "Year 2 · Fall": [
       "CIS 375",
       "CIS 351",
-      "MAT 397 or MAT 331",
-      "Science elective sequence option",
+      "MAT 397 or MAT 331 (Linear Algebra)",
+      "CHE 106",
+      "IST 344"
+    ],
+    "Year 2 · Spring": [
       "CIS 321",
       "CIS 341",
       "CIS 352",
       "CSE 384",
-      "WRT 205"
+      "WRT 205",
+      "SOC 281 (IDEA)"
     ],
     "Junior": [
       "CIS 453",
       "CIS 477",
       "CSE 486",
       "CIS 473",
-      "CIS 454"
+      "CIS 454",
+      "SSH distribution (e.g. HST 122, PSY 205, ANT courses) to 21 cr"
     ],
     "Senior": [
       "ECS 392",
-      "Upper-division technical electives",
-      "Free electives / A-SS-H as needed"
+      "Upper-division electives (18 cr): CIS 400 topics + CIS 442",
+      "Free electives (8 cr): e.g. IST 323, IST 343, IST 359"
     ]
   },
   "reference": {
     "minimumCredits": 120,
     "generalEducation": [
-      "Writing (6 cr): WRT 105, WRT 205",
-      "Presentational skills (3 cr): CRS 225 or CRS 325 or IST 344",
-      "Natural sciences (8 cr): PHY 211 + PHY 221, plus one sequence: PHY 212+PHY 222 or CHE 106+CHE 107 or BIO 121+BIO 122",
-      "Social science and humanities (21 cr), including PHI 251 and ECS 392",
-      "Free electives (8 cr)"
+      "University — First Year Seminar: FYS 101 (1 cr)",
+      "University — IDEA course (example): SOC 281 Sociology of Families (3 cr)",
+      "Major — Writing (6 cr): WRT 105 and WRT 205 (minimum C- in each)",
+      "Major — Presentation skills (3 cr): IST 344 (minimum C-)",
+      "Major — Social sciences & humanities (21 cr): choose from ECS 392 Ethical Aspects of Engineering and Computer Science; PHI 251 Logic; HST 122 Global History 1750 to Present; PSY 205 Foundations of Human Behavior; SOC 281 Sociology of Families; ANT 357 Health, Healing, and Culture; ANT 121 Peoples and Cultures of the World (typically 3 cr each; combine per program rules to 21 cr)",
+      "Major — Natural sciences (8 cr): PHY 211 General Physics I (4 cr) and CHE 106 General Chemistry Lecture I (4 cr) (minimum C-)",
+      "Major — Free electives (8 cr): e.g. IST 323 Introduction to Information Security; IST 343 Data in Society; IST 359 Introduction to Database Management Systems (3 cr each; combine to 8 cr per program rules)"
     ],
     "mathematics": [
-      "MAT 295 (Calculus I)",
-      "MAT 296 (Calculus II)",
-      "MAT 397 (Calculus III) or MAT 331 (Linear Algebra)",
-      "CIS 321 (Introduction to Probability and Statistics)"
+      "MAT 295 Calculus I (4 cr)",
+      "MAT 296 Calculus II (4 cr)",
+      "MAT 397 Calculus III (4 cr) or MAT 331 Introduction to Linear Algebra (4 cr) — one of the two fulfills this slot",
+      "CIS 321 Introduction to Probability and Statistics (4 cr)",
+      "Total 16 credits; minimum C- in each course"
     ],
     "core": [
-      "ECS 101, CIS 151",
-      "CIS 252, CIS 341, CIS 351, CIS 352, CSE 384",
-      "CIS 375, CIS 453, CIS 454, CIS 473, CIS 477, CSE 486",
-      "18 credits upper-division technical electives (at least 9 credits CIS/CSE)"
+      "Engineering / intro computing (6 cr): ECS 101 Introduction to Engineering & Computer Science (3 cr); CIS 151 Fundamentals of Computing and Programming (3 cr)",
+      "Computer science core (34 cr, minimum C- each; core GPA ≥ 2.667): CIS 252 Elements of Computer Science (4); CIS 375 Introduction to Discrete Mathematics (3); CIS 341 Computer Organization & Programming Systems (3); CSE 384 Systems & Network Programming (3); CIS 351 Data Structures (3); CIS 352 Programming Languages: Theory & Practice (3); CIS 453 Software Specification & Design (3); CIS 454 Software Implementation (3); CIS 473 Automata and Computability (3); CIS 477 Introduction to Analysis of Algorithms (3); CSE 486 Design of Operating Systems (3)",
+      "Upper-division electives (18 cr, minimum C-): CIS 400 Principles: Social Media & Data Mining (3); CIS 400 Data Visualization (3); CIS 442 Introduction to Virtual Reality (3); CIS 400 Android Programming (3); CIS 400 Applied NLP (3); CIS 400 Quantum Algorithms (3) — topical CIS 400 sections as offered; confirm exact titles/credit with catalog",
+      "GPA rule: minimum 2.0 GPA in ECS / mathematics / natural science courses combined (per program standards)"
     ],
     "standards": [
-      "Minimum grade C- for writing, mathematics, CS core, and upper-division technical electives",
-      "Computer science core must be completed with at least B- (2.667) average"
+      "Minimum grade C- or better on required courses in the categories above (confirm full list with your catalog year and DegreeWorks)",
+      "Computer science core (listed 34 cr set) must average at least 2.667 GPA",
+      "Combined ECS, mathematics, and natural science coursework must average at least 2.0 GPA"
     ]
   }
 }

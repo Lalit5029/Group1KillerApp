@@ -7,6 +7,7 @@ import { Progress } from "@/components/ui/progress"
 import { Badge } from "@/components/ui/badge"
 import { CheckCircle, Clock, AlertCircle } from "lucide-react"
 import { type CourseData, categorizeRequirements, getGradeColor } from "@/lib/academic-data"
+import { usePresentationPrivacy } from "@/components/presentation-privacy-provider"
 
 interface DegreeRequirementsViewProps {
   courses: CourseData[] | null
@@ -14,6 +15,7 @@ interface DegreeRequirementsViewProps {
 
 export function DegreeRequirementsView({ courses }: DegreeRequirementsViewProps) {
   const [activeTab, setActiveTab] = useState<string>("all")
+  const { formatGrade, hideSensitiveAcademic } = usePresentationPrivacy()
 
   if (!courses || courses.length === 0) {
     return (
@@ -102,8 +104,15 @@ export function DegreeRequirementsView({ courses }: DegreeRequirementsViewProps)
                               <div className="min-w-0 flex-1">
                                 <div className="flex justify-between items-center">
                                   <div className="font-medium truncate">{course.code}</div>
-                                  <div className="font-medium" style={{ color: getGradeColor(course.grade) }}>
-                                    {course.grade}
+                                  <div
+                                    className="font-medium"
+                                    style={{
+                                      color: hideSensitiveAcademic ? undefined : getGradeColor(course.grade),
+                                    }}
+                                  >
+                                    <span className={hideSensitiveAcademic ? "text-muted-foreground" : ""}>
+                                      {formatGrade(course.grade)}
+                                    </span>
                                   </div>
                                 </div>
                                 <div className="text-xs text-slate-500 truncate">{course.title}</div>
@@ -133,7 +142,9 @@ export function DegreeRequirementsView({ courses }: DegreeRequirementsViewProps)
                                 <div className="min-w-0 flex-1">
                                   <div className="flex justify-between items-center">
                                     <div className="font-medium truncate">{course.code}</div>
-                                    <div className="font-medium text-blue-500">IP</div>
+                                    <div className="font-medium text-blue-500">
+                                      {hideSensitiveAcademic ? "In progress" : "IP"}
+                                    </div>
                                   </div>
                                   <div className="text-xs text-slate-500 truncate">{course.title}</div>
                                 </div>
@@ -225,8 +236,11 @@ export function DegreeRequirementsView({ courses }: DegreeRequirementsViewProps)
                                 <tr key={`${course.code}-${idx}`} className="border-t hover:bg-slate-50">
                                   <td className="p-3 font-medium">{course.code}</td>
                                   <td className="p-3">{course.title}</td>
-                                  <td className="p-3 font-medium" style={{ color: getGradeColor(course.grade) }}>
-                                    {course.grade}
+                                  <td
+                                    className={`p-3 font-medium ${hideSensitiveAcademic ? "text-muted-foreground" : ""}`}
+                                    style={hideSensitiveAcademic ? undefined : { color: getGradeColor(course.grade) }}
+                                  >
+                                    {formatGrade(course.grade)}
                                   </td>
                                   <td className="p-3">{course.credits}</td>
                                   <td className="p-3">{course.term}</td>
