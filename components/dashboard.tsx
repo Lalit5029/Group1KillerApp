@@ -49,7 +49,6 @@ export function Dashboard({
   const filteredCourses = selectedCourses.filter((course) => {
     let passesFilter = true
 
-    // Department filter
     if (departmentFilter) {
       const deptCode = getDepartmentCode(course.Class)
       if (deptCode !== departmentFilter) {
@@ -57,14 +56,12 @@ export function Dashboard({
       }
     }
 
-    // Time filter
     if (timeFilter && passesFilter) {
       const timeMatch = course.DaysTimes?.match(/(\d{1,2}):(\d{2})\s*([AP]M)/i)
       if (timeMatch) {
         let hour = Number.parseInt(timeMatch[1])
         const period = timeMatch[3].toUpperCase()
 
-        // Convert to 24-hour
         if (period === "PM" && hour !== 12) hour += 12
         if (period === "AM" && hour === 12) hour = 0
 
@@ -104,7 +101,7 @@ export function Dashboard({
             {mounted ? (
               <>
                 <Select value={departmentFilter} onValueChange={setDepartmentFilter}>
-                  <SelectTrigger className="w-[180px] border-primary-200">
+                  <SelectTrigger className="w-[180px] bg-primary-700 text-white border-primary-800 hover:bg-primary-800">
                     <SelectValue placeholder="All Departments" />
                   </SelectTrigger>
                   <SelectContent>
@@ -123,7 +120,7 @@ export function Dashboard({
                 </Select>
 
                 <Select value={timeFilter} onValueChange={setTimeFilter}>
-                  <SelectTrigger className="w-[180px] border-primary-200">
+                  <SelectTrigger className="w-[180px] bg-primary-700 text-white border-primary-800 hover:bg-primary-800">
                     <SelectValue placeholder="All Times" />
                   </SelectTrigger>
                   <SelectContent>
@@ -144,20 +141,18 @@ export function Dashboard({
 
           <div className="flex gap-2">
             <Button
-              variant="outline"
               size="sm"
               onClick={exportSchedule}
-              className="flex items-center gap-1 border-primary-200 text-primary-700 hover:bg-primary-50"
+              className="flex items-center gap-1 bg-primary-700 hover:bg-primary-800 text-white"
             >
               <FileExport className="h-4 w-4" />
               Export
             </Button>
 
             <Button
-              variant="outline"
               size="sm"
               onClick={onToggleView}
-              className="flex items-center gap-1 border-primary-200 text-primary-700 hover:bg-primary-50"
+              className="flex items-center gap-1 bg-primary-700 hover:bg-primary-800 text-white"
             >
               <RefreshCw className="h-4 w-4" />
               Toggle View
@@ -253,7 +248,6 @@ export function Dashboard({
   )
 }
 
-// Helper function to get department code
 function getDepartmentCode(className?: string): string {
   if (!className) return ""
   const match = className.match(/^([A-Z]+)/)

@@ -76,7 +76,10 @@ export default function Home() {
             <Button asChild>
               <Link href="/students">Back to student list</Link>
             </Button>
-            <Button variant="outline" onClick={() => signOut({ callbackUrl: "/login" })}>
+            <Button
+              className="bg-primary-700 hover:bg-primary-800 text-white"
+              onClick={() => signOut({ callbackUrl: "/login" })}
+            >
               Log out
             </Button>
           </div>
@@ -106,13 +109,25 @@ export default function Home() {
             {session?.user?.email}
           </div>
         </div>
-        <Button asChild variant="secondary" size="sm" className="hidden sm:inline-flex">
+        <Button
+          asChild
+          size="sm"
+          className="hidden sm:inline-flex bg-primary-700 hover:bg-primary-800 text-white"
+        >
           <Link href="/students">Switch student</Link>
         </Button>
-        <Button asChild variant="outline" size="sm" className="sm:hidden">
+        <Button
+          asChild
+          size="sm"
+          className="sm:hidden bg-primary-700 hover:bg-primary-800 text-white"
+        >
           <Link href="/students">Students</Link>
         </Button>
-        <Button variant="outline" size="sm" onClick={() => signOut({ callbackUrl: "/login" })}>
+        <Button
+          size="sm"
+          className="bg-primary-700 hover:bg-primary-800 text-white"
+          onClick={() => signOut({ callbackUrl: "/login" })}
+        >
           Log out
         </Button>
       </SiteHeader>
