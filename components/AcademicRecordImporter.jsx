@@ -244,7 +244,8 @@ export default function AcademicRecordImporter({ onImportComplete }) {
           <div className="font-medium mb-1">Quick import checklist</div>
           <div>1. Verify your NetID and password.</div>
           <div>2. Complete Duo/Microsoft approval immediately when prompted.</div>
-          <div>3. If you see a session/sign-in error, open `https://myslice.ps.syr.edu`, sign in once, then retry import.</div>
+          <div>3. After login, if MySlice stays on its home page, manually open Academics -&gt; Course History in that same window.</div>
+          <div>4. If you see a session/sign-in error, open `https://myslice.ps.syr.edu`, sign in once, then retry import.</div>
         </div>
       )}
 
@@ -259,7 +260,9 @@ export default function AcademicRecordImporter({ onImportComplete }) {
         <div className="rounded-md border border-blue-200 bg-blue-50 p-4 text-sm text-blue-900 space-y-2">
           <div className="font-medium">Manual MySlice sign-in</div>
           <div>When you start import, the scraper will open its own Chrome window.</div>
-          <div>Sign in to MySlice in that opened window, including 2FA, and leave it open while import continues.</div>
+          <div>Sign in to MySlice in that opened window, including 2FA.</div>
+          <div>After login, MySlice may stay on its home page. That is expected.</div>
+          <div>In that same window, manually open Academics -&gt; Course History or Student Records -&gt; Course History, then leave that page open while import continues.</div>
         </div>
         <div className="text-sm text-gray-500">
           Your MySlice credentials stay in the browser sign-in flow and are not entered into this app.
@@ -292,6 +295,11 @@ export default function AcademicRecordImporter({ onImportComplete }) {
                 : 'Import In Progress'}
             </div>
             <div className="mt-1">{importStatusMessage}</div>
+            {importStatus === 'loading' && (
+              <div className="mt-2 text-xs">
+                If the Chrome window is sitting on the MySlice landing page, manually open <span className="font-medium">Academics -&gt; Course History</span> in that same window. The scraper resumes after the course table appears.
+              </div>
+            )}
           </div>
         )}
 

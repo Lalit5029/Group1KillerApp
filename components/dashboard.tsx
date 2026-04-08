@@ -9,6 +9,7 @@ import { ScheduleStats } from "./schedule-stats"
 import { WeeklyCalendar } from "./weekly-calendar"
 import { CourseListView } from "./course-list-view"
 import type { SelectedCourse, Course } from "@/lib/types"
+import type { RankedRecommendation } from "@/lib/recommendation/types"
 import { findScheduleConflicts, hasConflict } from "@/lib/schedule-utils"
 
 interface DashboardProps {
@@ -21,6 +22,7 @@ interface DashboardProps {
   onRemoveCourse: (courseId: string) => void
   courseNotes: Record<string, string>
   onSwapCourse: (oldCourseId: string, newCourse: Course) => void
+  scheduledRecommendations?: RankedRecommendation[]
 }
 
 export function Dashboard({
@@ -33,6 +35,7 @@ export function Dashboard({
   onRemoveCourse,
   courseNotes,
   onSwapCourse,
+  scheduledRecommendations = [],
 }: DashboardProps) {
   const [departmentFilter, setDepartmentFilter] = useState("")
   const [timeFilter, setTimeFilter] = useState("")
@@ -79,6 +82,16 @@ export function Dashboard({
   })
 
   const conflicts = findScheduleConflicts(filteredCourses)
+
+  const scheduledRecommendationInsights = selectedCourses
+    .map((course) => {
+      const classCode = course.Class?.trim().toUpperCase()
+      if (!classCode) return null
+      return scheduledRecommendations.find(
+        (recommendation) => recommendation.courseCode.trim().toUpperCase() === classCode
+      ) || null
+    })
+    .filter((item): item is RankedRecommendation => item != null)
 
   const getAlternativesForCourse = (course: SelectedCourse): Course[] => {
     const sameClass = allCourses.filter(
@@ -239,6 +252,54 @@ export function Dashboard({
                     </div>
                   )
                 })}
+              </div>
+            )}
+
+            {scheduledRecommendationInsights.length > 0 && (
+              <div className="pt-3 border-t border-border space-y-3">
+                <div>
+                  <h3 className="font-semibold text-sm text-primary-900">Scheduled Course Insights</h3>
+                  <p className="text-xs text-muted-foreground">
+                    Why these scheduled courses were selected by the recommendation layer.
+                  </p>
+                </div>
+
+                <div className="space-y-3 max-h-72 overflow-y-auto pr-1">
+                  {scheduledRecommendationInsights.map((course) => (
+                    <div
+                      key={`insight-${course.courseCode}`}
+                      className="rounded-md border border-primary/15 bg-background px-3 py-2 space-y-2"
+                    >
+                      <div className="flex flex-wrap items-center justify-between gap-2">
+                        <div>
+                          <p className="text-sm font-medium">{course.courseCode}</p>
+                          {course.explanation.requirementCategoryLabel && (
+                            <p className="text-[11px] text-muted-foreground">
+                              {course.explanation.requirementCategoryLabel}
+                            </p>
+                          )}
+                        </div>
+                        <span className="text-[11px] text-muted-foreground">
+                          Score {course.priorityScore}
+                        </span>
+                      </div>
+
+                      {course.explanation.servesRequirementGroups.length > 0 && (
+                        <p className="text-[11px] text-muted-foreground">
+                          Serves: {course.explanation.servesRequirementGroups.join(", ")}
+                        </p>
+                      )}
+
+                      {course.explanation.rankingHighlights.length > 0 && (
+                        <ul className="list-disc pl-4 space-y-1 text-[11px] text-muted-foreground">
+                          {course.explanation.rankingHighlights.slice(0, 3).map((reason) => (
+                            <li key={`${course.courseCode}-${reason}`}>{reason}</li>
+                          ))}
+                        </ul>
+                      )}
+                    </div>
+                  ))}
+                </div>
               </div>
             )}
           </aside>

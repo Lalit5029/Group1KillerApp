@@ -4,6 +4,8 @@ import type { CandidateCourse, InferenceResult } from "./types";
 const baseCandidate = (overrides: Partial<CandidateCourse> = {}): CandidateCourse => ({
   courseCode: "CIS 453",
   title: "CIS 453",
+  sourcePoolIds: ["required_courses"],
+  requirementPriorityCategory: "required_courses",
   planYears: ["Junior"],
   neededRequirementGroups: ["Junior Plan"],
   remainingDegreeRequirementGroups: ["Core Requirement"],
@@ -119,6 +121,46 @@ describe("rankRecommendations", () => {
     expect(ranked[0].courseCode).toBe("CIS 321");
   });
 
+  it("prioritizes required/core courses over upper-division and elective buckets", () => {
+    const ranked = rankRecommendations(
+      [
+        baseCandidate({
+          courseCode: "CIS 252",
+          requirementPriorityCategory: "required_courses",
+          sourcePoolIds: ["required_courses"],
+        }),
+        baseCandidate({
+          courseCode: "CIS 400",
+          requirementPriorityCategory: "upper_division_cs",
+          sourcePoolIds: ["upper_division_cs"],
+        }),
+        baseCandidate({
+          courseCode: "HST 122",
+          requirementPriorityCategory: "ssh_distribution",
+          sourcePoolIds: ["ssh_distribution"],
+        }),
+        baseCandidate({
+          courseCode: "IST 323",
+          requirementPriorityCategory: "free_electives",
+          sourcePoolIds: ["free_electives"],
+        }),
+      ],
+      [
+        baseInference("CIS 252"),
+        baseInference("CIS 400"),
+        baseInference("HST 122"),
+        baseInference("IST 323"),
+      ]
+    );
+
+    expect(ranked.map((course) => course.courseCode)).toEqual([
+      "CIS 252",
+      "CIS 400",
+      "HST 122",
+      "IST 323",
+    ]);
+  });
+
   it("boosts courses that unlock future courses", () => {
     const ranked = rankRecommendations(
       [
@@ -137,5 +179,34 @@ describe("rankRecommendations", () => {
 
     expect(ranked[0].courseCode).toBe("CIS 351");
     expect(ranked[0].reasons.join(" ")).toContain("Unlocks 2 future courses");
+  });
+
+  it("returns structured explanation details for review UI", () => {
+    const ranked = rankRecommendations(
+      [
+        baseCandidate({
+          courseCode: "CIS 400",
+          requirementPriorityCategory: "upper_division_cs",
+          sourcePoolIds: ["upper_division_cs"],
+          remainingDegreeRequirementGroups: ["Upper Division CS Electives"],
+          unlockCount: 1,
+          unlocksCourseCodes: ["CSE 687"],
+          bottleneck: true,
+        }),
+      ],
+      [
+        baseInference("CIS 400", {
+          high_priority: true,
+          bottleneck_course: true,
+          unlocks_future_courses: true,
+        }),
+      ]
+    );
+
+    expect(ranked[0].explanation.requirementCategoryLabel).toBe("Upper-division CS requirement");
+    expect(ranked[0].explanation.servesRequirementGroups).toEqual(["Upper Division CS Electives"]);
+    expect(ranked[0].explanation.sourcePoolIds).toEqual(["upper_division_cs"]);
+    expect(ranked[0].explanation.rankingHighlights).toContain("Marked high-priority by the reasoning layer");
+    expect(ranked[0].explanation.rankingHighlights).toContain("Sequencing bottleneck");
   });
 });

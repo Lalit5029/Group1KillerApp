@@ -242,22 +242,17 @@ The recommendation output includes:
 - missing prerequisites
 - priority score
 
-## PyReason Notes
+## Recommendation Notes
 
-PyReason is used to infer labels such as:
-- `eligible_now`
-- `blocked`
-- `missing_prereq`
-- `missing_coreq`
-- `offered_this_term`
-- `satisfies_needed_requirement`
-- `high_priority`
-- `bottleneck_course`
-- `recommended`
+The app now uses a deterministic recommendation layer built from:
+- structured CS program rules
+- transcript-aware degree-progress evaluation
+- explicit candidate pools
+- prerequisite / offering checks
 
 Important:
-- PyReason is not the scheduler
-- it is the reasoning layer before schedule generation
+- the recommender is not the scheduler
+- it chooses and ranks candidate courses before timetable generation
 
 ### Recommendation logic priorities
 
@@ -272,42 +267,6 @@ It prioritizes:
 
 Academic year is only a secondary hint, not the main driver.
 
-### PyReason debug mode
-
-Run with verbose reasoning debug:
-
-```bash
-PYREASON_DEBUG=1 npm run dev
-```
-
-Save graph artifacts too:
-
-```bash
-PYREASON_DEBUG=1 PYREASON_SAVE_GRAPH=1 npm run dev
-```
-
-Artifacts are written to:
-
-[backend/src/reasoning/debug_artifacts](/Users/akhereedoro/Coding%20Projects/Group1KillerApp/backend/src/reasoning/debug_artifacts)
-
-Saved files include:
-- `reasoning_graph.graphml`
-- `reasoning_graph.json`
-- `inferred_labels.json`
-
-## Viewing The Reasoning Graph
-
-Simplest option:
-- open the generated `.graphml` in yEd Graph Editor
-
-Then in yEd:
-1. `Layout -> Organic`
-2. `View -> Fit Content`
-
-If you just want raw data:
-- inspect `reasoning_graph.json`
-- inspect `inferred_labels.json`
-
 ## Current Recommendation Debugging Tips
 
 If `/api/recommendations` returns:
@@ -317,14 +276,14 @@ If `/api/recommendations` returns:
   "recommendedCourses": [],
   "blockedCourses": [],
   "debug": {
-    "engine": "pyreason",
+    "engine": "fallback",
     "candidateCount": 0
   }
 }
 ```
 
 that means:
-- PyReason ran
+- the deterministic recommender ran
 - but there were no candidate courses to reason over
 
 Possible reasons:
