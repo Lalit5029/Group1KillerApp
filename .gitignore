@@ -46,3 +46,10 @@ backend/src/chrome_profile_manual/
 # scraper runtime outputs
 course_history.json
 backend/course_history.json
+backend/data/user_completed_courses.json
+backend/data/degree_works_cookies.pkl
+scripts/syracuse-class-search.config.json
+public/data/course_offerings_from_saved_responses.json
+public/data/course_offerings_from_saved_responses.jsonl
+public/data/courses.from_saved_responses.json
+public/data/parsed_courses.json
