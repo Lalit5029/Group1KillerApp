@@ -62,6 +62,13 @@ export interface CatalogSectionRecord {
 export interface CandidateCourse {
   courseCode: string;
   title: string;
+  sourcePoolIds: string[];
+  requirementPriorityCategory:
+    | "required_courses"
+    | "upper_division_cs"
+    | "ssh_distribution"
+    | "free_electives"
+    | "unclassified";
   planYears: string[];
   neededRequirementGroups: string[];
   remainingDegreeRequirementGroups: string[];
@@ -138,6 +145,13 @@ export interface RankedRecommendation {
   status: "recommended" | "eligible" | "blocked";
   priorityScore: number;
   reasons: string[];
+  explanation: {
+    requirementCategoryLabel: string | null;
+    servesRequirementGroups: string[];
+    sourcePoolIds: string[];
+    rankingHighlights: string[];
+    blockingFactors: string[];
+  };
   missingPrereqs: string[];
   missingCoreqs: string[];
   blocked: boolean;
@@ -145,6 +159,7 @@ export interface RankedRecommendation {
   availableSectionCount: number;
   debug: {
     flags: InferenceFlags;
+    requirementPriorityCategory: CandidateCourse["requirementPriorityCategory"];
     neededRequirementGroups: string[];
     unlockCount: number;
     rawLabels: string[];

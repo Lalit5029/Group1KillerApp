@@ -8,6 +8,9 @@ import type {
   RequirementBlockRecord,
   RequirementClause,
 } from "./types";
+import { buildProgramCandidatePools } from "@/lib/program-rules/build-candidate-pools";
+import { evaluateDegreeProgress } from "@/lib/program-rules/evaluate-degree-progress";
+import type { ProgramRules } from "@/lib/program-rules/types";
 
 const YEAR_ORDER = ["Freshman", "Sophomore", "Junior", "Senior"];
 
@@ -25,6 +28,10 @@ const PASSING_GRADES = new Set([
   "D",
   "D-",
 ]);
+
+const CS_UPPER_DIVISION_PREFIXES = new Set(["CIS", "CSE"]);
+const MIN_STRICT_ROADMAP_POOL = 2;
+const MIN_COMBINED_CANDIDATE_POOL = 4;
 
 /**
  * Normalize a course code so the same course can be matched across transcript,
@@ -105,6 +112,29 @@ function unique<T>(items: T[]) {
   return Array.from(new Set(items));
 }
 
+function isFlexibleRoadmapEntry(entry: string | null | undefined) {
+  const normalized = String(entry || "").trim().toLowerCase();
+  return (
+    normalized.includes("free elective") ||
+    normalized.includes("ssh distribution") ||
+    normalized.includes("social sciences & humanities") ||
+    normalized.includes("e.g.")
+  );
+}
+
+function parseCourseCodeParts(courseCode: string) {
+  const normalized = normalizeCourseCode(courseCode);
+  const match = normalized.match(/^([A-Z]{2,4})\s+(\d{3})/);
+  if (!match) {
+    return null;
+  }
+
+  return {
+    subject: match[1],
+    number: Number(match[2]),
+  };
+}
+
 function getPlanYearsFromMajorRequirements(
   requirementsForMajor: Record<string, string[]> | undefined,
   selectedYear: string
@@ -156,6 +186,148 @@ function deriveNeededRequirementGroups(
   }
 
   return Array.from(groups);
+}
+
+function deriveBucketFallbackGroups(
+  courseCode: string,
+  degreeRequirements: RequirementBlockRecord[],
+  selectedMajor: string
+) {
+  const groups = new Set<string>();
+  const parts = parseCourseCodeParts(courseCode);
+  if (!parts) {
+    return [];
+  }
+
+  for (const block of degreeRequirements) {
+    if (isRequirementBlockComplete(block.status)) continue;
+
+    const normalizedTitle = String(block.title || "").trim().toLowerCase();
+    const hasExplicitCodes = block.courses.some(
+      (course) => extractCourseCodesFromText(course.code || course.title).length > 0
+    );
+
+    if (hasExplicitCodes) {
+      continue;
+    }
+
+    if (/upper division cis/i.test(normalizedTitle)) {
+      if (CS_UPPER_DIVISION_PREFIXES.has(parts.subject) && parts.number >= 400) {
+        groups.add(block.title);
+      }
+      continue;
+    }
+
+    if (/upper division courses/i.test(normalizedTitle) && /computer science/i.test(selectedMajor)) {
+      if (CS_UPPER_DIVISION_PREFIXES.has(parts.subject) && parts.number >= 400) {
+        groups.add(block.title);
+      }
+      continue;
+    }
+  }
+
+  return Array.from(groups);
+}
+
+function inferFallbackRequirementPriorityCategory(
+  courseCode: string,
+  remainingDegreeRequirementGroups: string[]
+): CandidateCourse["requirementPriorityCategory"] {
+  const normalizedGroups = remainingDegreeRequirementGroups.map((group) =>
+    String(group || "").trim().toLowerCase()
+  );
+  const parts = parseCourseCodeParts(courseCode);
+
+  if (
+    normalizedGroups.some(
+      (group) =>
+        group.includes("core") ||
+        group.includes("major") ||
+        group.includes("writing") ||
+        group.includes("mathematics") ||
+        group.includes("natural science") ||
+        group.includes("presentation")
+    )
+  ) {
+    return "required_courses";
+  }
+
+  if (
+    normalizedGroups.some((group) => group.includes("upper division")) ||
+    (parts && ["CIS", "CSE"].includes(parts.subject) && parts.number >= 400)
+  ) {
+    return "upper_division_cs";
+  }
+
+  if (
+    normalizedGroups.some(
+      (group) => group.includes("ssh") || group.includes("humanities") || group.includes("social")
+    )
+  ) {
+    return "ssh_distribution";
+  }
+
+  if (normalizedGroups.some((group) => group.includes("free elective"))) {
+    return "free_electives";
+  }
+
+  return "unclassified";
+}
+
+function derivePriorityCategoryFromSourcePools(
+  sourcePoolIds: string[]
+): CandidateCourse["requirementPriorityCategory"] {
+  if (sourcePoolIds.includes("required_courses")) return "required_courses";
+  if (sourcePoolIds.includes("upper_division_cs")) return "upper_division_cs";
+  if (sourcePoolIds.includes("ssh_distribution")) return "ssh_distribution";
+  if (sourcePoolIds.includes("free_electives")) return "free_electives";
+  return "unclassified";
+}
+
+function deriveFallbackCandidateCodesFromDegreeBuckets(
+  degreeRequirements: RequirementBlockRecord[],
+  catalogCourses: CatalogSectionRecord[],
+  selectedMajor: string
+) {
+  const fallbackCodes = new Set<string>();
+
+  for (const block of degreeRequirements) {
+    if (isRequirementBlockComplete(block.status)) continue;
+
+    const normalizedTitle = String(block.title || "").trim().toLowerCase();
+    const hasExplicitCodes = block.courses.some(
+      (course) => extractCourseCodesFromText(course.code || course.title).length > 0
+    );
+
+    if (hasExplicitCodes) {
+      continue;
+    }
+
+    if (/upper division cis/i.test(normalizedTitle)) {
+      for (const section of catalogCourses) {
+        const code = normalizeCourseCode(section.Class);
+        const parts = parseCourseCodeParts(code);
+        if (!parts) continue;
+        if (CS_UPPER_DIVISION_PREFIXES.has(parts.subject) && parts.number >= 400) {
+          fallbackCodes.add(code);
+        }
+      }
+      continue;
+    }
+
+    if (/upper division courses/i.test(normalizedTitle) && /computer science/i.test(selectedMajor)) {
+      for (const section of catalogCourses) {
+        const code = normalizeCourseCode(section.Class);
+        const parts = parseCourseCodeParts(code);
+        if (!parts) continue;
+        if (CS_UPPER_DIVISION_PREFIXES.has(parts.subject) && parts.number >= 400) {
+          fallbackCodes.add(code);
+        }
+      }
+    }
+  }
+
+  return Array.from(fallbackCodes);
 }
 
 function evaluateRequirementGroups(
@@ -216,6 +388,7 @@ export function buildPyReasonPayload({
   selectedYear,
   term,
   requirementsForMajor,
+  programRules,
   academicCourses,
   degreeRequirements,
   catalogCourses,
@@ -226,6 +399,7 @@ export function buildPyReasonPayload({
   selectedYear: string;
   term: string;
   requirementsForMajor?: Record<string, string[]>;
+  programRules?: ProgramRules | null;
   academicCourses: AcademicCourseRecord[];
   degreeRequirements: RequirementBlockRecord[];
   catalogCourses: CatalogSectionRecord[];
@@ -255,6 +429,7 @@ export function buildPyReasonPayload({
     selectedYear
   );
   const selectedYearIndex = Math.max(0, YEAR_ORDER.indexOf(selectedYear));
+  const seniorYearIndex = YEAR_ORDER.indexOf("Senior");
 
   const planYearsByCourse = new Map<string, string[]>();
   for (const year of allYears) {
@@ -268,8 +443,15 @@ export function buildPyReasonPayload({
     }
   }
 
-  const currentAndFuturePlanCodes = currentAndFutureYears.flatMap((year) =>
-    (requirementsForMajor?.[year] || []).flatMap((entry) => extractCourseCodesFromText(entry))
+  const strictPlanCodes = currentAndFutureYears.flatMap((year) =>
+    (requirementsForMajor?.[year] || [])
+      .filter((entry) => !isFlexibleRoadmapEntry(entry))
+      .flatMap((entry) => extractCourseCodesFromText(entry))
+  );
+  const flexiblePlanCodes = currentAndFutureYears.flatMap((year) =>
+    (requirementsForMajor?.[year] || [])
+      .filter((entry) => isFlexibleRoadmapEntry(entry))
+      .flatMap((entry) => extractCourseCodesFromText(entry))
   );
   const incompleteBlockCodes = degreeRequirements.flatMap((block) =>
     isRequirementBlockComplete(block.status)
@@ -280,7 +462,37 @@ export function buildPyReasonPayload({
     (block) => !isRequirementBlockComplete(block.status) && block.courses.length > 0
   );
 
-  const candidateCodes = unique([...currentAndFuturePlanCodes, ...incompleteBlockCodes]).filter(
+  const fallbackBucketCodes = deriveFallbackCandidateCodesFromDegreeBuckets(
+    degreeRequirements,
+    catalogCourses,
+    selectedMajor
+  );
+
+  const degreeDrivenCandidateCodes = unique([...incompleteBlockCodes, ...fallbackBucketCodes]);
+  const primaryCandidateCodes =
+    degreeDrivenCandidateCodes.length > 0
+      ? selectedYearIndex >= seniorYearIndex
+        ? unique([...degreeDrivenCandidateCodes, ...strictPlanCodes])
+        : degreeDrivenCandidateCodes
+      : unique(
+          strictPlanCodes.length > 0
+            ? [...strictPlanCodes, ...fallbackBucketCodes]
+            : [...flexiblePlanCodes, ...fallbackBucketCodes]
+        );
+
+  const shouldSupplementWithFlexibleCandidates =
+    (degreeDrivenCandidateCodes.length > 0 &&
+      selectedYearIndex >= seniorYearIndex &&
+      primaryCandidateCodes.length < MIN_COMBINED_CANDIDATE_POOL) ||
+    (degreeDrivenCandidateCodes.length === 0 &&
+      strictPlanCodes.length > 0 &&
+      strictPlanCodes.length < MIN_STRICT_ROADMAP_POOL);
+
+  const candidateSeedCodes = shouldSupplementWithFlexibleCandidates
+    ? unique([...primaryCandidateCodes, ...flexiblePlanCodes])
+    : primaryCandidateCodes;
+
+  const candidateCodes = candidateSeedCodes.filter(
     (courseCode) =>
       Boolean(courseCode) &&
       !passedCourses.has(courseCode) &&
@@ -293,6 +505,118 @@ export function buildPyReasonPayload({
       ...(definition.corequisites || []).flatMap((group) => group.courses),
     ])
   );
+
+  const reverseUnlockMap = new Map<string, string[]>();
+  for (const [courseCode, definition] of Object.entries(COURSE_DEPENDENCY_CATALOG)) {
+    const dependencyCourses = [
+      ...(definition.prerequisites || []).flatMap((group) => group.courses),
+      ...(definition.corequisites || []).flatMap((group) => group.courses),
+    ];
+
+    for (const dependencyCourse of dependencyCourses) {
+      const normalizedDependency = normalizeCourseCode(dependencyCourse);
+      const bucket = reverseUnlockMap.get(normalizedDependency) || [];
+      bucket.push(normalizeCourseCode(courseCode));
+      reverseUnlockMap.set(normalizedDependency, unique(bucket));
+    }
+  }
+
+  let structuredCandidatePool: CandidateCourse[] | null = null;
+  if (programRules) {
+    const progressSummary = evaluateDegreeProgress({
+      programRules,
+      academicCourses,
+    });
+    const candidatePools = buildProgramCandidatePools({
+      programRules,
+      academicCourses,
+      catalogCourses,
+    });
+    const incompleteRequirementIds = new Set(progressSummary.incompleteRequirementGroupIds);
+    const requirementTitleById = new Map(
+      progressSummary.requirementProgress.map((group) => [group.requirementGroupId, group.title])
+    );
+
+    const programRoadmap = programRules.roadmap || {};
+    const roadmapYears = Object.keys(programRoadmap);
+    const roadmapYearsByCourse = new Map<string, string[]>();
+    for (const year of roadmapYears) {
+      for (const courseCode of programRoadmap[year] || []) {
+        const normalizedCode = normalizeCourseCode(courseCode);
+        const bucket = roadmapYearsByCourse.get(normalizedCode) || [];
+        bucket.push(year);
+        roadmapYearsByCourse.set(normalizedCode, unique(bucket));
+      }
+    }
+
+    const activeProgramCandidates = candidatePools.allCandidates.filter((candidate) =>
+      candidate.requirementGroupIds.some((groupId) => incompleteRequirementIds.has(groupId))
+    );
+
+    structuredCandidatePool = activeProgramCandidates.map((candidate) => {
+      const courseCode = normalizeCourseCode(candidate.courseCode);
+      const dependencyDefinition = COURSE_DEPENDENCY_CATALOG[courseCode];
+      const prerequisiteGroups = dependencyDefinition?.prerequisites || [];
+      const corequisiteGroups = dependencyDefinition?.corequisites || [];
+      const minimumGrade = dependencyDefinition?.minimumGrade || programRules.gradePolicies.defaultMinimumGrade || "C-";
+
+      const prereqEval = evaluateRequirementGroups(
+        prerequisiteGroups,
+        passedCourses,
+        inProgressCourses,
+        minimumGrade
+      );
+      const coreqEval = evaluateRequirementGroups(corequisiteGroups, passedCourses, inProgressCourses);
+
+      const planYearsForCourse = roadmapYearsByCourse.get(courseCode) || [];
+      const remainingDegreeRequirementGroups = unique(
+        candidate.requirementGroupIds
+          .filter((groupId) => incompleteRequirementIds.has(groupId))
+          .map((groupId) => requirementTitleById.get(groupId) || groupId)
+      );
+      const neededRequirementGroups = remainingDegreeRequirementGroups;
+      const unlocksCourseCodes = (reverseUnlockMap.get(courseCode) || []).filter((unlockedCourse) =>
+        activeProgramCandidates.some((item) => normalizeCourseCode(item.courseCode) === unlockedCourse) ||
+        allKnownDependencyCourses.includes(unlockedCourse)
+      );
+      const bottleneck = unlocksCourseCodes.length >= 2;
+      const planYearIndexes = planYearsForCourse
+        .map((year) => YEAR_ORDER.indexOf(year))
+        .filter((index) => index >= 0);
+      const nearestPlanYearIndex =
+        planYearIndexes.length > 0 ? Math.min(...planYearIndexes) : Number.POSITIVE_INFINITY;
+      const yearPreference: CandidateCourse["yearPreference"] =
+        nearestPlanYearIndex === Number.POSITIVE_INFINITY
+          ? "unplanned"
+          : nearestPlanYearIndex < selectedYearIndex
+          ? "past"
+          : nearestPlanYearIndex === selectedYearIndex
+          ? "current"
+          : "future";
+
+      return {
+        courseCode,
+        title: candidate.title,
+        sourcePoolIds: candidate.sourcePoolIds,
+        requirementPriorityCategory: derivePriorityCategoryFromSourcePools(candidate.sourcePoolIds),
+        planYears: planYearsForCourse,
+        neededRequirementGroups,
+        remainingDegreeRequirementGroups,
+        yearPreference,
+        offeredThisTerm: candidate.offeredThisTerm,
+        availableSectionCount: candidate.availableSectionCount,
+        prerequisiteGroups,
+        corequisiteGroups,
+        missingPrereqs: prereqEval.missing,
+        missingCoreqs: coreqEval.missing,
+        allPrereqsSatisfied: prereqEval.allSatisfied,
+        allCoreqsSatisfied: coreqEval.allSatisfied,
+        unlocksCourseCodes,
+        unlockCount: unlocksCourseCodes.length,
+        bottleneck,
+      };
+    });
+  }
 
   const facts: PyReasonFactCollection = {
     passed: Array.from(passedCourses).map((course) => ({ student: studentId, course })),
@@ -313,22 +637,7 @@ export function buildPyReasonPayload({
     currentTerm: [term],
   };
 
-  const reverseUnlockMap = new Map<string, string[]>();
-  for (const [courseCode, definition] of Object.entries(COURSE_DEPENDENCY_CATALOG)) {
-    const dependencyCourses = [
-      ...(definition.prerequisites || []).flatMap((group) => group.courses),
-      ...(definition.corequisites || []).flatMap((group) => group.courses),
-    ];
-
-    for (const dependencyCourse of dependencyCourses) {
-      const normalizedDependency = normalizeCourseCode(dependencyCourse);
-      const bucket = reverseUnlockMap.get(normalizedDependency) || [];
-      bucket.push(normalizeCourseCode(courseCode));
-      reverseUnlockMap.set(normalizedDependency, unique(bucket));
-    }
-  }
-
-  const candidateCourses: CandidateCourse[] = candidateCodes.map((courseCode) => {
+  const candidateCourses: CandidateCourse[] = structuredCandidatePool || candidateCodes.map((courseCode) => {
     const dependencyDefinition = COURSE_DEPENDENCY_CATALOG[courseCode];
     const prerequisiteGroups = dependencyDefinition?.prerequisites || [];
     const corequisiteGroups = dependencyDefinition?.corequisites || [];
@@ -344,7 +653,10 @@ export function buildPyReasonPayload({
 
     const offeredSections = catalogIndex.get(courseCode) || [];
     const planYearsForCourse = planYearsByCourse.get(courseCode) || [];
-    const remainingDegreeRequirementGroups = deriveNeededRequirementGroups(courseCode, degreeRequirements);
+    const remainingDegreeRequirementGroups = unique([
+      ...deriveNeededRequirementGroups(courseCode, degreeRequirements),
+      ...deriveBucketFallbackGroups(courseCode, degreeRequirements, selectedMajor),
+    ]);
     const neededRequirementGroups =
       remainingDegreeRequirementGroups.length > 0
         ? remainingDegreeRequirementGroups
@@ -433,6 +745,11 @@ export function buildPyReasonPayload({
     return {
       courseCode,
       title,
+      sourcePoolIds: [],
+      requirementPriorityCategory: inferFallbackRequirementPriorityCategory(
+        courseCode,
+        remainingDegreeRequirementGroups
+      ),
       planYears: planYearsForCourse,
       neededRequirementGroups,
       remainingDegreeRequirementGroups,

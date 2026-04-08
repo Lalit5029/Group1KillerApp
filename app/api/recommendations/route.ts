@@ -4,7 +4,7 @@ import { getAuthorizedStudent, requireAdvisorSession } from "@/lib/server-auth";
 import { buildPyReasonPayload } from "@/lib/recommendation/build-pyreason-payload";
 import { runFallbackReasoner } from "@/lib/recommendation/fallback-reasoner";
 import { rankRecommendations } from "@/lib/recommendation/rank-recommendations";
-import { runPyReason } from "@/lib/recommendation/run-pyreason";
+import { loadComputerScienceProgramRules } from "@/lib/program-rules/load-program-rules";
 import type {
   CatalogSectionRecord,
   RecommendationApiResponse,
@@ -13,6 +13,8 @@ import type {
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
+
+const DEFAULT_CS_MAJOR_KEY = "Computer Science, BS";
 
 export async function POST(request: Request) {
   try {
@@ -41,13 +43,18 @@ export async function POST(request: Request) {
       }),
     ]);
 
+    const resolvedMajor = selectedMajor || student.major || "";
+    const programRules =
+      resolvedMajor === DEFAULT_CS_MAJOR_KEY ? loadComputerScienceProgramRules() : null;
+
     const payload = buildPyReasonPayload({
       studentId: student.id,
       studentName: student.name,
-      selectedMajor: selectedMajor || student.major || "",
+      selectedMajor: resolvedMajor,
       selectedYear: selectedYear || student.academicYear || "",
       term,
       requirementsForMajor,
+      programRules,
       academicCourses,
       degreeRequirements: degreeRequirements.map((block) => ({
         title: block.title,
@@ -59,33 +66,8 @@ export async function POST(request: Request) {
       catalogCourses,
     });
 
-    let engine: "pyreason" | "fallback" = "pyreason";
-    let inferredResults;
-
-    try {
-      const pyreasonResponse = await runPyReason(payload);
-      const hasAnySignal = pyreasonResponse.results.some((result) =>
-        Object.values(result.flags).some(Boolean)
-      );
-
-      // Some local PyReason builds successfully execute but do not emit any
-      // inferred labels because of version-specific rule/trace behavior. In
-      // that case, fall back to the deterministic mirror instead of returning
-      // misleading empty inferences to the ranking layer.
-      if (!hasAnySignal && payload.candidateCourses.length > 0) {
-        console.warn(
-          "PyReason returned no inferred labels. Raw trace:\n",
-          JSON.stringify(pyreasonResponse.rawTrace, null, 2)
-        );
-        throw new Error("PyReason returned no inferred labels");
-      }
-
-      inferredResults = pyreasonResponse.results;
-    } catch (error) {
-      console.warn("PyReason unavailable, falling back to deterministic reasoner:", error);
-      engine = "fallback";
-      inferredResults = runFallbackReasoner(payload);
-    }
+    const engine: "fallback" = "fallback";
+    const inferredResults = runFallbackReasoner(payload);
 
     const ranked = rankRecommendations(payload.candidateCourses, inferredResults);
 

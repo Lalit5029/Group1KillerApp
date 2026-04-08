@@ -26,11 +26,20 @@ import { Button } from "@/components/ui/button"
 import { useToast } from "@/components/ui/use-toast"
 import { Label } from "@/components/ui/label"
 import { Badge } from "@/components/ui/badge"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog"
 import { evaluateCsGraduationReadiness } from "@/lib/graduation-readiness"
 import { GraduationPathTimeline } from "@/components/graduation-path-timeline"
 import { CLASS_YEARS, normalizeAcademicYearLabel, type ClassYear } from "@/lib/class-year"
 import { usePresentationPrivacy } from "@/components/presentation-privacy-provider"
 import { ScheduleAssistantChat } from "@/components/schedule-assistant-chat"
+import type { RankedRecommendation } from "@/lib/recommendation/types"
 
 interface RequirementGroup {
   name: string;
@@ -80,6 +89,21 @@ const DEFAULT_CS_MAJOR_KEY = "Computer Science, BS"
 
 function plannerYearStorageKey(studentId: string) {
   return `planner:selectedYear:${studentId}`
+}
+
+function recommendationSourcePoolLabel(poolId: string) {
+  switch (poolId) {
+    case "required_courses":
+      return "Required courses"
+    case "upper_division_cs":
+      return "Upper-division CS"
+    case "ssh_distribution":
+      return "SSH distribution"
+    case "free_electives":
+      return "Free electives"
+    default:
+      return poolId.replace(/_/g, " ")
+  }
 }
 
 interface CourseSchedulerProps {
@@ -144,6 +168,10 @@ export default function CourseScheduler({
   const [courseData, setCourseData] = useState<CourseData[]>([])
   const [calendarCourses, setCalendarCourses] = useState<SelectedCourse[]>([])
   const [academicCourses, setAcademicCourses] = useState<CourseData[]>([])
+  const [latestRecommendations, setLatestRecommendations] = useState<RankedRecommendation[]>([])
+  const [latestBlockedRecommendations, setLatestBlockedRecommendations] = useState<RankedRecommendation[]>([])
+  const [isRecommendationPreviewOpen, setIsRecommendationPreviewOpen] = useState(false)
+  const [pendingRecommendationWorkload, setPendingRecommendationWorkload] = useState<WorkloadLevel | null>(null)
   const [degreeCourses, setDegreeCourses] = useState<BlockData[]>([])
   const [blocks, setBlocks] = useState<BlockData[]>([])
   const [error, setError] = useState<string | null>(null)
@@ -162,6 +190,87 @@ export default function CourseScheduler({
   } | null>(null)
   const advisorAlerts = useMemo(() => evaluateCsGraduationReadiness(academicCourses), [academicCourses])
   const { sanitizeAdvisorAlert, formatGrade, hideSensitiveAcademic } = usePresentationPrivacy()
+
+  const renderRecommendationCard = useCallback(
+    (course: RankedRecommendation, tone: "recommended" | "blocked" = "recommended") => {
+      const toneClasses =
+        tone === "blocked"
+          ? "rounded-md border border-amber-200 bg-amber-50 p-3"
+          : "rounded-md border p-3"
+
+      return (
+        <div key={course.courseCode} className={toneClasses}>
+          <div className="flex items-start justify-between gap-3">
+            <div className="space-y-1">
+              <div className="flex flex-wrap items-center gap-2">
+                <p className="font-medium">{course.courseCode}</p>
+                {course.explanation.requirementCategoryLabel && (
+                  <Badge variant="secondary">{course.explanation.requirementCategoryLabel}</Badge>
+                )}
+                {course.offeredThisTerm ? (
+                  <Badge variant="outline">Offered now</Badge>
+                ) : (
+                  <Badge variant="outline">Not offered now</Badge>
+                )}
+              </div>
+              <p className="text-sm text-muted-foreground">{course.title}</p>
+            </div>
+            <div className="flex shrink-0 items-center gap-2">
+              <Badge variant="outline">Score {course.priorityScore}</Badge>
+              {tone === "blocked" && <Badge variant="outline">Blocked</Badge>}
+            </div>
+          </div>
+
+          <div className="mt-3 space-y-3 text-sm">
+            {course.explanation.servesRequirementGroups.length > 0 && (
+              <div>
+                <p className="font-medium">Serves requirement groups</p>
+                <p className="text-muted-foreground">
+                  {course.explanation.servesRequirementGroups.join(", ")}
+                </p>
+              </div>
+            )}
+
+            {course.explanation.sourcePoolIds.length > 0 && (
+              <div>
+                <p className="font-medium">Candidate pool</p>
+                <div className="mt-1 flex flex-wrap gap-2">
+                  {course.explanation.sourcePoolIds.map((poolId) => (
+                    <Badge key={`${course.courseCode}-${poolId}`} variant="outline">
+                      {recommendationSourcePoolLabel(poolId)}
+                    </Badge>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {course.explanation.rankingHighlights.length > 0 && (
+              <div>
+                <p className="font-medium">Why it ranked here</p>
+                <ul className="mt-1 list-disc space-y-1 pl-5 text-muted-foreground">
+                  {course.explanation.rankingHighlights.map((reason) => (
+                    <li key={`${course.courseCode}-${reason}`}>{reason}</li>
+                  ))}
+                </ul>
+              </div>
+            )}
+
+            {course.explanation.blockingFactors.length > 0 && (
+              <div>
+                <p className="font-medium">Why it is blocked</p>
+                <ul className="mt-1 list-disc space-y-1 pl-5 text-muted-foreground">
+                  {course.explanation.blockingFactors.map((reason) => (
+                    <li key={`${course.courseCode}-${reason}`}>{reason}</li>
+                  ))}
+                </ul>
+              </div>
+            )}
+          </div>
+        </div>
+      )
+    },
+    []
+  )
 
   const withStudentId = (path: string) => {
     const separator = path.includes("?") ? "&" : "?"
@@ -368,8 +477,7 @@ export default function CourseScheduler({
   const estimateCourseCredits = (courseCode: string, section?: Course) =>
     estimateSectionCredits(courseCode, section)
 
-  // Generate best schedule based on major, year, and selected workload.
-  const generateBestSchedule = (workload: WorkloadLevel) => {
+  const buildScheduleFromCourseCodes = (courseCodes: string[], workload: WorkloadLevel) => {
     if (!selectedMajor || !selectedYear || Object.keys(requirements).length === 0) {
       showNotification("Please confirm selection or wait for data to load.", "error");
       return;
@@ -389,22 +497,12 @@ export default function CourseScheduler({
     // Reset current schedule
     setSelectedCourses([]);
 
-    // Get suggested courses for the selected major and year
-    const majorRequirements = requirements[selectedMajor];
-    if (!majorRequirements) {
-      showNotification(`No requirements found for major: ${selectedMajor}`, "error");
-      console.error("Could not find requirements for major:", selectedMajor);
+    if (!Array.isArray(courseCodes) || courseCodes.length === 0) {
+      showNotification("No recommended courses were available for scheduling.", "warning");
       return;
     }
 
-    const yearRequirements = majorRequirements[selectedYear];
-    if (!yearRequirements || !Array.isArray(yearRequirements) || yearRequirements.length === 0) {
-      showNotification(`No suggested courses listed for ${selectedMajor} - ${selectedYear}.`, "warning");
-      console.error("Year requirements missing or empty for:", selectedMajor, selectedYear);
-      return;
-    }
-
-    console.log("Required courses for", selectedMajor, selectedYear, ":", yearRequirements);
+    console.log("Recommended courses for", selectedMajor, selectedYear, ":", courseCodes);
 
     // Print first few courses for debugging
     console.log("Sample available courses:");
@@ -420,12 +518,12 @@ export default function CourseScheduler({
     const targetCredits = WORKLOAD_TARGETS[workload];
 
     // Loop through each course code
-    for (let i = 0; i < yearRequirements.length; i++) {
+    for (let i = 0; i < courseCodes.length; i++) {
       if (totalScheduledCredits >= targetCredits) {
         break;
       }
 
-      const code = yearRequirements[i];
+      const code = courseCodes[i];
       if (!code) continue;
 
       // Handle both formats - with or without spaces
@@ -566,6 +664,108 @@ export default function CourseScheduler({
       showNotification("No courses could be added to your schedule.", "error");
     }
   };
+
+  // Suggested courses depend on imported academic history. PyReason reasons
+  // over completed/in-progress classes plus saved degree requirements and then
+  // hands the ordered results to the existing schedule builder above.
+  const applyRecommendedCoursesToSchedule = () => {
+    if (!pendingRecommendationWorkload || latestRecommendations.length === 0) {
+      setIsRecommendationPreviewOpen(false)
+      return
+    }
+
+    buildScheduleFromCourseCodes(
+      latestRecommendations.map((course) => course.courseCode),
+      pendingRecommendationWorkload
+    )
+    setIsRecommendationPreviewOpen(false)
+    setPendingRecommendationWorkload(null)
+  }
+
+  const generateBestSchedule = async (workload: WorkloadLevel) => {
+    if (!selectedMajor || !selectedYear || Object.keys(requirements).length === 0) {
+      showNotification("Please confirm selection or wait for data to load.", "error")
+      return
+    }
+
+    if (academicCourses.length === 0) {
+      setActiveTab("academic")
+      showNotification(
+        "Import this student's classes from MySlice before generating suggested courses.",
+        "warning"
+      )
+      return
+    }
+
+    if (courses.length === 0) {
+      showNotification("No courses available. Please try refreshing the page.", "error")
+      return
+    }
+
+    const majorRequirements = requirements[selectedMajor]
+    if (!majorRequirements) {
+      showNotification(`No requirements found for major: ${selectedMajor}`, "error")
+      return
+    }
+
+    setIsLoading(true)
+
+    try {
+      const response = await fetch("/api/recommendations", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          studentId: selectedStudentId,
+          selectedMajor,
+          selectedYear,
+          term: "Current Catalog",
+          requirementsForMajor: majorRequirements,
+          catalogCourses: courses,
+        }),
+      })
+
+      const data = await response.json()
+      if (!response.ok) {
+        throw new Error(data.message || "Failed to generate recommendations")
+      }
+
+      const recommendedCourses = Array.isArray(data.recommendedCourses)
+        ? (data.recommendedCourses as RankedRecommendation[])
+        : []
+      const blockedCourses = Array.isArray(data.blockedCourses)
+        ? (data.blockedCourses as RankedRecommendation[])
+        : []
+
+      setLatestRecommendations(recommendedCourses)
+      setLatestBlockedRecommendations(blockedCourses)
+      setPendingRecommendationWorkload(workload)
+
+      if (recommendedCourses.length === 0 && blockedCourses.length === 0) {
+        showNotification(
+          "No course suggestions were generated. This student may be near completion or missing codified remaining requirements.",
+          "warning"
+        )
+        return
+      }
+
+      if (recommendedCourses.length === 0) {
+        showNotification(
+          "No eligible suggested courses were found. Review blocked courses and degree requirements.",
+          "warning"
+        )
+        return
+      }
+
+      setIsRecommendationPreviewOpen(true)
+    } catch (error) {
+      console.error("Failed to generate recommendations:", error)
+      showNotification((error as Error).message || "Failed to generate recommendations", "error")
+    } finally {
+      setIsLoading(false)
+    }
+  }
 
   // Handle courses imported from image
   const handleImportFromImage = (importedCourses: SelectedCourse[]) => {
@@ -1112,6 +1312,8 @@ export default function CourseScheduler({
       const errorData = await response.json().catch(() => ({}))
       throw new Error(errorData.message || 'Failed to save imported academic courses')
     }
+
+    return response.json().catch(() => null)
   }
 
   const persistImportedDegreeRequirements = async (blocksToPersist: BlockData[]) => {
@@ -1127,6 +1329,8 @@ export default function CourseScheduler({
       const errorData = await response.json().catch(() => ({}))
       throw new Error(errorData.message || 'Failed to save imported degree requirements')
     }
+
+    return response.json().catch(() => null)
   }
 
   const handleImport = async () => {
@@ -1200,48 +1404,60 @@ export default function CourseScheduler({
       
       // Poll for job status
       const checkStatus = async () => {
-        const statusResponse = await fetch(`${statusBaseUrl}/api/scrape-status/${jobId}`)
-        const statusData = await statusResponse.json()
+        try {
+          const statusResponse = await fetch(`${statusBaseUrl}/api/scrape-status/${jobId}`)
+          const statusData = await statusResponse.json()
 
-        // Update logs with the detailed log message from the backend
-        if (statusData.log) {
-          const logLines = statusData.log.split('\n').filter((line: string) => line.trim())
-          setImportLogs(logLines)
-        }
-
-        if (statusData.status === "completed") {
-          const importedCourses = dedupeAcademicCourseRows(
-            Array.isArray(statusData.result?.courses) ? statusData.result.courses : []
-          )
-          const importedBlocks = Array.isArray(statusData.result?.blocks) ? statusData.result.blocks : []
-
-          if (importedCourses.length === 0) {
-            throw new Error("Import completed, but MySlice returned no courses. Your previously saved student data was left unchanged.")
+          // Update logs with the detailed log message from the backend
+          if (statusData.log) {
+            const logLines = statusData.log.split('\n').filter((line: string) => line.trim())
+            setImportLogs(logLines)
           }
 
-          await persistImportedAcademicCourses(importedCourses)
-          setAcademicCourses(importedCourses)
+          if (statusData.status === "completed") {
+            const importedCourses = dedupeAcademicCourseRows(
+              Array.isArray(statusData.result?.courses) ? statusData.result.courses : []
+            )
+            const importedBlocks = Array.isArray(statusData.result?.blocks) ? statusData.result.blocks : []
 
-          if (importedBlocks.length > 0) {
-            await persistImportedDegreeRequirements(importedBlocks)
-            setDegreeCourses(importedBlocks)
+            if (importedCourses.length === 0) {
+              throw new Error("Import completed, but MySlice returned no courses. Your previously saved student data was left unchanged.")
+            }
+
+            setImportStatus("running")
+            setImportStatusMessage("MySlice import completed. Saving imported courses to this student's record...")
+
+            await persistImportedAcademicCourses(importedCourses)
+            setAcademicCourses(importedCourses)
+
+            if (importedBlocks.length > 0) {
+              await persistImportedDegreeRequirements(importedBlocks)
+              setDegreeCourses(importedBlocks)
+            }
+
+            const importedCourseCount = importedCourses.length
+            setImportStatus("success")
+            setImportStatusMessage(`Import successful. ${importedCourseCount} course(s) were imported from MySlice.`)
+            showNotification("Successfully imported courses from MySlice", "success")
+            setIsLoading(false)
+          } else if (statusData.status === "failed") {
+            setIsLoading(false)
+            setImportStatus("error")
+            setImportStatusMessage(statusData.message || "Import failed. Review the log below for details.")
+            throw new Error(statusData.message || "Import failed")
+          } else {
+            // Job is still running, check again in 2 seconds
+            setImportStatus("running")
+            setImportStatusMessage("Import in progress. Waiting for MySlice to finish responding.")
+            setTimeout(checkStatus, 2000)
           }
-
-          const importedCourseCount = importedCourses.length
-          setImportStatus("success")
-          setImportStatusMessage(`Import successful. ${importedCourseCount} course(s) were imported from MySlice.`)
-          showNotification("Successfully imported courses from MySlice", "success")
-          setIsLoading(false)
-        } else if (statusData.status === "failed") {
-          setIsLoading(false)
+        } catch (statusError) {
+          console.error("Import status/save failed:", statusError)
+          const friendly = getFriendlyImportError((statusError as Error).message || "")
           setImportStatus("error")
-          setImportStatusMessage(statusData.message || "Import failed. Review the log below for details.")
-          throw new Error(statusData.message || "Import failed")
-        } else {
-          // Job is still running, check again in 2 seconds
-          setImportStatus("running")
-          setImportStatusMessage("Import in progress. Waiting for MySlice to finish responding.")
-          setTimeout(checkStatus, 2000)
+          setImportStatusMessage(friendly)
+          showNotification(friendly || "Failed to import courses", "error")
+          setIsLoading(false)
         }
       }
 
@@ -1558,6 +1774,58 @@ export default function CourseScheduler({
 
   return (
     <div className="app-container mx-auto max-w-7xl px-0 py-2 md:py-4">
+      <Dialog open={isRecommendationPreviewOpen} onOpenChange={setIsRecommendationPreviewOpen}>
+        <DialogContent className="max-w-3xl">
+          <DialogHeader>
+            <DialogTitle>Review Suggested Courses</DialogTitle>
+            <DialogDescription>
+              PyReason built these candidates from the student's completed courses, in-progress courses,
+              remaining requirements, and current catalog offerings. Choose whether to add the recommended
+              courses to the schedule.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4 max-h-[60vh] overflow-y-auto">
+            <div>
+              <h3 className="text-sm font-semibold mb-2">
+                Recommended Courses ({latestRecommendations.length})
+              </h3>
+              <div className="space-y-2">
+                {latestRecommendations.map((course) => renderRecommendationCard(course))}
+              </div>
+            </div>
+
+            {latestBlockedRecommendations.length > 0 && (
+              <div>
+                <h3 className="text-sm font-semibold mb-2">
+                  Blocked Candidates ({latestBlockedRecommendations.length})
+                </h3>
+                <div className="space-y-2">
+                  {latestBlockedRecommendations.map((course) =>
+                    renderRecommendationCard(course, "blocked")
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
+
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => {
+                setIsRecommendationPreviewOpen(false)
+                setPendingRecommendationWorkload(null)
+              }}
+            >
+              Not Now
+            </Button>
+            <Button onClick={applyRecommendedCoursesToSchedule}>
+              Add Recommended Courses
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
       <AppHeader
         selectedMajor={selectedMajor}
         selectedYear={selectedYear}
@@ -1594,6 +1862,24 @@ export default function CourseScheduler({
 
           <div className="p-6">
             <TabsContent value="schedule" className="space-y-6 mt-0">
+              {academicCourses.length === 0 && (
+                <Card className="border-amber-200 bg-amber-50">
+                  <CardHeader>
+                    <CardTitle className="text-amber-900">Import Academic Records First</CardTitle>
+                    <CardDescription className="text-amber-800">
+                      Suggested courses use PyReason to reason over the student's completed and in-progress classes.
+                      Import this student's MySlice record first so recommendations are based on real progress instead
+                      of class year alone.
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <Button variant="outline" onClick={() => setActiveTab("academic")}>
+                      Go To Academic Import
+                    </Button>
+                  </CardContent>
+                </Card>
+              )}
+
               <MainControls
                 onGenerateSchedule={generateBestSchedule}
                 onToggleSearch={toggleSearchPopup}
@@ -1639,6 +1925,7 @@ export default function CourseScheduler({
                 onRemoveCourse={removeCourse}
                 courseNotes={courseNotes}
                 onSwapCourse={swapCourse}
+                scheduledRecommendations={latestRecommendations}
               />
             </TabsContent>
 
@@ -1656,7 +1943,12 @@ export default function CourseScheduler({
                       <div className="rounded-md border border-blue-200 bg-blue-50 p-4 text-sm text-blue-900 space-y-2">
                         <p className="font-medium">Manual MySlice sign-in</p>
                         <p>When you start import, the scraper will open its own Chrome window.</p>
-                        <p>Sign in to MySlice in that opened window, including 2FA, and leave it open while the scraper continues.</p>
+                        <p>Sign in to MySlice in that opened window, including 2FA.</p>
+                        <p>After login, MySlice may stay on its home page. That is expected.</p>
+                        <p>
+                          In that same window, manually open <span className="font-medium">Academics -&gt; Course History</span> or{" "}
+                          <span className="font-medium">Student Records -&gt; Course History</span>, then leave that page open while import continues.
+                        </p>
                       </div>
                       <p className="text-sm text-muted-foreground">
                         Your MySlice credentials stay in the browser sign-in flow and are not entered into this app.
@@ -1686,6 +1978,12 @@ export default function CourseScheduler({
                               : "Import In Progress"}
                           </p>
                           <p className="mt-1">{importStatusMessage}</p>
+                          {importStatus === "running" && (
+                            <p className="mt-2 text-xs">
+                              If the Chrome window is sitting on the MySlice landing page, manually open{" "}
+                              <span className="font-medium">Academics -&gt; Course History</span> in that same window. The scraper resumes after the course table appears.
+                            </p>
+                          )}
                         </div>
                       )}
                       {importLogs.length > 0 && (

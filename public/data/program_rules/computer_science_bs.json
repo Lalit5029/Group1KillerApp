@@ -1,0 +1,147 @@
+{
+  "programId": "computer_science_bs",
+  "programName": "Computer Science, BS",
+  "majorKey": "Computer Science, BS",
+  "minimumCredits": 120,
+  "gradePolicies": {
+    "defaultMinimumGrade": "C-",
+    "coreGpaMinimum": 2.667,
+    "ecsMathScienceGpaMinimum": 2.0
+  },
+  "candidatePools": {
+    "upper_division_cs": {
+      "description": "Undergraduate-oriented CIS and CSE courses in the 400-699 range.",
+      "subjects": ["CIS", "CSE"],
+      "minCourseNumber": 400,
+      "maxCourseNumber": 699
+    },
+    "ssh_distribution": {
+      "description": "Known SSH / humanities-social-science options from the CS reference.",
+      "allowedCourses": ["ECS 392", "PHI 251", "HST 122", "PSY 205", "SOC 281", "ANT 357", "ANT 121"]
+    },
+    "free_electives": {
+      "description": "Known free elective examples from the CS reference.",
+      "allowedCourses": ["IST 323", "IST 343", "IST 359"]
+    },
+    "natural_science": {
+      "description": "Natural science requirements tracked explicitly in the shared CS reference.",
+      "allowedCourses": ["PHY 211", "CHE 106"]
+    }
+  },
+  "requirementGroups": [
+    {
+      "id": "intro_computing",
+      "title": "Engineering / Intro Computing",
+      "kind": "all_of",
+      "minimumGrade": "C-",
+      "courses": ["ECS 101", "CIS 151"]
+    },
+    {
+      "id": "writing",
+      "title": "Writing",
+      "kind": "all_of",
+      "minimumGrade": "C-",
+      "courses": ["WRT 105", "WRT 205"]
+    },
+    {
+      "id": "first_year_seminar",
+      "title": "First Year Seminar",
+      "kind": "all_of",
+      "courses": ["FYS 101"]
+    },
+    {
+      "id": "idea_requirement",
+      "title": "IDEA Requirement",
+      "kind": "all_of",
+      "courses": ["SOC 281"]
+    },
+    {
+      "id": "presentation_skills",
+      "title": "Presentation Skills",
+      "kind": "all_of",
+      "minimumGrade": "C-",
+      "courses": ["IST 344"]
+    },
+    {
+      "id": "math_calculus",
+      "title": "Calculus Sequence",
+      "kind": "all_of",
+      "minimumGrade": "C-",
+      "courses": ["MAT 295", "MAT 296"]
+    },
+    {
+      "id": "math_advanced_choice",
+      "title": "Advanced Mathematics Choice",
+      "kind": "choose_n",
+      "count": 1,
+      "minimumGrade": "C-",
+      "options": ["MAT 397", "MAT 331"]
+    },
+    {
+      "id": "math_statistics",
+      "title": "Probability and Statistics",
+      "kind": "all_of",
+      "minimumGrade": "C-",
+      "courses": ["CIS 321"]
+    },
+    {
+      "id": "natural_science",
+      "title": "Natural Science Requirement",
+      "kind": "all_of",
+      "minimumGrade": "C-",
+      "courses": ["PHY 211", "CHE 106"]
+    },
+    {
+      "id": "cs_core",
+      "title": "Computer Science Core",
+      "kind": "all_of",
+      "minimumGrade": "C-",
+      "courses": [
+        "CIS 252",
+        "CIS 375",
+        "CIS 341",
+        "CSE 384",
+        "CIS 351",
+        "CIS 352",
+        "CIS 453",
+        "CIS 454",
+        "CIS 473",
+        "CIS 477",
+        "CSE 486"
+      ]
+    },
+    {
+      "id": "upper_division_cs_electives",
+      "title": "Upper Division CS Electives",
+      "kind": "credit_bucket",
+      "minimumGrade": "C-",
+      "minimumCredits": 18,
+      "candidatePoolId": "upper_division_cs"
+    },
+    {
+      "id": "ssh_distribution",
+      "title": "SSH Distribution",
+      "kind": "credit_bucket",
+      "minimumCredits": 21,
+      "candidatePoolId": "ssh_distribution"
+    },
+    {
+      "id": "free_electives",
+      "title": "Free Electives",
+      "kind": "credit_bucket",
+      "minimumCredits": 8,
+      "candidatePoolId": "free_electives"
+    }
+  ],
+  "roadmap": {
+    "Freshman": ["ECS 101", "CIS 151", "MAT 295", "WRT 105", "FYS 101", "CIS 252", "MAT 296", "PHY 211", "PHI 251"],
+    "Sophomore": ["CIS 375", "CIS 351", "MAT 397", "MAT 331", "CHE 106", "IST 344", "CIS 321", "CIS 341", "CIS 352", "CSE 384", "WRT 205", "SOC 281"],
+    "Junior": ["CIS 453", "CIS 477", "CSE 486", "CIS 473", "CIS 454", "HST 122", "PSY 205", "ANT 357", "ANT 121"],
+    "Senior": ["ECS 392", "CIS 400", "CIS 442", "IST 323", "IST 343", "IST 359"]
+  },
+  "notes": [
+    "This file is the structured source of truth for the CS program rules used by recommendation and degree-progress logic.",
+    "Upper division electives are intentionally modeled as a bucket rather than a fixed list because CIS 400 topics vary by term.",
+    "SSH and free-elective pools are intentionally explicit so roadmap prose does not need to be parsed as the primary source of truth."
+  ]
+}

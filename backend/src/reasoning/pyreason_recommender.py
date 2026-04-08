@@ -139,7 +139,36 @@ def configure_pyreason(pr, graph) -> None:
     return rules
 
 
-def dataframe_to_pairs(frame) -> List[Tuple[str, str]]:
+def label_is_active(value) -> bool:
+    """
+    Interpret a PyReason label cell.
+
+    The installed PyReason build returns intervals such as:
+    - [1, 1] meaning definitely true
+    - [0, 1] meaning unknown / not proven true
+    We only want rows whose lower bound is truthy.
+    """
+    if value is None:
+        return False
+
+    if isinstance(value, (list, tuple)):
+        if len(value) == 0:
+            return False
+        try:
+            return float(value[0]) > 0
+        except Exception:
+            return False
+
+    if isinstance(value, bool):
+        return value
+
+    try:
+        return float(value) > 0
+    except Exception:
+        return False
+
+
+def dataframe_to_pairs(frame, label_name: str) -> List[Tuple[str, str]]:
     """
     Convert a PyReason edge dataframe into (source, target) pairs.
 
@@ -150,6 +179,7 @@ def dataframe_to_pairs(frame) -> List[Tuple[str, str]]:
         return []
 
     columns = {str(column).lower(): column for column in frame.columns}
+    label_column = columns.get(str(label_name).lower())
 
     component_column = next(
         (
@@ -163,6 +193,8 @@ def dataframe_to_pairs(frame) -> List[Tuple[str, str]]:
     if component_column is not None:
         pairs: List[Tuple[str, str]] = []
         for _, row in frame.iterrows():
+            if label_column is not None and not label_is_active(row[label_column]):
+                continue
             component = row[component_column]
             if isinstance(component, (list, tuple)) and len(component) >= 2:
                 pairs.append((str(component[0]), str(component[1])))
@@ -190,6 +222,8 @@ def dataframe_to_pairs(frame) -> List[Tuple[str, str]]:
 
     pairs: List[Tuple[str, str]] = []
     for _, row in frame.iterrows():
+        if label_column is not None and not label_is_active(row[label_column]):
+            continue
         pairs.append((str(row[source_column]), str(row[target_column])))
 
     return pairs
@@ -202,7 +236,7 @@ def extract_edge_labels(pr, interpretation, labels: Iterable[str]) -> Dict[str, 
     label_map: Dict[str, List[Tuple[str, str]]] = {}
 
     for label, frame in zip(labels, dataframes):
-        label_map[label] = dataframe_to_pairs(frame)
+        label_map[label] = dataframe_to_pairs(frame, label)
 
     return label_map
 

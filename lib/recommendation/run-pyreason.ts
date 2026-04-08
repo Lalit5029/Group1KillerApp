@@ -19,9 +19,15 @@ export async function runPyReason(payload: PyReasonPayload): Promise<PyReasonRun
   const scriptPath = path.join(process.cwd(), "backend", "src", "reasoning", "pyreason_recommender.py");
   const venvPython = path.join(process.cwd(), "backend", ".venv", "bin", "python");
   const pythonExecutable = fs.existsSync(venvPython) ? venvPython : "python3";
-  const timeoutMs = 15000;
+  const configuredTimeout = Number(process.env.PYREASON_TIMEOUT_MS);
+  const timeoutMs =
+    Number.isFinite(configuredTimeout) && configuredTimeout > 0
+      ? configuredTimeout
+      : 45000;
 
   return new Promise((resolve, reject) => {
+    let settled = false;
+
     const child = spawn(pythonExecutable, [scriptPath], {
       cwd: process.cwd(),
       stdio: ["pipe", "pipe", "pipe"],
@@ -30,6 +36,7 @@ export async function runPyReason(payload: PyReasonPayload): Promise<PyReasonRun
     let stdout = "";
     let stderr = "";
     const timeoutHandle = setTimeout(() => {
+      settled = true;
       child.kill("SIGKILL");
       reject(new Error(`PyReason timed out after ${timeoutMs}ms`));
     }, timeoutMs);
@@ -43,10 +50,19 @@ export async function runPyReason(payload: PyReasonPayload): Promise<PyReasonRun
     });
 
     child.on("error", (error) => {
+      if (settled) {
+        return;
+      }
+      settled = true;
+      clearTimeout(timeoutHandle);
       reject(error);
     });
 
     child.on("close", (code) => {
+      if (settled) {
+        return;
+      }
+      settled = true;
       clearTimeout(timeoutHandle);
       if (code !== 0) {
         reject(
