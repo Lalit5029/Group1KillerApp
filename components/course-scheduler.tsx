@@ -106,6 +106,13 @@ function recommendationSourcePoolLabel(poolId: string) {
   }
 }
 
+function normalizeRecommendationCourseCode(value: string | null | undefined) {
+  return String(value || "")
+    .trim()
+    .replace(/\s+/g, " ")
+    .toUpperCase()
+}
+
 interface CourseSchedulerProps {
   selectedStudentId: string
   selectedStudentName?: string
@@ -140,6 +147,22 @@ export default function CourseScheduler({
       return true
     })
   }
+
+  const dedupeRecommendedCourses = useCallback((rows: RankedRecommendation[]) => {
+    const byCourseCode = new Map<string, RankedRecommendation>()
+
+    for (const row of rows) {
+      const normalizedCode = normalizeRecommendationCourseCode(row.courseCode)
+      if (!normalizedCode) continue
+
+      const existing = byCourseCode.get(normalizedCode)
+      if (!existing || row.priorityScore > existing.priorityScore) {
+        byCourseCode.set(normalizedCode, row)
+      }
+    }
+
+    return Array.from(byCourseCode.values())
+  }, [])
 
   // State
   const [courses, setCourses] = useState<Course[]>([])
@@ -502,7 +525,11 @@ export default function CourseScheduler({
       return;
     }
 
-    console.log("Recommended courses for", selectedMajor, selectedYear, ":", courseCodes);
+    const uniqueCourseCodes = Array.from(
+      new Set(courseCodes.map((code) => normalizeRecommendationCourseCode(code)).filter(Boolean))
+    )
+
+    console.log("Recommended courses for", selectedMajor, selectedYear, ":", uniqueCourseCodes);
 
     // Print first few courses for debugging
     console.log("Sample available courses:");
@@ -518,12 +545,12 @@ export default function CourseScheduler({
     const targetCredits = WORKLOAD_TARGETS[workload];
 
     // Loop through each course code
-    for (let i = 0; i < courseCodes.length; i++) {
+    for (let i = 0; i < uniqueCourseCodes.length; i++) {
       if (totalScheduledCredits >= targetCredits) {
         break;
       }
 
-      const code = courseCodes[i];
+      const code = uniqueCourseCodes[i];
       if (!code) continue;
 
       // Handle both formats - with or without spaces
@@ -558,6 +585,16 @@ export default function CourseScheduler({
           
           let added = false;
           for (const section of lenientSections) {
+            const sectionClass = normalizeRecommendationCourseCode(section.Class);
+            if (
+              newSelectedCourses.some(
+                (scheduledCourse) =>
+                  normalizeRecommendationCourseCode(scheduledCourse.Class) === sectionClass
+              )
+            ) {
+              continue;
+            }
+
             const estimatedCredits = estimateCourseCredits(normalizedCode, section);
             if (totalScheduledCredits + estimatedCredits > MAX_SEMESTER_CREDITS) {
               continue;
@@ -594,6 +631,16 @@ export default function CourseScheduler({
 
       let added = false;
       for (const section of possibleSections) {
+        const sectionClass = normalizeRecommendationCourseCode(section.Class);
+        if (
+          newSelectedCourses.some(
+            (scheduledCourse) =>
+              normalizeRecommendationCourseCode(scheduledCourse.Class) === sectionClass
+          )
+        ) {
+          continue;
+        }
+
         const estimatedCredits = estimateCourseCredits(normalizedCode, section);
         if (totalScheduledCredits + estimatedCredits > MAX_SEMESTER_CREDITS) {
           continue;
@@ -732,10 +779,10 @@ export default function CourseScheduler({
       }
 
       const recommendedCourses = Array.isArray(data.recommendedCourses)
-        ? (data.recommendedCourses as RankedRecommendation[])
+        ? dedupeRecommendedCourses(data.recommendedCourses as RankedRecommendation[])
         : []
       const blockedCourses = Array.isArray(data.blockedCourses)
-        ? (data.blockedCourses as RankedRecommendation[])
+        ? dedupeRecommendedCourses(data.blockedCourses as RankedRecommendation[])
         : []
 
       setLatestRecommendations(recommendedCourses)
