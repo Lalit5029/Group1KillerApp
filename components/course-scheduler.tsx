@@ -12,7 +12,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Calendar, GraduationCap, BookOpen, Download, Upload } from "lucide-react"
 import type { Course, SelectedCourse, Notification, Major, Requirements, CourseData, CourseSearchCriteria } from "@/lib/types"
 import { fetchCourses, fetchRequirements } from "@/lib/data-utils"
-import { findFirstBlockingCourse, findScheduleConflicts, hasConflict } from "@/lib/schedule-utils"
+import { findFirstBlockingCourse, findScheduleConflicts, hasConflict, parseDaysTimes } from "@/lib/schedule-utils"
 import {
   buildSearchQueryFromCriteria,
   filterCoursesByCriteria,
@@ -588,6 +588,7 @@ export default function CourseScheduler({
     const newSelectedCourses: SelectedCourse[] = [];
     const notFoundCourses: string[] = [];
     const skippedForCreditLimit: string[] = [];
+    const skippedForSingleDayLecture: string[] = [];
     const collisionNotes: string[] = [];
 
     const normClass = (c?: string) =>
@@ -595,6 +596,15 @@ export default function CourseScheduler({
         .trim()
         .toUpperCase()
         .replace(/\s+/g, " ");
+
+    const shouldSkipSingleDaySection = (courseCode: string, section: Course): boolean => {
+      const normalizedCode = normClass(courseCode);
+      if (normalizedCode === "FYS 101") return false;
+      if (String(section.Section || "").toUpperCase().includes("LAB")) return false;
+      const parsed = parseDaysTimes(String(section.DaysTimes || ""));
+      if (!parsed) return false;
+      return parsed.days.length <= 1;
+    };
 
     const tryAddCode = (rawCode: string, allowDuplicateClass = false): boolean => {
       const normalizedCode = rawCode.trim();
@@ -608,7 +618,7 @@ export default function CourseScheduler({
         return true;
       }
 
-      const possibleSections = courses
+      const allMatchingSections = courses
         .filter((c) => {
           if (!c.Class) return false;
           const courseClass = c.Class.trim();
@@ -622,6 +632,9 @@ export default function CourseScheduler({
         .filter(
           (c) => !newSelectedCourses.some((s) => s.Class === c.Class && s.Section === c.Section)
         );
+      const possibleSections = allMatchingSections.filter(
+        (section) => !shouldSkipSingleDaySection(normalizedCode, section)
+      );
 
       const pushSection = (section: Course): boolean => {
         const estimatedCredits = estimateCourseCredits(normalizedCode, section);
@@ -638,12 +651,24 @@ export default function CourseScheduler({
       };
 
       if (possibleSections.length === 0) {
+        if (allMatchingSections.length > 0) {
+          skippedForSingleDayLecture.push(normalizedCode);
+          return false;
+        }
+
         const lenientSections = courses.filter(
           (c) =>
             c.Class &&
             c.Class.replace(/\s+/g, "").toLowerCase().includes(codeWithoutSpace.toLowerCase())
         );
-        for (const section of lenientSections) {
+        const lenientEligible = lenientSections.filter(
+          (section) => !shouldSkipSingleDaySection(normalizedCode, section)
+        );
+        if (lenientSections.length > 0 && lenientEligible.length === 0) {
+          skippedForSingleDayLecture.push(normalizedCode);
+          return false;
+        }
+        for (const section of lenientEligible) {
           if (pushSection(section)) return true;
         }
         notFoundCourses.push(normalizedCode);
@@ -795,6 +820,14 @@ export default function CourseScheduler({
     if (skippedForCreditLimit.length > 0) {
       showNotification(
         `Stopped at ${totalScheduledCredits} credits to stay within the ${MAX_SEMESTER_CREDITS}-credit maximum.`,
+        "default"
+      );
+    }
+
+    if (skippedForSingleDayLecture.length > 0) {
+      const uniq = Array.from(new Set(skippedForSingleDayLecture));
+      showNotification(
+        `Skipped one-day sections for: ${uniq.slice(0, 3).join(", ")}${uniq.length > 3 ? "…" : ""} (labs and FYS 101 are exempt).`,
         "default"
       );
     }

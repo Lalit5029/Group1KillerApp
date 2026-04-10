@@ -16,11 +16,37 @@ import { COURSE_DEPENDENCY_CATALOG } from "@/lib/recommendation/course-dependenc
 import { buildPyReasonPayload } from "@/lib/recommendation/build-pyreason-payload"
 import { runFallbackReasoner } from "@/lib/recommendation/fallback-reasoner"
 import { rankRecommendations } from "@/lib/recommendation/rank-recommendations"
-import { runPyReason } from "@/lib/recommendation/run-pyreason"
+import { CS_WORKLOAD_SUGGESTIONS } from "@/lib/cs-workload-suggestions"
 import type { CatalogSectionRecord, RequirementBlockRecord } from "@/lib/recommendation/types"
 import type { Course, SelectedCourse } from "@/lib/types"
 
 export const runtime = "nodejs"
+
+function inferPlannerTermFromMessage(message: string): string | null {
+  const m = String(message || "").toLowerCase()
+  const yearMatch = m.match(/\byear\s*([1-4])\b/)
+  if (!yearMatch) return null
+  const year = yearMatch[1]
+  if (/\bfall\b/.test(m)) return `y${year}f`
+  if (/\bspring\b/.test(m)) return `y${year}s`
+  return null
+}
+
+function inferMajorFromMessage(message: string): string | null {
+  const m = String(message || "").toLowerCase()
+  if (/\bcomputer\s+science\b/.test(m) || /\bcs\b/.test(m)) {
+    return "Computer Science, BS"
+  }
+  return null
+}
+
+function inferWorkloadFromMessage(message: string): "low" | "medium" | "high" | null {
+  const m = String(message || "").toLowerCase()
+  if (/\bmedium\b/.test(m)) return "medium"
+  if (/\bhigh\b/.test(m)) return "high"
+  if (/\blow\b/.test(m)) return "low"
+  return null
+}
 
 export async function POST(req: Request) {
   try {
@@ -44,9 +70,33 @@ export async function POST(req: Request) {
     const prereqQuestion =
       codesInMessage.length > 0 &&
       /\b(prereq|prerequisite|pre-req|requirements?\s+for|needed\s+for|require\s+for)\b/i.test(message)
+    const semesterSuggestionIntent =
+      /\b(suggest|recommend)\b/i.test(message) &&
+      /\b(course|courses|class|classes|semester|fall|spring|year\s*[1-4])\b/i.test(message)
     const recommendationIntent =
       /\b(recommend|suggest|next\s+course|next\s+courses|what\s+should\s+i\s+take)\b/i.test(message) &&
       /\b(completed|already\s+took|already\s+completed|finished|passed|done)\b/i.test(message)
+    const history = Array.isArray(body.history) ? body.history.slice(-8) : []
+    const lastUserMessage = [...history]
+      .reverse()
+      .find((h: { role?: string; content?: string }) => h?.role === "user")?.content || ""
+    const followUpSemesterSuggestionIntent =
+      /\byear\s*[1-4]\b/i.test(message) &&
+      /\b(fall|spring)\b/i.test(message) &&
+      /\b(computer\s+science|cs)\b/i.test(message) &&
+      /\b(suggest|recommend)\b/i.test(String(lastUserMessage))
+    const followUpAddSuggestedCoursesIntent =
+      /\byear\s*[1-4]\b/i.test(message) &&
+      /\b(fall|spring)\b/i.test(message) &&
+      /\b(low|medium|high)\b/i.test(message) &&
+      /\b(computer\s+science|cs)\b/i.test(message) &&
+      /\b(add|apply|put|include|schedule)\b/i.test(String(lastUserMessage))
+    const addConfirmationIntent =
+      /\b(did\s+you\s+add|added\?|has\s+it\s+been\s+added|did\s+it\s+add)\b/i.test(message)
+    const addSuggestedCoursesIntent =
+      /\b(add|apply|put|include|schedule)\b/i.test(message) &&
+      /\b(low|medium|high)\b/i.test(message) &&
+      /\b(course|courses)\b/i.test(message)
 
     if (isCatalogLookupQuestion(message)) {
       assistantMode = "catalog"
@@ -66,6 +116,87 @@ export async function POST(req: Request) {
         lines.push(`• **${code}** — ${formatted}`)
       }
       reply = `From the app's curated prerequisite map:\n${lines.join("\n")}`
+    } else if (addConfirmationIntent) {
+      assistantMode = "schedule"
+      reply =
+        "I don't auto-commit changes to your planner from chat text alone. I can prepare sections and then you must click **Add to schedule** on that assistant message."
+    } else if (addSuggestedCoursesIntent || followUpAddSuggestedCoursesIntent) {
+      assistantMode = "schedule"
+      const selectedMajor =
+        String(body.selectedMajor || "").trim() || inferMajorFromMessage(message) || ""
+      const selectedYear = String(body.selectedYear || "").trim()
+      const requirementsForMajor =
+        body.requirementsForMajor && typeof body.requirementsForMajor === "object"
+          ? (body.requirementsForMajor as Record<string, string[]>)
+          : {}
+      const plannerTerm = inferPlannerTermFromMessage(message) || selectedYear
+      const workload = inferWorkloadFromMessage(message)
+
+      if (!selectedMajor || !plannerTerm || !workload) {
+        reply =
+          "I can add suggested courses when major, term, and workload are clear (for example: `Computer Science, BS`, `Year 2 Fall`, `medium`)."
+      } else {
+        let courseCodes: string[] = []
+        if (
+          selectedMajor.toLowerCase().includes("computer science") &&
+          CS_WORKLOAD_SUGGESTIONS[plannerTerm]?.[workload]
+        ) {
+          courseCodes = [...CS_WORKLOAD_SUGGESTIONS[plannerTerm][workload]]
+        } else {
+          const termEntries = requirementsForMajor?.[plannerTerm] || []
+          courseCodes = extractCourseCodesFromText(termEntries.join(" ; "))
+        }
+
+        const mergedConstraints = { ...constraints, courseCodes }
+        const result = solveSchedule(catalog, mergedConstraints)
+        if (result.ok && result.selection.length > 0) {
+          scheduleSuggestion = result.selection
+          const lines = result.selection.map(
+            (s) => `• **${s.Class}** ${s.Section || ""} — ${s.DaysTimes || "TBA"}${s.Room ? ` — ${s.Room}` : ""}`,
+          )
+          reply =
+            `I prepared a **${workload}** workload suggestion for **${selectedMajor}** in **${plannerTerm.toUpperCase()}**:\n` +
+            `${lines.join("\n")}\n\nUse **Add to schedule** below to apply these sections to your planner.`
+        } else {
+          reply = result.issues.join("\n\n")
+        }
+      }
+    } else if (semesterSuggestionIntent || followUpSemesterSuggestionIntent) {
+      assistantMode = "catalog"
+      const selectedMajor =
+        String(body.selectedMajor || "").trim() || inferMajorFromMessage(message) || ""
+      const selectedYear = String(body.selectedYear || "").trim()
+      const requirementsForMajor =
+        body.requirementsForMajor && typeof body.requirementsForMajor === "object"
+          ? (body.requirementsForMajor as Record<string, string[]>)
+          : {}
+      const plannerTerm = inferPlannerTermFromMessage(message) || selectedYear
+
+      if (!selectedMajor || !plannerTerm) {
+        reply =
+          "I can suggest courses once I know your major and term. Please include both, e.g. `Computer Science, BS` and `Year 2 Fall`."
+      } else if (
+        selectedMajor.toLowerCase().includes("computer science") &&
+        CS_WORKLOAD_SUGGESTIONS[plannerTerm]
+      ) {
+        const row = CS_WORKLOAD_SUGGESTIONS[plannerTerm]
+        reply =
+          `For **${selectedMajor}** in **${plannerTerm.toUpperCase()}**, here are major-course suggestions:\n` +
+          `- **Low**: ${row.low.join(", ")}\n` +
+          `- **Medium**: ${row.medium.join(", ")}\n` +
+          `- **High**: ${row.high.join(", ")}`
+      } else {
+        const termReq = requirementsForMajor?.[plannerTerm] || []
+        if (termReq.length > 0) {
+          reply =
+            `For **${selectedMajor}** in **${plannerTerm.toUpperCase()}**, your planner's listed courses are:\n` +
+            termReq.map((c: string) => `- ${c}`).join("\n")
+        } else {
+          reply =
+            `I couldn't find a configured course list for **${selectedMajor}** in **${plannerTerm.toUpperCase()}**. ` +
+            "Please verify major/term selection in the planner."
+        }
+      }
     } else if (recommendationIntent) {
       const studentId = String(body.studentId || "")
       const selectedMajor = String(body.selectedMajor || "").trim()
@@ -106,15 +237,8 @@ export async function POST(req: Request) {
           })),
           catalogCourses,
         })
-        let inferredResults
-        let engine: "pyreason" | "fallback" = "pyreason"
-        try {
-          const pyreasonResponse = await runPyReason(payload)
-          inferredResults = pyreasonResponse.results
-        } catch {
-          engine = "fallback"
-          inferredResults = runFallbackReasoner(payload)
-        }
+        const inferredResults = runFallbackReasoner(payload)
+        const engine: "fallback" = "fallback"
         const ranked = rankRecommendations(payload.candidateCourses, inferredResults)
         const candidateByCode = new Map(payload.candidateCourses.map((c) => [c.courseCode, c]))
         const formatMissingFromGroups = (
@@ -204,7 +328,6 @@ export async function POST(req: Request) {
         assistantMode = "help"
         reply = help
       } else {
-        const history = Array.isArray(body.history) ? body.history.slice(-8) : []
         const historyForLlm = history.map((h: { role?: string; content?: string }) => ({
           role: h.role === "assistant" ? "assistant" : "user",
           content: String(h.content || ""),
