@@ -1,0 +1,3 @@
+# Keep deploy uploads small; Next.js app lives at repo root.
+backend/.venv
+backend/node_modules
