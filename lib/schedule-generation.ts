@@ -85,6 +85,18 @@ export function buildFillerCourseQueue(catalog: Course[]): string[] {
   return out;
 }
 
+/** ECN / ANT catalog codes only — used to fill y4f schedules when matrix rows conflict or are missing. */
+export function buildEcnAntFillQueue(catalog: Course[]): string[] {
+  const labels = new Set(
+    catalog.map((c) => String(c.Class || "").trim()).filter(Boolean)
+  );
+  const out: string[] = [];
+  for (const cl of [...labels].sort((a, b) => a.localeCompare(b))) {
+    if (/^(ECN|ANT)\s+\d/i.test(cl)) out.push(cl);
+  }
+  return out;
+}
+
 export function workloadTargetCredits(workload: WorkloadLevel): number {
   const map = { low: 12, medium: 15, high: 18 } as const;
   return map[workload];

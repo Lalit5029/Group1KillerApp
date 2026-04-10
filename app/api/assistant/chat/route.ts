@@ -17,6 +17,7 @@ import { buildPyReasonPayload } from "@/lib/recommendation/build-pyreason-payloa
 import { runFallbackReasoner } from "@/lib/recommendation/fallback-reasoner"
 import { rankRecommendations } from "@/lib/recommendation/rank-recommendations"
 import { CS_WORKLOAD_SUGGESTIONS } from "@/lib/cs-workload-suggestions"
+import { formatCsWorkloadSuggestionsForChat } from "@/lib/cs-workload-chat-format"
 import type { CatalogSectionRecord, RequirementBlockRecord } from "@/lib/recommendation/types"
 import type { Course, SelectedCourse } from "@/lib/types"
 
@@ -24,9 +25,15 @@ export const runtime = "nodejs"
 
 function inferPlannerTermFromMessage(message: string): string | null {
   const m = String(message || "").toLowerCase()
-  const yearMatch = m.match(/\byear\s*([1-4])\b/)
-  if (!yearMatch) return null
-  const year = yearMatch[1]
+  let year: string | null = null
+  const yearDigit = m.match(/\byear\s*([1-4])\b/)
+  if (yearDigit) year = yearDigit[1]
+  else if (/\bfirst\s+year\b/.test(m) || /\b1st\s+year\b/.test(m) || /\bfreshman\b/.test(m)) year = "1"
+  else if (/\bsecond\s+year\b/.test(m) || /\b2nd\s+year\b/.test(m) || /\bsophomore\b/.test(m)) year = "2"
+  else if (/\bthird\s+year\b/.test(m) || /\b3rd\s+year\b/.test(m) || /\bjunior\b/.test(m)) year = "3"
+  else if (/\bfourth\s+year\b/.test(m) || /\b4th\s+year\b/.test(m) || /\bsenior\b/.test(m)) year = "4"
+
+  if (!year) return null
   if (/\bfall\b/.test(m)) return `y${year}f`
   if (/\bspring\b/.test(m)) return `y${year}s`
   return null
@@ -38,6 +45,17 @@ function inferMajorFromMessage(message: string): string | null {
     return "Computer Science, BS"
   }
   return null
+}
+
+/** Planner chat assumes CS BS when the user names a term but not a major (this app’s primary program). */
+function resolveMajorForPlannerChat(
+  bodyMajor: string,
+  message: string,
+  plannerTerm: string,
+): string {
+  const fromBodyOrInfer = String(bodyMajor || "").trim() || inferMajorFromMessage(message) || ""
+  if (fromBodyOrInfer) return fromBodyOrInfer
+  return plannerTerm ? "Computer Science, BS" : ""
 }
 
 function inferWorkloadFromMessage(message: string): "low" | "medium" | "high" | null {
@@ -70,9 +88,20 @@ export async function POST(req: Request) {
     const prereqQuestion =
       codesInMessage.length > 0 &&
       /\b(prereq|prerequisite|pre-req|requirements?\s+for|needed\s+for|require\s+for)\b/i.test(message)
+    const mentionsPlannerTerm =
+      /\b(year\s*[1-4]|first\s+year|second\s+year|third\s+year|fourth\s+year|1st\s+year|2nd\s+year|3rd\s+year|4th\s+year|sophomore|junior|senior|freshman|fall|spring|semester)\b/i.test(
+        message
+      )
+    const asksCoursesForPlannerTerm =
+      /\b(which|what)\s+courses?\b/i.test(message) ||
+      /\bwhat\s+should\s+i\s+take\b/i.test(message) ||
+      /\bwhat\s+.*\b(class|classes)\b.*\b(take|for)\b/i.test(message) ||
+      /\bcourses?\s+i\s+should\s+take\b/i.test(message) ||
+      /\bcourses?\s+(for|to\s+take)\b/i.test(message)
     const semesterSuggestionIntent =
-      /\b(suggest|recommend)\b/i.test(message) &&
-      /\b(course|courses|class|classes|semester|fall|spring|year\s*[1-4])\b/i.test(message)
+      (/\b(suggest|recommend)\b/i.test(message) &&
+        /\b(course|courses|class|classes|semester|term|fall|spring|year\s*[1-4])\b/i.test(message)) ||
+      (asksCoursesForPlannerTerm && mentionsPlannerTerm)
     const recommendationIntent =
       /\b(recommend|suggest|next\s+course|next\s+courses|what\s+should\s+i\s+take)\b/i.test(message) &&
       /\b(completed|already\s+took|already\s+completed|finished|passed|done)\b/i.test(message)
@@ -80,11 +109,15 @@ export async function POST(req: Request) {
     const lastUserMessage = [...history]
       .reverse()
       .find((h: { role?: string; content?: string }) => h?.role === "user")?.content || ""
+    const lastUserMsg = String(lastUserMessage)
+    const priorAskedSemesterCourses =
+      /\b(suggest|recommend)\b/i.test(lastUserMsg) ||
+      /\b(which|what)\s+courses?\b/i.test(lastUserMsg) ||
+      /\bwhat\s+should\s+i\s+take\b/i.test(lastUserMsg)
     const followUpSemesterSuggestionIntent =
-      /\byear\s*[1-4]\b/i.test(message) &&
-      /\b(fall|spring)\b/i.test(message) &&
-      /\b(computer\s+science|cs)\b/i.test(message) &&
-      /\b(suggest|recommend)\b/i.test(String(lastUserMessage))
+      inferPlannerTermFromMessage(message) !== null &&
+      priorAskedSemesterCourses &&
+      (/\b(computer\s+science|cs)\b/i.test(message) || /\b(computer\s+science|cs)\b/i.test(lastUserMsg))
     const followUpAddSuggestedCoursesIntent =
       /\byear\s*[1-4]\b/i.test(message) &&
       /\b(fall|spring)\b/i.test(message) &&
@@ -122,19 +155,22 @@ export async function POST(req: Request) {
         "I don't auto-commit changes to your planner from chat text alone. I can prepare sections and then you must click **Add to schedule** on that assistant message."
     } else if (addSuggestedCoursesIntent || followUpAddSuggestedCoursesIntent) {
       assistantMode = "schedule"
-      const selectedMajor =
-        String(body.selectedMajor || "").trim() || inferMajorFromMessage(message) || ""
       const selectedYear = String(body.selectedYear || "").trim()
+      const plannerTerm = inferPlannerTermFromMessage(message) || selectedYear
+      const selectedMajor = resolveMajorForPlannerChat(
+        String(body.selectedMajor || ""),
+        message,
+        plannerTerm,
+      )
       const requirementsForMajor =
         body.requirementsForMajor && typeof body.requirementsForMajor === "object"
           ? (body.requirementsForMajor as Record<string, string[]>)
           : {}
-      const plannerTerm = inferPlannerTermFromMessage(message) || selectedYear
       const workload = inferWorkloadFromMessage(message)
 
-      if (!selectedMajor || !plannerTerm || !workload) {
+      if (!plannerTerm || !workload) {
         reply =
-          "I can add suggested courses when major, term, and workload are clear (for example: `Computer Science, BS`, `Year 2 Fall`, `medium`)."
+          "I can add suggested courses when **term** and **workload** are clear (for example: `Year 2 Fall`, `medium`)."
       } else {
         let courseCodes: string[] = []
         if (
@@ -163,28 +199,29 @@ export async function POST(req: Request) {
       }
     } else if (semesterSuggestionIntent || followUpSemesterSuggestionIntent) {
       assistantMode = "catalog"
-      const selectedMajor =
-        String(body.selectedMajor || "").trim() || inferMajorFromMessage(message) || ""
       const selectedYear = String(body.selectedYear || "").trim()
+      const plannerTerm = inferPlannerTermFromMessage(message) || selectedYear
+      const selectedMajor = resolveMajorForPlannerChat(
+        String(body.selectedMajor || ""),
+        message,
+        plannerTerm,
+      )
       const requirementsForMajor =
         body.requirementsForMajor && typeof body.requirementsForMajor === "object"
           ? (body.requirementsForMajor as Record<string, string[]>)
           : {}
-      const plannerTerm = inferPlannerTermFromMessage(message) || selectedYear
+      const workloadForChat = inferWorkloadFromMessage(message)
 
-      if (!selectedMajor || !plannerTerm) {
+      if (!plannerTerm) {
         reply =
-          "I can suggest courses once I know your major and term. Please include both, e.g. `Computer Science, BS` and `Year 2 Fall`."
+          "I can suggest courses once I know which semester you mean (for example **Year 2 Fall** or **junior spring**)."
       } else if (
         selectedMajor.toLowerCase().includes("computer science") &&
         CS_WORKLOAD_SUGGESTIONS[plannerTerm]
       ) {
-        const row = CS_WORKLOAD_SUGGESTIONS[plannerTerm]
         reply =
-          `For **${selectedMajor}** in **${plannerTerm.toUpperCase()}**, here are major-course suggestions:\n` +
-          `- **Low**: ${row.low.join(", ")}\n` +
-          `- **Medium**: ${row.medium.join(", ")}\n` +
-          `- **High**: ${row.high.join(", ")}`
+          formatCsWorkloadSuggestionsForChat(plannerTerm, { workload: workloadForChat }) +
+          `\n\nUse **Add suggested courses** in the planner (pick workload) to load real sections from the catalog.`
       } else {
         const termReq = requirementsForMajor?.[plannerTerm] || []
         if (termReq.length > 0) {

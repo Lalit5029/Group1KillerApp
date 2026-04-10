@@ -41,9 +41,16 @@ import {
   orderedRequirementKeys,
   PLAN_SEMESTER_OPTIONS,
 } from "@/lib/plan-semester"
-import { buildCsWorkloadSuggestionList, usesCsWorkloadMatrix } from "@/lib/cs-workload-suggestions"
+import {
+  buildCsWorkloadSuggestionList,
+  CS_LAB_REQUIRES_LECTURE,
+  usesCsWorkloadMatrix,
+  type CatalogSectionKind,
+} from "@/lib/cs-workload-suggestions"
+import { sortSectionsForAutoSchedule } from "@/lib/schedule-section-prefs"
 import {
   applyLowWorkloadPostpone,
+  buildEcnAntFillQueue,
   buildFillerCourseQueue,
   isSparseSemesterBucket,
   requirementStringsToSlots,
@@ -582,7 +589,6 @@ export default function CourseScheduler({
     const sparse = useCsWorkloadMatrix ? false : isSparseSemesterBucket(selectedYear, slots);
     const workloadTarget = workloadTargetCredits(workload);
     const targetCredits = WORKLOAD_TARGETS[workload];
-
     let coursesAddedCount = 0;
     let totalScheduledCredits = 0;
     const newSelectedCourses: SelectedCourse[] = [];
@@ -600,16 +606,47 @@ export default function CourseScheduler({
     const shouldSkipSingleDaySection = (courseCode: string, section: Course): boolean => {
       const normalizedCode = normClass(courseCode);
       if (normalizedCode === "FYS 101") return false;
-      if (String(section.Section || "").toUpperCase().includes("LAB")) return false;
+      const secUpper = String(section.Section || "").toUpperCase();
+      if (secUpper.includes("LAB")) return false;
+      if (secUpper.includes("REC")) return false;
       const parsed = parseDaysTimes(String(section.DaysTimes || ""));
       if (!parsed) return false;
       return parsed.days.length <= 1;
     };
 
-    const tryAddCode = (rawCode: string, allowDuplicateClass = false): boolean => {
+    const extractLastPhy211LectureSecNum = (): number | null => {
+      for (let i = newSelectedCourses.length - 1; i >= 0; i--) {
+        const s = newSelectedCourses[i];
+        if (!s.Class || normClass(s.Class) !== "PHY 211") continue;
+        const m = String(s.Section || "").match(/M(\d+)-SEC/i);
+        if (m) return parseInt(m[1], 10);
+      }
+      return null;
+    };
+
+    type AutoPickSectionOpts = {
+      sectionKind?: CatalogSectionKind;
+      phy211LectureSecNumForRec?: number;
+    };
+
+    const tryAddCode = (
+      rawCode: string,
+      allowDuplicateClass = false,
+      opts?: AutoPickSectionOpts
+    ): boolean => {
       const normalizedCode = rawCode.trim();
       const codeWithoutSpace = normalizedCode.replace(/\s+/g, "");
       if (!normalizedCode) return false;
+
+      const requiredLectureForLab = Object.entries(CS_LAB_REQUIRES_LECTURE).find(
+        ([lab]) => normClass(lab) === normClass(normalizedCode)
+      )?.[1];
+      if (
+        requiredLectureForLab &&
+        !newSelectedCourses.some((s) => normClass(s.Class) === normClass(requiredLectureForLab))
+      ) {
+        return false;
+      }
 
       if (
         !allowDuplicateClass &&
@@ -632,9 +669,43 @@ export default function CourseScheduler({
         .filter(
           (c) => !newSelectedCourses.some((s) => s.Class === c.Class && s.Section === c.Section)
         );
-      const possibleSections = allMatchingSections.filter(
+
+      const secLabel = (s: Course) => String(s.Section || "");
+      let sectionPool = allMatchingSections;
+      if (opts?.sectionKind === "SEC") {
+        sectionPool = sectionPool.filter(
+          (s) =>
+            /-SEC/i.test(secLabel(s)) &&
+            !/-REC/i.test(secLabel(s)) &&
+            !/-LAB/i.test(secLabel(s))
+        );
+      } else if (opts?.sectionKind === "REC") {
+        const n = opts.phy211LectureSecNumForRec;
+        if (n != null && Number.isFinite(n)) {
+          const target = `M${String(n + 1).padStart(3, "0")}-REC`;
+          const paired = sectionPool.filter((s) =>
+            secLabel(s).toUpperCase().includes(target.toUpperCase())
+          );
+          sectionPool = paired.length ? paired : sectionPool.filter((s) => /-REC/i.test(secLabel(s)));
+        } else {
+          sectionPool = sectionPool.filter((s) => /-REC/i.test(secLabel(s)));
+        }
+      } else if (opts?.sectionKind === "LAB") {
+        const labs = sectionPool.filter(
+          (s) => /-LAB/i.test(secLabel(s)) || /\bLAB\b/i.test(secLabel(s).toUpperCase())
+        );
+        sectionPool = labs.length ? labs : sectionPool;
+      }
+
+      const possibleSections = sectionPool.filter(
         (section) => !shouldSkipSingleDaySection(normalizedCode, section)
       );
+
+      const orderedPossible = sortSectionsForAutoSchedule({
+        sections: possibleSections,
+        normalizedCode,
+        selected: newSelectedCourses,
+      });
 
       const pushSection = (section: Course): boolean => {
         const estimatedCredits = estimateCourseCredits(normalizedCode, section);
@@ -650,9 +721,13 @@ export default function CourseScheduler({
         return true;
       };
 
-      if (possibleSections.length === 0) {
-        if (allMatchingSections.length > 0) {
+      if (orderedPossible.length === 0) {
+        if (sectionPool.length > 0) {
           skippedForSingleDayLecture.push(normalizedCode);
+          return false;
+        }
+        if (opts?.sectionKind && allMatchingSections.length > 0) {
+          notFoundCourses.push(normalizedCode);
           return false;
         }
 
@@ -668,7 +743,12 @@ export default function CourseScheduler({
           skippedForSingleDayLecture.push(normalizedCode);
           return false;
         }
-        for (const section of lenientEligible) {
+        const orderedLenient = sortSectionsForAutoSchedule({
+          sections: lenientEligible,
+          normalizedCode,
+          selected: newSelectedCourses,
+        });
+        for (const section of orderedLenient) {
           if (pushSection(section)) return true;
         }
         notFoundCourses.push(normalizedCode);
@@ -676,7 +756,7 @@ export default function CourseScheduler({
       }
 
       let placed = false;
-      for (const section of possibleSections) {
+      for (const section of orderedPossible) {
         if (pushSection(section)) {
           placed = true;
           break;
@@ -684,14 +764,14 @@ export default function CourseScheduler({
       }
 
       if (!placed) {
-        const couldFit = possibleSections.some(
+        const couldFit = orderedPossible.some(
           (section) =>
             totalScheduledCredits + estimateCourseCredits(normalizedCode, section) <= MAX_SEMESTER_CREDITS
         );
         if (!couldFit) {
           skippedForCreditLimit.push(normalizedCode);
         } else {
-          const first = possibleSections[0];
+          const first = orderedPossible[0];
           const blocker = findFirstBlockingCourse(first, newSelectedCourses);
           if (useCsWorkloadMatrix) {
             collisionNotes.push(
@@ -723,9 +803,34 @@ export default function CourseScheduler({
         showNotification("No suggested course list for this term and workload.", "error");
         return;
       }
-      for (const { code, allowDuplicateClass } of entries) {
+      let lastPhy211LectureSecNum: number | null = null;
+      for (const entry of entries) {
         if (totalScheduledCredits >= MAX_SEMESTER_CREDITS) break;
-        tryAddCode(code, Boolean(allowDuplicateClass));
+        const recNum =
+          entry.pairPhy211RecToPriorSec && lastPhy211LectureSecNum != null
+            ? lastPhy211LectureSecNum
+            : undefined;
+        const placed = tryAddCode(entry.code, Boolean(entry.allowDuplicateClass), {
+          sectionKind: entry.sectionKind,
+          phy211LectureSecNumForRec: recNum,
+        });
+        if (placed && entry.code.trim() === "PHY 211" && entry.sectionKind === "SEC") {
+          lastPhy211LectureSecNum = extractLastPhy211LectureSecNum();
+        }
+      }
+
+      const y4fHadMatrixGaps =
+        collisionNotes.length > 0 ||
+        notFoundCourses.length > 0 ||
+        skippedForSingleDayLecture.length > 0;
+      if (selectedYear === "y4f" && y4fHadMatrixGaps) {
+        const fillCodes = buildEcnAntFillQueue(courses);
+        for (const fillCode of fillCodes) {
+          if (totalScheduledCredits >= workloadTarget) break;
+          if (totalScheduledCredits >= MAX_SEMESTER_CREDITS) break;
+          if (newSelectedCourses.some((s) => normClass(s.Class) === normClass(fillCode))) continue;
+          tryAddCode(fillCode, false);
+        }
       }
     } else {
       for (const slot of slots) {

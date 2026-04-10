@@ -1,4 +1,5 @@
 import type { Course, Requirements } from "./types";
+import { dedupeRepeatedSectionLabel } from "./catalog-section-label";
 
 /** Parse one CSV line respecting double-quoted fields (commas inside quotes stay) */
 function parseCSVLine(line: string): string[] {
@@ -170,7 +171,7 @@ async function parseCoursesJson(
       ...course,
       id: course.id || `course-${i}`,
       Class: course.Class.trim(),
-      Section: course.Section?.trim() || "",
+      Section: dedupeRepeatedSectionLabel(course.Section?.trim() || ""),
       DaysTimes: course.DaysTimes?.trim() || "",
       Room: course.Room?.trim() || "",
       Instructor: instructorName,

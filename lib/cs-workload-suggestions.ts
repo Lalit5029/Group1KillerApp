@@ -56,10 +56,22 @@ export const CS_LECTURE_LAB_PAIR: Record<string, string> = {
   "CHE 106": "CHE 107",
 };
 
+/** Lab rows in the matrix should not schedule unless the paired lecture was placed. */
+export const CS_LAB_REQUIRES_LECTURE: Record<string, string> = Object.fromEntries(
+  Object.entries(CS_LECTURE_LAB_PAIR).map(([lecture, lab]) => [lab, lecture])
+);
+
+/** Sub-row type from PeopleSoft (section link text like M001-SEC / M002-REC / M003-LAB). */
+export type CatalogSectionKind = "SEC" | "REC" | "LAB";
+
 export type CsWorkloadSuggestionEntry = {
   code: string;
   /** Second (or later) CIS 400 in the same term — must use a different section than earlier CIS 400. */
   allowDuplicateClass?: boolean;
+  /** When set, only consider catalog rows whose section label matches this component. */
+  sectionKind?: CatalogSectionKind;
+  /** PHY 211 only: use M{n+1}-REC after the placed M{n}-SEC (Syracuse-style pairing). */
+  pairPhy211RecToPriorSec?: boolean;
 };
 
 export function buildCsWorkloadSuggestionList(
@@ -76,8 +88,19 @@ export function buildCsWorkloadSuggestionList(
     const trimmed = code.trim();
     const lab = CS_LECTURE_LAB_PAIR[trimmed];
     if (lab) {
-      out.push({ code: trimmed });
-      out.push({ code: lab });
+      if (trimmed === "PHY 211" && lab === "PHY 221") {
+        out.push({ code: "PHY 211", sectionKind: "SEC" });
+        out.push({
+          code: "PHY 211",
+          sectionKind: "REC",
+          pairPhy211RecToPriorSec: true,
+          allowDuplicateClass: true,
+        });
+        out.push({ code: "PHY 221", sectionKind: "LAB" });
+      } else {
+        out.push({ code: trimmed });
+        out.push({ code: lab });
+      }
       continue;
     }
     if (trimmed === "CIS 400") {
