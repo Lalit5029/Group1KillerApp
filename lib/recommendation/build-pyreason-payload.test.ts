@@ -7,10 +7,10 @@ describe("buildPyReasonPayload", () => {
       studentId: "student-1",
       studentName: "Student One",
       selectedMajor: "Computer Science, BS",
-      selectedYear: "Junior",
+      selectedYear: "y3f",
       term: "Current Catalog",
       requirementsForMajor: {
-        Junior: ["CIS 453", "CIS 477", "ECS 392"],
+        y3f: ["CIS 453", "CIS 477", "ECS 392"],
       },
       academicCourses: [
         {
@@ -54,11 +54,11 @@ describe("buildPyReasonPayload", () => {
       studentId: "student-1",
       studentName: "Student One",
       selectedMajor: "Computer Science, BS",
-      selectedYear: "Freshman",
+      selectedYear: "y1f",
       term: "Current Catalog",
       requirementsForMajor: {
-        Freshman: ["CIS 252"],
-        Sophomore: ["CIS 321"],
+        y1f: ["CIS 252"],
+        y1s: ["CIS 321"],
       },
       academicCourses: [],
       degreeRequirements: [
@@ -315,5 +315,39 @@ describe("buildPyReasonPayload", () => {
     expect(payload.candidateCourses.some((course) => course.courseCode === "CIS 252")).toBe(true);
     expect(payload.candidateCourses.some((course) => course.courseCode === "HST 122")).toBe(true);
     expect(payload.candidateCourses.some((course) => course.courseCode === "IST 323")).toBe(true);
+  });
+
+  it("counts ECN courses toward incomplete Social Science & Humanities degree blocks", () => {
+    const payload = buildPyReasonPayload({
+      studentId: "student-1",
+      studentName: "Student One",
+      selectedMajor: "Computer Science, BS",
+      selectedYear: "y4s",
+      term: "Fall 2026",
+      requirementsForMajor: {
+        y4s: ["CIS 454"],
+      },
+      academicCourses: [],
+      degreeRequirements: [
+        {
+          title: "Social Science and Humanities (21 cr)",
+          status: "Incomplete",
+          courses: [
+            { code: "PHI 251", title: "Logic" },
+            { code: "ECS 392", title: "Ethics" },
+          ],
+        },
+      ],
+      catalogCourses: [
+        { Class: "CIS 454", Section: "M001" },
+        { Class: "ECN 101", Section: "M001" },
+        { Class: "ECN 301", Section: "M002" },
+      ],
+    });
+
+    const ecn101 = payload.candidateCourses.find((c) => c.courseCode === "ECN 101");
+    expect(ecn101).toBeDefined();
+    expect(ecn101?.neededRequirementGroups).toContain("Social Science and Humanities (21 cr)");
+    expect(ecn101?.remainingDegreeRequirementGroups).toContain("Social Science and Humanities (21 cr)");
   });
 });

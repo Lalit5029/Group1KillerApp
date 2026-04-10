@@ -4,7 +4,8 @@
 oWin.strCurrUrl='https://cs92prod.ps.syr.edu/psc/CS92PROD/EMPLOYEE/SA/c/SA_LEARNER_SERVICES.CLASS_SEARCH.GBL?&PAGE=SSR_CLSRCH_RSLT';
 oWin.strReqURL='';
 bPTActEnterKey = false;
-]]></GENSCRIPT><GENSCRIPT id='script'><![CDATA[oWin.gridRowSelRgbColor_win0 ='rgb(212,219,217)';
+]]></GENSCRIPT><GENCSS id='css'><![CDATA[this.arrSrcCSSApp = ['/cs/CS92PROD/cache/3/SSS_STYLESHEET_1.css'];
+]]></GENCSS><GENSCRIPT id='script'><![CDATA[oWin.gridRowSelRgbColor_win0 ='rgb(212,219,217)';
 ]]></GENSCRIPT><GENSCRIPT id='onloadScript'><![CDATA[var pt_pageinfo = document.getElementById('pt_pageinfo_win0');
 if (pt_pageinfo) {
 pt_pageinfo.setAttribute('Page', 'SSR_CLSRCH_RSLT');
@@ -21,7 +22,7 @@ actn=oDoc.win0.ICAction.value;
 oDoc.win0.ICAction.value='None';
 oDoc.win0.ICResubmit.value='0';
 oWin.nResubmit='0';
-oDoc.win0.ICStateNum.value=53;initVars_win0();
+oDoc.win0.ICStateNum.value=10;initVars_win0();
 if (typeof resetVars_win0 == "function")resetVars_win0();
 oDoc.win0.ICFocus.value='';
 setupTimeout2();
@@ -56,7 +57,7 @@ setupTimeout2();
 processing_win0(0,3000);]]></GENSCRIPT>
 <FIELD id='win0divPSHIDDENFIELDS'><![CDATA[<input type='hidden' name='ICType' id='ICType' value='Panel' />
 <input type='hidden' name='ICElementNum' id='ICElementNum' value='0' />
-<input type='hidden' name='ICStateNum' id='ICStateNum' value='53' />
+<input type='hidden' name='ICStateNum' id='ICStateNum' value='10' />
 <input type='hidden' name='ICAction' id='ICAction' value='None' />
 <input type='hidden' name='ICModelCancel' id='ICModelCancel' value='0' />
 <input type='hidden' name='ICXPos' id='ICXPos' value='0' />
@@ -70,7 +71,7 @@ processing_win0(0,3000);]]></GENSCRIPT>
 <input type='hidden' name='ICSkipPending' id='ICSkipPending' value='0' />
 <input type='hidden' name='ICAutoSave' id='ICAutoSave' value='0' />
 <input type='hidden' name='ICResubmit' id='ICResubmit' value='0' />
-<input type='hidden' name='ICSID' id='ICSID' value='tZHi0MYQVZqRbw49hkm7htEMHZXDTv+X697FB0/0aoE=' />
+<input type='hidden' name='ICSID' id='ICSID' value='eTJRh/EfPR4jCTtrAisq6+sHzPTgt5Q7lLWb8j4UiMA=' />
 <input type='hidden' name='ICActionPrompt' id='ICActionPrompt' value='false' />
 <input type='hidden' name='ICBcDomData' id='ICBcDomData' value='' />
 <input type='hidden' name='ICPanelName' id='ICPanelName' value='' />
@@ -8374,7 +8375,7 @@ Regular</a></span></DIV></td>
 <DIV    id='win0divMTG_DAYTIME$103'><span  class='PSLONGEDITBOX' id='MTG_DAYTIME$103' >MoWe 12:45PM - 2:05PM</span>
 </DIV></td>
 <td class='PSLEVEL3GRIDODDROW'  align='left'  class='PSLEVEL3GRIDODDROW' >
-<DIV    id='win0divMTG_ROOM$103'><span  class='PSLONGEDITBOX' id='MTG_ROOM$103' >TBA</span>
+<DIV    id='win0divMTG_ROOM$103'><span  class='PSLONGEDITBOX' id='MTG_ROOM$103' >Lyman Hall 126</span>
 </DIV></td>
 <td class='PSLEVEL3GRIDODDROW'  align='left'  class='PSLEVEL3GRIDODDROW' >
 <DIV    id='win0divMTG_INSTR$103'><span  class='PSLONGEDITBOX' id='MTG_INSTR$103' >Staff</span>

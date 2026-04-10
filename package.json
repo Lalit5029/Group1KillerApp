@@ -10,6 +10,7 @@
     "lint": "next lint",
     "scraper": "node backend/run_scraper.js",
     "api": "node backend/src/api/academic_scraper_api.js",
+    "merge:catalog-xml": "node scripts/merge-xml-to-courses.mjs",
     "reconcile:courses": "node scripts/reconcile-course-catalog.cjs",
     "reconcile:courses:write": "node scripts/reconcile-course-catalog.cjs --write-placeholders",
     "scrape:missing:courses": "node scripts/scrape-missing-courses.cjs",

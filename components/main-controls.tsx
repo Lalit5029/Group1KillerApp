@@ -47,7 +47,8 @@ export function MainControls({
           <DialogHeader>
             <DialogTitle>Choose Semester Workload</DialogTitle>
             <DialogDescription>
-              Suggested courses will stay between 12 and 19 credits and target the workload you choose.
+              Stays within 12–19 credits. Low workload defers one planned course to a later term; high adds
+              electives (UD CIS, SSH, IST) toward ~18 credits; sparse terms get a mixed fill toward ~15 credits.
             </DialogDescription>
           </DialogHeader>
           <div className="grid gap-3 pt-2">

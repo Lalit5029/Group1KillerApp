@@ -1,4 +1,5 @@
 import { COURSE_DEPENDENCY_CATALOG } from "./course-dependency-catalog";
+import { PLAN_SEMESTER_ORDER } from "@/lib/plan-semester";
 import type {
   AcademicCourseRecord,
   CandidateCourse,
@@ -12,7 +13,18 @@ import { buildProgramCandidatePools } from "@/lib/program-rules/build-candidate-
 import { evaluateDegreeProgress } from "@/lib/program-rules/evaluate-degree-progress";
 import type { ProgramRules } from "@/lib/program-rules/types";
 
-const YEAR_ORDER = ["Freshman", "Sophomore", "Junior", "Senior"];
+const LEGACY_YEAR_ORDER = ["Freshman", "Sophomore", "Junior", "Senior"];
+
+function resolvePlanOrder(requirementsForMajor?: Record<string, string[]>): string[] {
+  const keys = Object.keys(requirementsForMajor || {});
+  const hasSemesterKeys = keys.some((k) =>
+    (PLAN_SEMESTER_ORDER as readonly string[]).includes(k)
+  );
+  if (hasSemesterKeys) {
+    return PLAN_SEMESTER_ORDER.filter((k) => keys.includes(k));
+  }
+  return LEGACY_YEAR_ORDER.filter((k) => keys.includes(k));
+}
 
 const PASSING_GRADES = new Set([
   "A+",
@@ -139,14 +151,14 @@ function getPlanYearsFromMajorRequirements(
   requirementsForMajor: Record<string, string[]> | undefined,
   selectedYear: string
 ) {
-  const startIndex = Math.max(0, YEAR_ORDER.indexOf(selectedYear));
-  const planYears = requirementsForMajor
-    ? YEAR_ORDER.filter((year) => requirementsForMajor[year])
-    : [];
+  const order = resolvePlanOrder(requirementsForMajor);
+  const planYears = requirementsForMajor ? order.filter((year) => requirementsForMajor[year]) : [];
+  const startIndex = Math.max(0, order.indexOf(selectedYear));
 
   return {
+    planOrder: order,
     allYears: planYears,
-    currentAndFutureYears: planYears.filter((year) => YEAR_ORDER.indexOf(year) >= startIndex),
+    currentAndFutureYears: planYears.filter((year) => order.indexOf(year) >= startIndex),
   };
 }
 
@@ -169,11 +181,23 @@ function isRequirementBlockComplete(status: string | null | undefined) {
   return String(status || "").trim().toLowerCase() === "complete";
 }
 
+/** DegreeWorks / import titles for the CS social sciences & humanities bucket. */
+function isSshRequirementBlockTitle(title: string | null | undefined) {
+  const t = String(title || "").toLowerCase();
+  if (/\bssh\b/.test(t)) return true;
+  return /social\s+science/.test(t) && /humanit/.test(t);
+}
+
+function isEcnCourseCode(courseCode: string) {
+  return /^ECN\s+\d/.test(normalizeCourseCode(courseCode));
+}
+
 function deriveNeededRequirementGroups(
   courseCode: string,
   degreeRequirements: RequirementBlockRecord[]
 ) {
   const groups = new Set<string>();
+  const ecn = isEcnCourseCode(courseCode);
 
   for (const block of degreeRequirements) {
     if (isRequirementBlockComplete(block.status)) continue;
@@ -181,6 +205,9 @@ function deriveNeededRequirementGroups(
       extractCourseCodesFromText(course.code || course.title)
     );
     if (blockCourseCodes.includes(courseCode)) {
+      groups.add(block.title);
+    }
+    if (ecn && isSshRequirementBlockTitle(block.title)) {
       groups.add(block.title);
     }
   }
@@ -424,12 +451,14 @@ export function buildPyReasonPayload({
       .map((course) => normalizeCourseCode(course.code))
   );
 
-  const { allYears, currentAndFutureYears } = getPlanYearsFromMajorRequirements(
+  const { planOrder, allYears, currentAndFutureYears } = getPlanYearsFromMajorRequirements(
     requirementsForMajor,
     selectedYear
   );
-  const selectedYearIndex = Math.max(0, YEAR_ORDER.indexOf(selectedYear));
-  const seniorYearIndex = YEAR_ORDER.indexOf("Senior");
+  const selectedYearIndex = Math.max(0, planOrder.indexOf(selectedYear));
+  const seniorYearIndex = planOrder.includes("Senior")
+    ? planOrder.indexOf("Senior")
+    : Math.max(0, planOrder.length - 1);
 
   const planYearsByCourse = new Map<string, string[]>();
   for (const year of allYears) {
@@ -492,7 +521,14 @@ export function buildPyReasonPayload({
     ? unique([...primaryCandidateCodes, ...flexiblePlanCodes])
     : primaryCandidateCodes;
 
-  const candidateCodes = candidateSeedCodes.filter(
+  const sshBlockIncomplete = degreeRequirements.some(
+    (block) => !isRequirementBlockComplete(block.status) && isSshRequirementBlockTitle(block.title)
+  );
+  const catalogEcnCodes = sshBlockIncomplete
+    ? Array.from(catalogIndex.keys()).filter((code) => isEcnCourseCode(code))
+    : [];
+
+  const candidateCodes = unique([...candidateSeedCodes, ...catalogEcnCodes]).filter(
     (courseCode) =>
       Boolean(courseCode) &&
       !passedCourses.has(courseCode) &&
@@ -581,7 +617,7 @@ export function buildPyReasonPayload({
       );
       const bottleneck = unlocksCourseCodes.length >= 2;
       const planYearIndexes = planYearsForCourse
-        .map((year) => YEAR_ORDER.indexOf(year))
+        .map((year) => planOrder.indexOf(year))
         .filter((index) => index >= 0);
       const nearestPlanYearIndex =
         planYearIndexes.length > 0 ? Math.min(...planYearIndexes) : Number.POSITIVE_INFINITY;
@@ -668,7 +704,7 @@ export function buildPyReasonPayload({
     );
     const bottleneck = unlocksCourseCodes.length >= 2;
     const planYearIndexes = planYearsForCourse
-      .map((year) => YEAR_ORDER.indexOf(year))
+      .map((year) => planOrder.indexOf(year))
       .filter((index) => index >= 0);
     const nearestPlanYearIndex =
       planYearIndexes.length > 0 ? Math.min(...planYearIndexes) : Number.POSITIVE_INFINITY;

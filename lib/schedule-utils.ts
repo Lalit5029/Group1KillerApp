@@ -60,6 +60,17 @@ export function hasConflict(course: Course, selectedCourses: SelectedCourse[]): 
   return false;
 }
 
+/** First course already on the schedule that blocks adding `course` (time overlap or duplicate row). */
+export function findFirstBlockingCourse(
+  course: Course,
+  selectedCourses: SelectedCourse[]
+): SelectedCourse | null {
+  for (const sc of selectedCourses) {
+    if (hasConflict(course, [sc])) return sc;
+  }
+  return null;
+}
+
 export interface ScheduleConflict {
   id: string;
   courseA: SelectedCourse;

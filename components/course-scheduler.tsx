@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect, useMemo, useCallback } from "react"
+import { useState, useEffect, useMemo, useCallback, useRef } from "react"
 import { AppHeader } from "./app-header"
 import { MainControls } from "./main-controls"
 import { Dashboard } from "./dashboard"
@@ -12,7 +12,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Calendar, GraduationCap, BookOpen, Download, Upload } from "lucide-react"
 import type { Course, SelectedCourse, Notification, Major, Requirements, CourseData, CourseSearchCriteria } from "@/lib/types"
 import { fetchCourses, fetchRequirements } from "@/lib/data-utils"
-import { hasConflict } from "@/lib/schedule-utils"
+import { findFirstBlockingCourse, findScheduleConflicts, hasConflict } from "@/lib/schedule-utils"
 import {
   buildSearchQueryFromCriteria,
   filterCoursesByCriteria,
@@ -36,7 +36,19 @@ import {
 } from "@/components/ui/dialog"
 import { evaluateCsGraduationReadiness } from "@/lib/graduation-readiness"
 import { GraduationPathTimeline } from "@/components/graduation-path-timeline"
-import { CLASS_YEARS, normalizeAcademicYearLabel, type ClassYear } from "@/lib/class-year"
+import {
+  normalizePlannerTerm,
+  orderedRequirementKeys,
+  PLAN_SEMESTER_OPTIONS,
+} from "@/lib/plan-semester"
+import { buildCsWorkloadSuggestionList, usesCsWorkloadMatrix } from "@/lib/cs-workload-suggestions"
+import {
+  applyLowWorkloadPostpone,
+  buildFillerCourseQueue,
+  isSparseSemesterBucket,
+  requirementStringsToSlots,
+  workloadTargetCredits,
+} from "@/lib/schedule-generation"
 import { usePresentationPrivacy } from "@/components/presentation-privacy-provider"
 import { ScheduleAssistantChat } from "@/components/schedule-assistant-chat"
 import type { RankedRecommendation } from "@/lib/recommendation/types"
@@ -195,6 +207,15 @@ export default function CourseScheduler({
   const [latestBlockedRecommendations, setLatestBlockedRecommendations] = useState<RankedRecommendation[]>([])
   const [isRecommendationPreviewOpen, setIsRecommendationPreviewOpen] = useState(false)
   const [pendingRecommendationWorkload, setPendingRecommendationWorkload] = useState<WorkloadLevel | null>(null)
+  /** True when user chose "Add Recommended Courses" so we do not fall back to matrix/slots on dialog close. */
+  const pyReasonRecommendationsAppliedRef = useRef(false)
+  /** Mirrors pendingRecommendationWorkload so dismiss always reads the latest workload (avoids stale onOpenChange). */
+  const pendingWorkloadRef = useRef<WorkloadLevel | null>(null)
+
+  useEffect(() => {
+    pendingWorkloadRef.current = pendingRecommendationWorkload
+  }, [pendingRecommendationWorkload])
+
   const [degreeCourses, setDegreeCourses] = useState<BlockData[]>([])
   const [blocks, setBlocks] = useState<BlockData[]>([])
   const [error, setError] = useState<string | null>(null)
@@ -359,31 +380,40 @@ export default function CourseScheduler({
     initializeApp()
   }, [])
 
-  // CS-only app: major comes from requirements; class year from student record, then per-student localStorage.
+  const planOptions = useMemo(() => {
+    const m = requirements[selectedMajor]
+    if (!m) return [] as { value: string; label: string }[]
+    return orderedRequirementKeys(m).map((value) => ({
+      value,
+      label: PLAN_SEMESTER_OPTIONS.find((o) => o.value === value)?.label ?? value,
+    }))
+  }, [requirements, selectedMajor])
+
+  // CS-only app: major from requirements; planner term from localStorage, then student record, then default.
   useEffect(() => {
     if (!isDataReady || Object.keys(requirements).length === 0) return
     const majorKey =
       requirements[csMajorKey] != null ? csMajorKey : Object.keys(requirements)[0]
     if (majorKey) setSelectedMajor(majorKey)
 
-    const fromStudent = normalizeAcademicYearLabel(studentAcademicYear)
+    const keys = orderedRequirementKeys(requirements[majorKey])
+    const defaultTerm = keys[0] ?? "y1f"
+
     let stored: string | null = null
     try {
       stored = localStorage.getItem(plannerYearStorageKey(selectedStudentId))
     } catch {
       stored = null
     }
-    const storedOk =
-      stored && (CLASS_YEARS as readonly string[]).includes(stored) ? stored : null
-    // Prefer last class-year choice in this browser (per advisee); else student record; else default.
-    const year = storedOk ?? fromStudent ?? "Freshman"
+    const resolved = normalizePlannerTerm(stored, studentAcademicYear)
+    const year = keys.includes(resolved) ? resolved : defaultTerm
     setSelectedYear(year)
   }, [isDataReady, requirements, studentAcademicYear, csMajorKey, selectedStudentId])
 
-  const handleClassYearChange = (year: ClassYear) => {
-    setSelectedYear(year)
+  const handlePlannerTermChange = (term: string) => {
+    setSelectedYear(term)
     try {
-      localStorage.setItem(plannerYearStorageKey(selectedStudentId), year)
+      localStorage.setItem(plannerYearStorageKey(selectedStudentId), term)
     } catch {
       /* ignore quota / private mode */
     }
@@ -500,6 +530,7 @@ export default function CourseScheduler({
   const estimateCourseCredits = (courseCode: string, section?: Course) =>
     estimateSectionCredits(courseCode, section)
 
+  /** PyReason passes explicit codes; CS BS with no codes uses the fixed workload matrix; else degree JSON slots + fillers. */
   const buildScheduleFromCourseCodes = (courseCodes: string[], workload: WorkloadLevel) => {
     if (!selectedMajor || !selectedYear || Object.keys(requirements).length === 0) {
       showNotification("Please confirm selection or wait for data to load.", "error");
@@ -512,179 +543,253 @@ export default function CourseScheduler({
       return;
     }
 
-    console.log("Generating schedule for major:", selectedMajor, "year:", selectedYear);
-    console.log("Available courses:", courses.length);
-    console.log("Requirements keys:", Object.keys(requirements));
-    console.log("Requested workload:", workload, "target credits:", WORKLOAD_TARGETS[workload]);
-
-    // Reset current schedule
-    setSelectedCourses([]);
-
-    if (!Array.isArray(courseCodes) || courseCodes.length === 0) {
-      showNotification("No recommended courses were available for scheduling.", "warning");
+    const majorRequirements = requirements[selectedMajor];
+    if (!majorRequirements) {
+      showNotification(`No requirements found for major: ${selectedMajor}`, "error");
       return;
     }
 
-    const uniqueCourseCodes = Array.from(
-      new Set(courseCodes.map((code) => normalizeRecommendationCourseCode(code)).filter(Boolean))
-    )
+    const useCsWorkloadMatrix = usesCsWorkloadMatrix(selectedMajor, selectedYear);
+    let termRequirements: string[] | undefined;
 
-    console.log("Recommended courses for", selectedMajor, selectedYear, ":", uniqueCourseCodes);
+    const explicitCodes = Array.isArray(courseCodes)
+      ? Array.from(
+          new Set(courseCodes.map((code) => normalizeRecommendationCourseCode(code)).filter(Boolean))
+        )
+      : [];
 
-    // Print first few courses for debugging
-    console.log("Sample available courses:");
-    courses.slice(0, 5).forEach(course => {
-      console.log(`- ${course.id}: Class=${course.Class}, Section=${course.Section}`);
-    });
+    if (!useCsWorkloadMatrix) {
+      termRequirements = majorRequirements[selectedYear];
+      if (explicitCodes.length === 0) {
+        if (!termRequirements || termRequirements.length === 0) {
+          showNotification(`No suggested courses listed for ${selectedMajor} — ${selectedYear}.`, "warning");
+          return;
+        }
+      }
+    }
+
+    setSelectedCourses([]);
+
+    let slots = useCsWorkloadMatrix
+      ? []
+      : requirementStringsToSlots(termRequirements!);
+    if (!useCsWorkloadMatrix) {
+      const postponedLow =
+        workload === "low" && slots.length > 1 ? applyLowWorkloadPostpone(slots) : null;
+      if (postponedLow) slots = postponedLow;
+    }
+
+    const sparse = useCsWorkloadMatrix ? false : isSparseSemesterBucket(selectedYear, slots);
+    const workloadTarget = workloadTargetCredits(workload);
+    const targetCredits = WORKLOAD_TARGETS[workload];
 
     let coursesAddedCount = 0;
     let totalScheduledCredits = 0;
     const newSelectedCourses: SelectedCourse[] = [];
     const notFoundCourses: string[] = [];
     const skippedForCreditLimit: string[] = [];
-    const targetCredits = WORKLOAD_TARGETS[workload];
+    const collisionNotes: string[] = [];
 
-    // Loop through each course code
-    for (let i = 0; i < uniqueCourseCodes.length; i++) {
-      if (totalScheduledCredits >= targetCredits) {
-        break;
+    const normClass = (c?: string) =>
+      String(c || "")
+        .trim()
+        .toUpperCase()
+        .replace(/\s+/g, " ");
+
+    const tryAddCode = (rawCode: string, allowDuplicateClass = false): boolean => {
+      const normalizedCode = rawCode.trim();
+      const codeWithoutSpace = normalizedCode.replace(/\s+/g, "");
+      if (!normalizedCode) return false;
+
+      if (
+        !allowDuplicateClass &&
+        newSelectedCourses.some((s) => normClass(s.Class) === normClass(normalizedCode))
+      ) {
+        return true;
       }
 
-      const code = uniqueCourseCodes[i];
-      if (!code) continue;
-
-      // Handle both formats - with or without spaces
-      const normalizedCode = code.trim();
-      const codeWithoutSpace = normalizedCode.replace(/\s+/g, '');
-      
-      // Find all possible sections of this course - more flexible matching
-      const possibleSections = courses.filter((c) => {
-        if (!c.Class) return false;
-        
-        const courseClass = c.Class.trim();
-        const courseClassNoSpace = courseClass.replace(/\s+/g, '');
-        
-        // Try multiple matching strategies
-        return (
-          courseClass.toLowerCase() === normalizedCode.toLowerCase() || // Exact match with spaces
-          courseClassNoSpace.toLowerCase() === codeWithoutSpace.toLowerCase() || // Match without spaces
-          courseClass.toLowerCase().includes(normalizedCode.toLowerCase()) // Partial match
+      const possibleSections = courses
+        .filter((c) => {
+          if (!c.Class) return false;
+          const courseClass = c.Class.trim();
+          const courseClassNoSpace = courseClass.replace(/\s+/g, "");
+          return (
+            courseClass.toLowerCase() === normalizedCode.toLowerCase() ||
+            courseClassNoSpace.toLowerCase() === codeWithoutSpace.toLowerCase() ||
+            courseClass.toLowerCase().includes(normalizedCode.toLowerCase())
+          );
+        })
+        .filter(
+          (c) => !newSelectedCourses.some((s) => s.Class === c.Class && s.Section === c.Section)
         );
-      });
 
-      console.log(`Looking for course ${code}: found ${possibleSections.length} possible sections`);
-      
-      if (possibleSections.length === 0) {
-        // Try a more lenient search if no matches found
-        const lenientSections = courses.filter(c => 
-          c.Class && c.Class.replace(/\s+/g, '').toLowerCase().includes(codeWithoutSpace.toLowerCase())
-        );
-        
-        if (lenientSections.length > 0) {
-          console.log(`Found ${lenientSections.length} sections with lenient matching for ${code}`);
-          
-          let added = false;
-          for (const section of lenientSections) {
-            const sectionClass = normalizeRecommendationCourseCode(section.Class);
-            if (
-              newSelectedCourses.some(
-                (scheduledCourse) =>
-                  normalizeRecommendationCourseCode(scheduledCourse.Class) === sectionClass
-              )
-            ) {
-              continue;
-            }
-
-            const estimatedCredits = estimateCourseCredits(normalizedCode, section);
-            if (totalScheduledCredits + estimatedCredits > MAX_SEMESTER_CREDITS) {
-              continue;
-            }
-
-            if (!hasConflict(section, newSelectedCourses)) {
-              newSelectedCourses.push({
-                ...section,
-                id: `course-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-                credits: estimatedCredits.toString(),
-              });
-              added = true;
-              coursesAddedCount++;
-              totalScheduledCredits += estimatedCredits;
-              break;
-            }
-          }
-          
-          if (!added) {
-            const couldFitWithinCredits = lenientSections.some(
-              (section) => totalScheduledCredits + estimateCourseCredits(normalizedCode, section) <= MAX_SEMESTER_CREDITS
-            );
-            if (!couldFitWithinCredits) {
-              skippedForCreditLimit.push(code);
-            } else {
-              showNotification(`Could not add "${code}": All sections conflict.`, "warning");
-            }
-          }
-        } else {
-          notFoundCourses.push(code);
-        }
-        continue;
-      }
-
-      let added = false;
-      for (const section of possibleSections) {
-        const sectionClass = normalizeRecommendationCourseCode(section.Class);
-        if (
-          newSelectedCourses.some(
-            (scheduledCourse) =>
-              normalizeRecommendationCourseCode(scheduledCourse.Class) === sectionClass
-          )
-        ) {
-          continue;
-        }
-
+      const pushSection = (section: Course): boolean => {
         const estimatedCredits = estimateCourseCredits(normalizedCode, section);
-        if (totalScheduledCredits + estimatedCredits > MAX_SEMESTER_CREDITS) {
-          continue;
-        }
+        if (totalScheduledCredits + estimatedCredits > MAX_SEMESTER_CREDITS) return false;
+        if (hasConflict(section, newSelectedCourses)) return false;
+        newSelectedCourses.push({
+          ...section,
+          id: `course-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+          credits: estimatedCredits.toString(),
+        });
+        coursesAddedCount++;
+        totalScheduledCredits += estimatedCredits;
+        return true;
+      };
 
-        if (!hasConflict(section, newSelectedCourses)) {
-          // Create a new SelectedCourse with a unique ID
-          const newCourse: SelectedCourse = {
-            ...section,
-            id: `course-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-            credits: estimatedCredits.toString(),
-          };
-          
-          newSelectedCourses.push(newCourse);
-          added = true;
-          coursesAddedCount++;
-          totalScheduledCredits += estimatedCredits;
+      if (possibleSections.length === 0) {
+        const lenientSections = courses.filter(
+          (c) =>
+            c.Class &&
+            c.Class.replace(/\s+/g, "").toLowerCase().includes(codeWithoutSpace.toLowerCase())
+        );
+        for (const section of lenientSections) {
+          if (pushSection(section)) return true;
+        }
+        notFoundCourses.push(normalizedCode);
+        return false;
+      }
+
+      let placed = false;
+      for (const section of possibleSections) {
+        if (pushSection(section)) {
+          placed = true;
           break;
         }
       }
 
-      if (!added && possibleSections.length > 0) {
-        const couldFitWithinCredits = possibleSections.some(
-          (section) => totalScheduledCredits + estimateCourseCredits(normalizedCode, section) <= MAX_SEMESTER_CREDITS
+      if (!placed) {
+        const couldFit = possibleSections.some(
+          (section) =>
+            totalScheduledCredits + estimateCourseCredits(normalizedCode, section) <= MAX_SEMESTER_CREDITS
         );
-        if (!couldFitWithinCredits) {
-          skippedForCreditLimit.push(code);
+        if (!couldFit) {
+          skippedForCreditLimit.push(normalizedCode);
         } else {
-          showNotification(`Could not add "${code}": All sections conflict.`, "warning");
+          const first = possibleSections[0];
+          const blocker = findFirstBlockingCourse(first, newSelectedCourses);
+          if (useCsWorkloadMatrix) {
+            collisionNotes.push(
+              `${normalizedCode}: all open sections clash${
+                blocker
+                  ? ` (e.g. with ${blocker.Class} ${blocker.Section} — ${blocker.DaysTimes || "see calendar"})`
+                  : ""
+              }`
+            );
+          } else {
+            showNotification(`Could not add "${normalizedCode}": All sections conflict.`, "warning");
+          }
+        }
+      }
+
+      return placed;
+    };
+
+    if (explicitCodes.length > 0) {
+      for (let i = 0; i < explicitCodes.length; i++) {
+        if (totalScheduledCredits >= targetCredits) break;
+        const code = explicitCodes[i];
+        if (!code) continue;
+        tryAddCode(code, false);
+      }
+    } else if (useCsWorkloadMatrix) {
+      const entries = buildCsWorkloadSuggestionList(selectedYear, workload);
+      if (!entries.length) {
+        showNotification("No suggested course list for this term and workload.", "error");
+        return;
+      }
+      for (const { code, allowDuplicateClass } of entries) {
+        if (totalScheduledCredits >= MAX_SEMESTER_CREDITS) break;
+        tryAddCode(code, Boolean(allowDuplicateClass));
+      }
+    } else {
+      for (const slot of slots) {
+        if (totalScheduledCredits >= MAX_SEMESTER_CREDITS) break;
+
+        if (slot.alternatives.length > 0) {
+          let placed = false;
+          for (const alt of slot.alternatives) {
+            if (tryAddCode(alt)) {
+              placed = true;
+              break;
+            }
+          }
+          if (!placed) {
+            /* tryAddCode recorded not-found / conflict */
+          }
+        } else if (slot.source.trim()) {
+          tryAddCode(slot.source);
+        }
+      }
+
+      if (workload !== "low") {
+        const fillerCap = workload === "high" ? 18 : 15;
+        const needFiller =
+          workload === "high"
+            ? totalScheduledCredits < fillerCap
+            : sparse
+              ? totalScheduledCredits < fillerCap
+              : totalScheduledCredits < MIN_SEMESTER_CREDITS;
+
+        if (needFiller) {
+          const queue = buildFillerCourseQueue(courses).filter(
+            (code) => !newSelectedCourses.some((s) => normClass(s.Class) === normClass(code))
+          );
+          for (const code of queue) {
+            if (totalScheduledCredits >= fillerCap) break;
+            if (totalScheduledCredits >= MAX_SEMESTER_CREDITS) break;
+            tryAddCode(code);
+          }
         }
       }
     }
 
-    // Force a re-render by creating a new array
     setSelectedCourses([...newSelectedCourses]);
-    console.log(`Added ${coursesAddedCount} courses to schedule. Schedule now has ${newSelectedCourses.length} courses and ${totalScheduledCredits} credits.`);
+
+    if (useCsWorkloadMatrix) {
+      const overlaps = findScheduleConflicts(newSelectedCourses);
+      if (overlaps.length > 0) {
+        const detail = overlaps
+          .slice(0, 5)
+          .map(
+            (c) =>
+              `${c.courseA.Class} ${c.courseA.Section} vs ${c.courseB.Class} ${c.courseB.Section} (${c.overlapLabel})`
+          )
+          .join(" · ");
+        showNotification(
+          `Schedule collisions (overlapping meeting times): ${detail}${overlaps.length > 5 ? " …" : ""}`,
+          "warning"
+        );
+      }
+      if (collisionNotes.length > 0) {
+        showNotification(
+          `Could not place some sections: ${collisionNotes.slice(0, 3).join(" · ")}${
+            collisionNotes.length > 3 ? " …" : ""
+          }`,
+          "warning"
+        );
+      }
+    }
+
+    if (
+      !useCsWorkloadMatrix &&
+      explicitCodes.length === 0 &&
+      workload === "low" &&
+      termRequirements &&
+      termRequirements.length > 1
+    ) {
+      showNotification(
+        "Low workload: one planned course was left for a later term (see graduation path).",
+        "default"
+      );
+    }
 
     if (notFoundCourses.length > 0) {
-      const message = notFoundCourses.length === 1 
-        ? `Could not find course: ${notFoundCourses[0]}`
-        : `Could not find ${notFoundCourses.length} courses: ${notFoundCourses.slice(0, 3).join(", ")}${notFoundCourses.length > 3 ? '...' : ''}`;
-      
+      const message =
+        notFoundCourses.length === 1
+          ? `Could not find course: ${notFoundCourses[0]}`
+          : `Could not find ${notFoundCourses.length} courses: ${notFoundCourses.slice(0, 3).join(", ")}${notFoundCourses.length > 3 ? "…" : ""}`;
       showNotification(message, "warning");
-      console.warn("Courses not found:", notFoundCourses);
     }
 
     if (skippedForCreditLimit.length > 0) {
@@ -695,19 +800,22 @@ export default function CourseScheduler({
     }
 
     if (coursesAddedCount > 0) {
-      const workloadLabel = workload.charAt(0).toUpperCase() + workload.slice(1)
-      if (totalScheduledCredits < MIN_SEMESTER_CREDITS) {
+      const workloadLabel = workload.charAt(0).toUpperCase() + workload.slice(1);
+      // CS workload matrix (no PyReason list): correct catalog credits can yield 11 cr (e.g. y1f low).
+      const minCreditsThisRun =
+        useCsWorkloadMatrix && explicitCodes.length === 0 ? 11 : MIN_SEMESTER_CREDITS;
+      if (totalScheduledCredits < minCreditsThisRun) {
         showNotification(
-          `${workloadLabel} workload scheduled ${totalScheduledCredits} credits, which is below the 12-credit minimum because no more non-conflicting courses fit.`,
+          `${workloadLabel} workload: ${totalScheduledCredits} credits (below ${minCreditsThisRun} min) — catalog gaps or conflicts.`,
           "warning"
         );
       } else {
         showNotification(
-          `${workloadLabel} workload scheduled ${coursesAddedCount} course(s) for ${totalScheduledCredits} credits.`,
+          `${workloadLabel} workload: ${coursesAddedCount} course(s), ${totalScheduledCredits} credits (target ~${workloadTarget}).`,
           "success"
         );
       }
-    } else if (coursesAddedCount === 0 && notFoundCourses.length === 0) {
+    } else if (notFoundCourses.length === 0) {
       showNotification("No courses could be added to your schedule.", "error");
     }
   };
@@ -721,12 +829,30 @@ export default function CourseScheduler({
       return
     }
 
+    pyReasonRecommendationsAppliedRef.current = true
     buildScheduleFromCourseCodes(
       latestRecommendations.map((course) => course.courseCode),
       pendingRecommendationWorkload
     )
     setIsRecommendationPreviewOpen(false)
     setPendingRecommendationWorkload(null)
+  }
+
+  /**
+   * Dismiss PyReason preview. If the user did not apply recommendations, fill the schedule from the
+   * CS workload matrix (or degree-term slots). Uses a ref for workload because Radix often does not
+   * invoke onOpenChange when the parent sets open=false programmatically (e.g. "Not now").
+   */
+  const closeRecommendationPreviewAndMaybeApplyMatrix = () => {
+    const w = pendingWorkloadRef.current
+    pendingWorkloadRef.current = null
+    const appliedPyReason = pyReasonRecommendationsAppliedRef.current
+    pyReasonRecommendationsAppliedRef.current = false
+    setPendingRecommendationWorkload(null)
+    setIsRecommendationPreviewOpen(false)
+    if (w != null && !appliedPyReason) {
+      buildScheduleFromCourseCodes([], w)
+    }
   }
 
   const generateBestSchedule = async (workload: WorkloadLevel) => {
@@ -1821,7 +1947,12 @@ export default function CourseScheduler({
 
   return (
     <div className="app-container mx-auto max-w-7xl px-0 py-2 md:py-4">
-      <Dialog open={isRecommendationPreviewOpen} onOpenChange={setIsRecommendationPreviewOpen}>
+      <Dialog
+        open={isRecommendationPreviewOpen}
+        onOpenChange={(open) => {
+          if (!open) closeRecommendationPreviewAndMaybeApplyMatrix()
+        }}
+      >
         <DialogContent className="max-w-3xl">
           <DialogHeader>
             <DialogTitle>Review Suggested Courses</DialogTitle>
@@ -1857,13 +1988,7 @@ export default function CourseScheduler({
           </div>
 
           <DialogFooter>
-            <Button
-              variant="outline"
-              onClick={() => {
-                setIsRecommendationPreviewOpen(false)
-                setPendingRecommendationWorkload(null)
-              }}
-            >
+            <Button variant="outline" type="button" onClick={closeRecommendationPreviewAndMaybeApplyMatrix}>
               Not Now
             </Button>
             <Button onClick={applyRecommendedCoursesToSchedule}>
@@ -1878,7 +2003,8 @@ export default function CourseScheduler({
         selectedYear={selectedYear}
         isLoading={isLoading}
         studentName={selectedStudentName}
-        onClassYearChange={handleClassYearChange}
+        planOptions={planOptions}
+        onPlannerTermChange={handlePlannerTermChange}
       />
 
       <div className="mb-6 overflow-hidden rounded-xl border border-border bg-card shadow-md">

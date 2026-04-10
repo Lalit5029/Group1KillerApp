@@ -22,7 +22,7 @@ actn=oDoc.win0.ICAction.value;
 oDoc.win0.ICAction.value='None';
 oDoc.win0.ICResubmit.value='0';
 oWin.nResubmit='0';
-oDoc.win0.ICStateNum.value=27;initVars_win0();
+oDoc.win0.ICStateNum.value=19;initVars_win0();
 if (typeof resetVars_win0 == "function")resetVars_win0();
 oDoc.win0.ICFocus.value='';
 setupTimeout2();
@@ -57,7 +57,7 @@ setupTimeout2();
 processing_win0(0,3000);]]></GENSCRIPT>
 <FIELD id='win0divPSHIDDENFIELDS'><![CDATA[<input type='hidden' name='ICType' id='ICType' value='Panel' />
 <input type='hidden' name='ICElementNum' id='ICElementNum' value='0' />
-<input type='hidden' name='ICStateNum' id='ICStateNum' value='27' />
+<input type='hidden' name='ICStateNum' id='ICStateNum' value='19' />
 <input type='hidden' name='ICAction' id='ICAction' value='None' />
 <input type='hidden' name='ICModelCancel' id='ICModelCancel' value='0' />
 <input type='hidden' name='ICXPos' id='ICXPos' value='0' />
@@ -71,7 +71,7 @@ processing_win0(0,3000);]]></GENSCRIPT>
 <input type='hidden' name='ICSkipPending' id='ICSkipPending' value='0' />
 <input type='hidden' name='ICAutoSave' id='ICAutoSave' value='0' />
 <input type='hidden' name='ICResubmit' id='ICResubmit' value='0' />
-<input type='hidden' name='ICSID' id='ICSID' value='tAaA45+RcgFiWxiYAWvN90jnTJxCNO78n6jRmfOlfbU=' />
+<input type='hidden' name='ICSID' id='ICSID' value='fgf2YoGXQqTlvJwB33DXT2MwJ04mS8mI8k53mimLsEg=' />
 <input type='hidden' name='ICActionPrompt' id='ICActionPrompt' value='false' />
 <input type='hidden' name='ICBcDomData' id='ICBcDomData' value='' />
 <input type='hidden' name='ICPanelName' id='ICPanelName' value='' />
@@ -210,7 +210,7 @@ processing_win0(0,3000);]]></GENSCRIPT>
 <td  valign='top' align='left'>
 <DIV    id='win0divDERIVED_CLSRCH_SSR_CLSRCH_CRIT'><div  style="width:723px; " >
 <!-- Begin HTML Area Name Undisclosed -->
-<table class="PSEDITBOX_DISPONLY"><tr><td>The following classes match your search criteria Course Subject: <strong>Engineering & Computer Science</strong>,&nbsp;&nbsp;Course Career: <strong>Undergraduate</strong>,&nbsp;&nbsp;Show Open Classes Only: <strong>No</strong></td></tr></table>
+<table class="PSEDITBOX_DISPONLY"><tr><td>The following classes match your search criteria Course Subject: <strong>Engineering & Computer Science</strong>,&nbsp;&nbsp;Course Career: <strong>Undergraduate</strong>,&nbsp;&nbsp;Show Open Classes Only: <strong>Yes</strong></td></tr></table>
 <!-- End HTML Area -->
 </div>
 </DIV></td>

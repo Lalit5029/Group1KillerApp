@@ -143,56 +143,67 @@ export async function fetchRequirements(): Promise<Requirements> {
   }
 }
 
+/**
+ * Primary catalog: public/data/courses.json (merged from PeopleSoft XML).
+ * Merges RMP/reviews from reviews.csv when instructor name matches.
+ */
+async function parseCoursesJson(
+  jsonPath: string,
+  reviewsMap: Map<string, { RMP_Rating: string; Reviews: string[] }>
+): Promise<Course[]> {
+  const response = await fetch(jsonPath);
+  if (!response.ok) {
+    return [];
+  }
+  const data: unknown = await response.json();
+  if (!Array.isArray(data)) {
+    return [];
+  }
+
+  const valid: Course[] = [];
+  for (let i = 0; i < data.length; i++) {
+    const course = data[i] as Partial<Course>;
+    if (!course.Class || typeof course.Class !== "string") continue;
+    const instructorName = String(course.Instructor || "").trim();
+    const reviewEntry = instructorName ? reviewsMap.get(instructorName) : undefined;
+    valid.push({
+      ...course,
+      id: course.id || `course-${i}`,
+      Class: course.Class.trim(),
+      Section: course.Section?.trim() || "",
+      DaysTimes: course.DaysTimes?.trim() || "",
+      Room: course.Room?.trim() || "",
+      Instructor: instructorName,
+      MeetingDates: course.MeetingDates?.trim() || "",
+      Reviews: reviewEntry?.Reviews ?? course.Reviews ?? [],
+      RMP_Rating: reviewEntry?.RMP_Rating ?? course.RMP_Rating ?? "N/A",
+    });
+  }
+  return valid;
+}
+
 // Fetch courses function
 export async function fetchCourses(): Promise<Course[]> {
   try {
-    console.log("Fetching course data from CSV...");
-    
-    // Use the CSV parser to fetch courses and merge reviews
-    const courses = await parseCoursesCsv("/data/courses.csv", "/data/reviews.csv");
-    
-    if (courses.length === 0) {
-      console.warn("No courses found in CSV file or failed to parse, attempting to use JSON file as fallback");
-      
-      // Fallback to JSON if CSV parsing fails or returns no courses
-      const response = await fetch("/data/courses.json");
-      if (!response.ok) {
-        throw new Error(`Failed to fetch courses from JSON: ${response.status}`);
-      }
-      const data = await response.json();
-      
-      if (!Array.isArray(data)) {
-        console.error("Fetched courses data is not an array:", data);
-        throw new Error("Invalid course data format: expected an array");
-      }
-      
-      console.log(`Successfully fetched ${data.length} courses from JSON`);
-      
-      // Validate each course has required fields
-      const validCourses = data.filter(course => {
-        if (!course.Class) {
-          console.warn("Course missing Class field:", course);
-          return false;
-        }
-        // Add default empty reviews/rating if missing in JSON
-        if (!course.Reviews) course.Reviews = [];
-        if (!course.RMP_Rating) course.RMP_Rating = "N/A";
-        return true;
-      });
-      
-      if (validCourses.length < data.length) {
-        console.warn(`Filtered out ${data.length - validCourses.length} invalid courses`);
-      }
-      
-      return validCourses;
+    const reviewsMap = await parseReviewsCsv("/data/reviews.csv");
+
+    const fromJson = await parseCoursesJson("/data/courses.json", reviewsMap);
+    if (fromJson.length > 0) {
+      console.log(`Loaded ${fromJson.length} courses from courses.json (primary catalog)`);
+      return fromJson;
     }
 
-    console.log(`Successfully fetched ${courses.length} courses`);
-    return courses;
-    
+    console.warn("courses.json missing or empty; falling back to courses.csv");
+    const fromCsv = await parseCoursesCsv("/data/courses.csv", "/data/reviews.csv");
+    if (fromCsv.length > 0) {
+      console.log(`Loaded ${fromCsv.length} courses from CSV`);
+      return fromCsv;
+    }
+
+    return [];
   } catch (error) {
     console.error("Error fetching course data:", error);
-    return []; // Return empty array on error
+    return [];
   }
 }
 

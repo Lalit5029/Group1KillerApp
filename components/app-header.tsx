@@ -8,15 +8,18 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-import { CLASS_YEARS, type ClassYear } from "@/lib/class-year"
+
+export type PlannerTermOption = { value: string; label: string }
 
 interface AppHeaderProps {
   selectedMajor: string
   selectedYear: string
   isLoading: boolean
   studentName?: string
-  /** Called when the user changes class year (suggested-course bucket). */
-  onClassYearChange?: (year: ClassYear) => void
+  /** Semester or legacy class-year buckets for suggested courses (from major requirements keys). */
+  planOptions: PlannerTermOption[]
+  /** Called when the user changes planner term (semester or class year). */
+  onPlannerTermChange?: (value: string) => void
 }
 
 export function AppHeader({
@@ -24,7 +27,8 @@ export function AppHeader({
   selectedYear,
   isLoading,
   studentName,
-  onClassYearChange,
+  planOptions,
+  onPlannerTermChange,
 }: AppHeaderProps) {
   return (
     <header className="mb-6 flex flex-wrap items-center justify-between gap-4 rounded-xl border border-primary/20 bg-gradient-to-r from-primary via-primary-600 to-secondary p-5 text-primary-foreground shadow-[0_4px_24px_-4px_hsl(var(--primary)/0.35)]">
@@ -46,20 +50,24 @@ export function AppHeader({
             </span>
           </p>
         ) : null}
-        {selectedMajor && selectedYear && onClassYearChange ? (
+        {selectedMajor && selectedYear && onPlannerTermChange && planOptions.length > 0 ? (
           <div className="flex items-center gap-2 text-sm">
-            <span className="hidden sm:inline opacity-90">Class year</span>
+            <span className="hidden sm:inline opacity-90">Planner term</span>
             <Select
-              value={CLASS_YEARS.includes(selectedYear as ClassYear) ? selectedYear : "Freshman"}
-              onValueChange={(v) => onClassYearChange(v as ClassYear)}
+              value={
+                planOptions.some((o) => o.value === selectedYear)
+                  ? selectedYear
+                  : planOptions[0]?.value ?? ""
+              }
+              onValueChange={(v) => onPlannerTermChange(v)}
             >
-              <SelectTrigger className="h-9 w-[140px] border-white/30 bg-white/15 text-primary-foreground backdrop-blur-sm">
+              <SelectTrigger className="h-9 min-w-[200px] max-w-[280px] border-white/30 bg-white/15 text-primary-foreground backdrop-blur-sm">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                {CLASS_YEARS.map((y) => (
-                  <SelectItem key={y} value={y}>
-                    {y}
+                {planOptions.map((o) => (
+                  <SelectItem key={o.value} value={o.value}>
+                    {o.label}
                   </SelectItem>
                 ))}
               </SelectContent>

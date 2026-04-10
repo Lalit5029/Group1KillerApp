@@ -1,44 +1,70 @@
 {
   "majorKey": "Computer Science, BS",
   "recommendedPlan": {
-    "Freshman": [
+    "y1f": [
       "ECS 101",
       "CIS 151",
       "MAT 295",
-      "WRT 105",
       "FYS 101",
+      "WRT 105",
+      "ECN 101"
+    ],
+    "y1s": [
       "CIS 252",
       "MAT 296",
       "PHY 211",
-      "PHI 251"
+      "PHY 221",
+      "PHI 251",
+      "SOC 281"
     ],
-    "Year 2 · Fall": [
+    "y2f": [
       "CIS 375",
       "CIS 351",
       "MAT 397 or MAT 331 (Linear Algebra)",
+      "IST 344",
       "CHE 106",
-      "IST 344"
+      "CHE 107"
     ],
-    "Year 2 · Spring": [
+    "y2s": [
       "CIS 321",
       "CIS 341",
       "CIS 352",
       "CSE 384",
       "WRT 205",
-      "SOC 281 (IDEA)"
+      "CIS 400"
     ],
-    "Junior": [
+    "y3f": [
       "CIS 453",
       "CIS 477",
       "CSE 486",
+      "CIS 400",
+      "HST 122",
+      "ECN 102"
+    ],
+    "y3s": [
       "CIS 473",
       "CIS 454",
-      "SSH distribution (e.g. HST 122, PSY 205, ANT courses) to 21 cr"
+      "CIS 442",
+      "CIS 400",
+      "ANT 111",
+      "ECN 311"
     ],
-    "Senior": [
+    "y4f": [
       "ECS 392",
-      "Upper-division electives (18 cr): CIS 400 topics + CIS 442",
-      "Free electives (8 cr): e.g. IST 323, IST 343, IST 359"
+      "CIS 400",
+      "CIS 400",
+      "PHI 378",
+      "PHI 451",
+      "ANT 121"
+    ],
+    "y4s": [
+      "PHI 107",
+      "CIS 400",
+      "CIS 400",
+      "ECN 495",
+      "ECN 304",
+      "CIS 442",
+      "PSY 205"
     ]
   },
   "reference": {
@@ -49,15 +75,15 @@
       "Major — Writing (6 cr): WRT 105 and WRT 205 (minimum C- in each)",
       "Major — Presentation skills (3 cr): IST 344 (minimum C-)",
       "Major — Social sciences & humanities (21 cr): choose from ECS 392 Ethical Aspects of Engineering and Computer Science; PHI 251 Logic; HST 122 Global History 1750 to Present; PSY 205 Foundations of Human Behavior; SOC 281 Sociology of Families; ANT 357 Health, Healing, and Culture; ANT 121 Peoples and Cultures of the World (typically 3 cr each; combine per program rules to 21 cr)",
-      "Major — Natural sciences (8 cr): PHY 211 General Physics I (4 cr) and CHE 106 General Chemistry Lecture I (4 cr) (minimum C-)",
+      "Major — Natural sciences (8 cr): PHY 211 General Physics I (4 cr) and CHE 106 lecture (3 cr) with CHE 107 lab (1 cr) (minimum C-); confirm totals with catalog",
       "Major — Free electives (8 cr): e.g. IST 323 Introduction to Information Security; IST 343 Data in Society; IST 359 Introduction to Database Management Systems (3 cr each; combine to 8 cr per program rules)"
     ],
     "mathematics": [
       "MAT 295 Calculus I (4 cr)",
       "MAT 296 Calculus II (4 cr)",
-      "MAT 397 Calculus III (4 cr) or MAT 331 Introduction to Linear Algebra (4 cr) — one of the two fulfills this slot",
-      "CIS 321 Introduction to Probability and Statistics (4 cr)",
-      "Total 16 credits; minimum C- in each course"
+      "MAT 397 Calculus III (4 cr) or MAT 331 Introduction to Linear Algebra (3 cr) — one of the two fulfills this slot",
+      "CIS 321 Introduction to Probability and Statistics (3 cr)",
+      "Total mathematics credits depend on which option you take; minimum C- in each course (confirm with DegreeWorks)"
     ],
     "core": [
       "Engineering / intro computing (6 cr): ECS 101 Introduction to Engineering & Computer Science (3 cr); CIS 151 Fundamentals of Computing and Programming (3 cr)",

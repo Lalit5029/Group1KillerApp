@@ -45,11 +45,10 @@ export interface Student {
   notes?: string | null;
 }
 
+/** Major key → planner term (class year or semester id) → suggested course strings */
 export interface Requirements {
-  [key: string]: {
-    [majorName: string]: {
-      [year: string]: string[];
-    };
+  [majorName: string]: {
+    [termKey: string]: string[];
   };
 }
 

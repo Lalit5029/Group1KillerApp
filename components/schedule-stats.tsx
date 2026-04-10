@@ -2,6 +2,7 @@ import type React from "react"
 import { Card, CardContent } from "@/components/ui/card"
 import { Book, GraduationCap, Clock, Building2 } from "lucide-react"
 import type { SelectedCourse } from "@/lib/types"
+import { sumSelectedCredits } from "@/lib/schedule-credits"
 
 interface ScheduleStatsProps {
   selectedCourses: SelectedCourse[]
@@ -11,8 +12,8 @@ export function ScheduleStats({ selectedCourses }: ScheduleStatsProps) {
   // Count total courses
   const totalCourses = selectedCourses.length
 
-  // Estimate credit hours (most courses are 3-4 credits)
-  const estimatedCredits = Math.round(totalCourses * 3.5)
+  // Sum real credits (plan overrides + per-section credits); not courses × 3.5 (that showed 14 for four courses).
+  const totalCreditHours = sumSelectedCredits(selectedCourses, [])
 
   // Calculate total class hours per week
   let totalMinutes = 0
@@ -69,7 +70,7 @@ export function ScheduleStats({ selectedCourses }: ScheduleStatsProps) {
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
       <StatCard icon={<Book className="h-6 w-6" />} value={totalCourses.toString()} label="Total Courses" />
 
-      <StatCard icon={<GraduationCap className="h-6 w-6" />} value={estimatedCredits.toString()} label="Credit Hours" />
+      <StatCard icon={<GraduationCap className="h-6 w-6" />} value={String(totalCreditHours)} label="Credit Hours" />
 
       <StatCard icon={<Clock className="h-6 w-6" />} value={totalHours.toString()} label="Class Hours" />
 
