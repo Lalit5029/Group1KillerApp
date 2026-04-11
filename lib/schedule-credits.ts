@@ -54,10 +54,14 @@ export function estimateSectionCredits(
   section?: Partial<Course> & { credits?: string }
 ): number {
   const norm = courseCode.trim().toUpperCase().replace(/\s+/g, " ");
+  const sectionLabel = String(section?.Section || "").toUpperCase();
 
   // Labs and CS BS plan codes win over catalog/section.credits (often missing or wrong).
   if (norm === "PHY 221" || norm === "CHE 107") {
     return 1;
+  }
+  if (norm === "PHY 211" && /-REC\b|-LAB\b/.test(sectionLabel)) {
+    return 0;
   }
   const planCredits = PLAN_COURSE_CREDITS[norm];
   if (planCredits !== undefined) {

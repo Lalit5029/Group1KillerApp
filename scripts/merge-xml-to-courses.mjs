@@ -31,6 +31,16 @@ function normalizeSectionText(text) {
     .trim();
 }
 
+/** PeopleSoft sometimes yields the same label twice (e.g. "M001-SEC RegularM001-SEC Regular"). */
+function dedupeRepeatedSectionLabel(text) {
+  const t = normalizeSectionText(text);
+  if (t.length < 4 || t.length % 2 !== 0) return t;
+  const half = t.length / 2;
+  const a = t.slice(0, half);
+  const b = t.slice(half);
+  return a === b ? a : t;
+}
+
 function parseXmlToOfferings(xmlPath) {
   const raw = fs.readFileSync(xmlPath, "utf8");
   const $ = cheerio.load(raw, { decodeEntities: true });
@@ -51,7 +61,7 @@ function parseXmlToOfferings(xmlPath) {
       .find('tr[id^="trSSR_CLSRCH_MTG1"]')
       .each((__, row) => {
         const $row = $(row);
-        const section = normalizeSectionText($row.find('[id^="MTG_CLASSNAME"]').text());
+        const section = dedupeRepeatedSectionLabel($row.find('[id^="MTG_CLASSNAME"]').text());
         const daysTimes = normalizeSectionText($row.find('[id^="MTG_DAYTIME"]').text()) || "TBA";
         const room = normalizeSectionText($row.find('[id^="MTG_ROOM"]').text()) || "TBA";
         const instructor = normalizeSectionText($row.find('[id^="MTG_INSTR"]').text()) || "Staff";
@@ -100,6 +110,24 @@ function main() {
     process.exit(1);
   }
 
+  function catalogRowKey(c) {
+    const cls = String(c.Class || "").trim();
+    const sec = dedupeRepeatedSectionLabel(String(c.Section || ""));
+    return `${cls}::${sec}`;
+  }
+
+  /** Collapse rows whose section label only differed by duplication (M001…M001). */
+  const dedupedExistingMap = new Map();
+  for (const c of existing) {
+    const normalized = {
+      ...c,
+      Class: String(c.Class || "").trim(),
+      Section: dedupeRepeatedSectionLabel(String(c.Section || "")),
+    };
+    dedupedExistingMap.set(catalogRowKey(normalized), normalized);
+  }
+  const dedupedExisting = [...dedupedExistingMap.values()];
+
   const byKey = new Map();
   let totalRows = 0;
 
@@ -111,25 +139,30 @@ function main() {
     const parsed = parseXmlToOfferings(xmlPath);
     totalRows += parsed.length;
     for (const o of parsed) {
-      const key = `${o.Class}::${o.Section}`;
+      const row = {
+        ...o,
+        Class: String(o.Class || "").trim(),
+        Section: dedupeRepeatedSectionLabel(o.Section),
+      };
+      const key = catalogRowKey(row);
       // Later files / rows overwrite so refreshed XML updates existing catalog rows.
-      byKey.set(key, o);
+      byKey.set(key, row);
     }
     console.log(`${path.basename(xmlPath)}: ${parsed.length} rows → ${byKey.size} unique sections so far`);
   }
 
   const uniqueOfferings = Array.from(byKey.values());
-  const rowKey = (c) => `${String(c.Class || "").trim()}::${String(c.Section || "").trim()}`;
 
   let updatedCount = 0;
-  const refreshed = existing.map((c) => {
-    const fresh = byKey.get(rowKey(c));
+  const refreshed = dedupedExisting.map((c) => {
+    const fresh = byKey.get(catalogRowKey(c));
     if (!fresh) return c;
     const changed =
       c.DaysTimes !== fresh.DaysTimes ||
       c.Room !== fresh.Room ||
       c.Instructor !== fresh.Instructor ||
-      c.MeetingDates !== fresh.MeetingDates;
+      c.MeetingDates !== fresh.MeetingDates ||
+      c.Section !== fresh.Section;
     if (changed) updatedCount++;
     return {
       ...c,
@@ -142,8 +175,8 @@ function main() {
     };
   });
 
-  const haveKeys = new Set(existing.map(rowKey));
-  const toAdd = uniqueOfferings.filter((o) => !haveKeys.has(`${o.Class}::${o.Section}`));
+  const haveKeys = new Set(dedupedExisting.map(catalogRowKey));
+  const toAdd = uniqueOfferings.filter((o) => !haveKeys.has(catalogRowKey(o)));
   const ids = nextCourseIds(refreshed, toAdd.length);
   const merged = [
     ...refreshed,
