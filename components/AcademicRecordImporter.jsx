@@ -5,6 +5,15 @@ import { Clock, CheckCircle, AlertCircle, BookOpen, Download, HelpCircle } from 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
 
 const getFriendlyAcademicImportError = (message = '') => {
+  if (/not available on this cloud host|not available in this cloud environment|serverless hosts/i.test(message)) {
+    return message;
+  }
+  if (/executablePath|Browser was not found|Chrome was not found at/i.test(message)) {
+    return (
+      'MySlice import needs Google Chrome on your computer. It does not run on typical cloud deployments. ' +
+      'Run the app locally with Chrome, or use the optional backend on your machine (port 3001).'
+    );
+  }
   if (/Failed to fetch/i.test(message)) {
     return 'Could not reach the import service. Start the backend API on port 3001, or use the built-in /api fallback by keeping Next.js running and retrying.';
   }

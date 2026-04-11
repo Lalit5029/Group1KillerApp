@@ -1615,6 +1615,15 @@ export default function CourseScheduler({
     if (/Failed to fetch/i.test(message)) {
       return "Could not reach the import service. Start backend API on port 3001, or retry to use the built-in /api fallback."
     }
+    if (/not available on this cloud host|not available in this cloud environment|serverless hosts/i.test(message)) {
+      return message
+    }
+    if (/executablePath|Browser was not found|Chrome was not found at/i.test(message)) {
+      return (
+        "MySlice import needs Google Chrome on your computer. It does not run on typical cloud deployments (no browser). " +
+        "Run the app locally with Chrome installed, or use the optional backend on your machine (port 3001)."
+      )
+    }
     if (/not authorized to access this component|security authorization|40\s*,\s*20/i.test(message)) {
       return "MySlice logged in, but that account is not authorized to open the Course History component directly. In the same browser window, open Academics or Student Records → Course History in View/Display mode, then retry the import."
     }

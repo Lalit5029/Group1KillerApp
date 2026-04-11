@@ -17,6 +17,15 @@ const __dirname = dirname(__filename);
 
 const isTestEnvironment = process.env.NODE_ENV === "test";
 
+/** Vercel / Lambda / Netlify: no bundled Chrome; MySlice flow uses a real browser window. */
+function isServerlessHosting() {
+  return Boolean(
+    process.env.VERCEL ||
+      process.env.AWS_LAMBDA_FUNCTION_NAME ||
+      process.env.NETLIFY,
+  );
+}
+
 // Define scrapingJobs object to track scraping tasks
 const scrapingJobs = {};
 
@@ -240,6 +249,13 @@ export async function login(username, password, jobId, options = {}) {
   let browser = null;
   let page = null;
   try {
+    if (!isTestEnvironment && isServerlessHosting()) {
+      throw new Error(
+        "MySlice import is not available on this cloud host: it needs Google Chrome on a desktop (interactive sign-in and 2FA). " +
+          "Use the app locally (`npm run dev`) with Chrome installed, or run the optional backend scraper on your machine.",
+      );
+    }
+
     if (isTestEnvironment) {
       // Test environment: Connect to existing Chrome instance
       console.log("🔍 Getting Chrome debug connection...");
@@ -261,10 +277,20 @@ export async function login(username, password, jobId, options = {}) {
     } else {
       // Production environment: Launch new browser instance
       const platform = process.platform;
-      const chromePath = CHROME_PATHS[platform];
+      const chromePath =
+        process.env.CHROME_PATH ||
+        process.env.PUPPETEER_EXECUTABLE_PATH ||
+        CHROME_PATHS[platform];
 
       if (!chromePath) {
         throw new Error(`Unsupported platform: ${platform}`);
+      }
+
+      if (!fs.existsSync(chromePath)) {
+        throw new Error(
+          `Google Chrome was not found at "${chromePath}". Install Chrome, or set CHROME_PATH / PUPPETEER_EXECUTABLE_PATH to your Chrome/Chromium binary. ` +
+            "MySlice import does not run on typical serverless hosts without a browser.",
+        );
       }
 
       browser = await puppeteer.launch({
