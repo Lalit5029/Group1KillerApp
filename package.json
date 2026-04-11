@@ -21,9 +21,6 @@
     "db:push": "prisma db push",
     "db:generate": "prisma generate"
   },
-  "prisma": {
-    "seed": "node prisma/seed.js"
-  },
   "dependencies": {
     "@google/generative-ai": "^0.24.1",
     "@hello-pangea/dnd": "^18.0.1",
