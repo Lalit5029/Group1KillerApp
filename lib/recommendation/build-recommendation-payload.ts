@@ -4,8 +4,8 @@ import type {
   AcademicCourseRecord,
   CandidateCourse,
   CatalogSectionRecord,
-  PyReasonFactCollection,
-  PyReasonPayload,
+  RecommendationFactCollection,
+  RecommendationPayload,
   RequirementBlockRecord,
   RequirementClause,
 } from "./types";
@@ -403,12 +403,12 @@ function evaluateRequirementGroups(
 }
 
 /**
- * Build the PyReason payload from real student/transcript/requirement/catalog data.
+ * Build the recommendation payload from real student/transcript/requirement/catalog data.
  * This function intentionally precomputes prerequisite satisfaction because the
  * project does not currently have a complete authoritative prerequisite feed.
- * PyReason then reasons over these facts to produce explainable status labels.
+ * The deterministic reasoner then labels and ranks these candidate courses.
  */
-export function buildPyReasonPayload({
+export function buildRecommendationPayload({
   studentId,
   studentName,
   selectedMajor,
@@ -430,7 +430,7 @@ export function buildPyReasonPayload({
   academicCourses: AcademicCourseRecord[];
   degreeRequirements: RequirementBlockRecord[];
   catalogCourses: CatalogSectionRecord[];
-}): PyReasonPayload {
+}): RecommendationPayload {
   const catalogIndex = buildCatalogIndex(catalogCourses);
   const gradeIndex = bestGradeByCourse(academicCourses);
   const allTranscriptCodes = unique(academicCourses.map((course) => normalizeCourseCode(course.code)));
@@ -654,7 +654,7 @@ export function buildPyReasonPayload({
     });
   }
 
-  const facts: PyReasonFactCollection = {
+  const facts: RecommendationFactCollection = {
     passed: Array.from(passedCourses).map((course) => ({ student: studentId, course })),
     failed: Array.from(failedCourses).map((course) => ({ student: studentId, course })),
     inProgress: Array.from(inProgressCourses).map((course) => ({ student: studentId, course })),

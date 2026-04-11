@@ -1,6 +1,6 @@
 # Group1KillerApp
 
-Advisor-focused course planning application built with Next.js, Prisma, MongoDB Atlas, and a Python-backed PyReason recommendation layer.
+Advisor-focused course planning application built with Next.js, Prisma, MongoDB Atlas, and a deterministic recommendation layer.
 
 The app supports:
 - advisor login
@@ -35,7 +35,7 @@ High-level flow:
 1. `User` logs in with NextAuth
 2. advisor selects a `Student`
 3. transcript + degree data + catalog + requirements are loaded
-4. PyReason is used as a recommendation layer
+4. a deterministic recommender evaluates next-course options
 5. ranked recommendations are passed into the existing schedule generator
 6. the schedule generator still handles:
    - section selection
@@ -43,7 +43,7 @@ High-level flow:
    - credit limits
    - room/time placement
 
-PyReason does not replace schedule generation. It improves which courses are recommended first.
+The recommender does not replace schedule generation. It improves which courses are recommended first.
 
 ## Main Features
 
@@ -57,7 +57,7 @@ PyReason does not replace schedule generation. It improves which courses are rec
 - Suggested courses with workload selection
 - Weekly calendar schedule view
 - Image import for schedules
-- PyReason-backed recommendation reasoning
+- Deterministic recommendation reasoning
 
 ## Tech Stack
 
@@ -68,7 +68,7 @@ PyReason does not replace schedule generation. It improves which courses are rec
 - Browser automation: Puppeteer
 - HTML parsing: Cheerio
 - OCR: Tesseract.js
-- Reasoning layer: Python + PyReason
+- Recommendation layer: TypeScript deterministic rules
 
 ## Project Data Model
 
@@ -182,7 +182,7 @@ npm run db:seed
 Run recommendation tests:
 
 ```bash
-npm test -- --runTestsByPath lib/recommendation/build-pyreason-payload.test.ts lib/recommendation/rank-recommendations.test.ts
+npm test -- --runTestsByPath lib/recommendation/build-recommendation-payload.test.ts lib/recommendation/rank-recommendations.test.ts
 ```
 
 ## Authentication Notes
@@ -229,11 +229,10 @@ Current recommendation pipeline:
 2. load saved degree requirement blocks
 3. load major requirement plan
 4. load course catalog
-5. build a reasoning payload
-6. run PyReason
-7. if PyReason fails or returns unusable output, fall back to a deterministic local reasoner
-8. rank recommendations
-9. pass recommended courses into the existing scheduler
+5. build a recommendation payload
+6. run the deterministic reasoner
+7. rank recommendations
+8. pass recommended courses into the existing scheduler
 
 The recommendation output includes:
 - recommended courses
@@ -291,12 +290,7 @@ Possible reasons:
 - remaining requirements may not map to concrete course codes
 - remaining work may be electives or buckets not yet represented in the data
 
-If the terminal shows a fallback message, PyReason may have:
-- timed out
-- failed to import
-- returned no usable inferred labels
-
-In those cases the app falls back to the deterministic TypeScript reasoner so recommendation still works.
+The deterministic TypeScript reasoner is the active recommendation engine.
 
 ## Troubleshooting
 
@@ -340,7 +334,7 @@ Check:
 - selected student
 - imported transcript data
 - degree requirements for that student
-- whether PyReason used `engine: "pyreason"` or fallback
+- whether the active student data and requirement mappings are accurate
 
 ### MySlice import seems stuck
 
@@ -360,7 +354,7 @@ Focused tests currently exist for the recommendation layer:
 Run:
 
 ```bash
-npm test -- --runTestsByPath lib/recommendation/build-pyreason-payload.test.ts lib/recommendation/rank-recommendations.test.ts
+npm test -- --runTestsByPath lib/recommendation/build-recommendation-payload.test.ts lib/recommendation/rank-recommendations.test.ts
 ```
 
 ## Good Things To Know Before Editing
@@ -368,8 +362,8 @@ npm test -- --runTestsByPath lib/recommendation/build-pyreason-payload.test.ts l
 - recommendation and schedule generation are intentionally separate
 - student data is scoped by `studentId`
 - advisor context is scoped by authenticated `user`
-- PyReason output is converted into ranked TypeScript objects before scheduling
-- the fallback reasoner exists on purpose and should not be removed unless PyReason is fully stable in all environments
+- recommendation output is converted into ranked TypeScript objects before scheduling
+- recommendation and scheduling are intentionally separate so ranking changes do not rewrite timetable construction
 
 ## Suggested Next Improvements
 

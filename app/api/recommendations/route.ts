@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { getAuthorizedStudent, requireAdvisorSession } from "@/lib/server-auth";
-import { buildPyReasonPayload } from "@/lib/recommendation/build-pyreason-payload";
+import { buildRecommendationPayload } from "@/lib/recommendation/build-recommendation-payload";
 import { runFallbackReasoner } from "@/lib/recommendation/fallback-reasoner";
 import { rankRecommendations } from "@/lib/recommendation/rank-recommendations";
 import { loadComputerScienceProgramRules } from "@/lib/program-rules/load-program-rules";
@@ -47,7 +47,7 @@ export async function POST(request: Request) {
     const programRules =
       resolvedMajor === DEFAULT_CS_MAJOR_KEY ? loadComputerScienceProgramRules() : null;
 
-    const payload = buildPyReasonPayload({
+    const payload = buildRecommendationPayload({
       studentId: student.id,
       studentName: student.name,
       selectedMajor: resolvedMajor,

@@ -220,7 +220,7 @@ function poolIdToBucketKey(poolId: string): keyof Omit<ProgramCandidatePools, "a
 /**
  * Phase 2: build explicit deterministic candidate pools from structured rules.
  *
- * This creates named pools before PyReason runs so the recommendation layer no
+ * This creates named pools before recommendation inference runs so the ranking layer no
  * longer has to infer its pool from roadmap prose alone.
  */
 export function buildProgramCandidatePools({

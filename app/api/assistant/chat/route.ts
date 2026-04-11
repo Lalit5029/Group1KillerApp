@@ -13,10 +13,9 @@ import {
 import { generateGeminiAssistantReply, getGeminiApiKey } from "@/lib/assistant-gemini"
 import { matchHelpAnswer, ASSISTANT_SYSTEM_PRIMER } from "@/lib/assistant-help"
 import { COURSE_DEPENDENCY_CATALOG } from "@/lib/recommendation/course-dependency-catalog"
-import { buildPyReasonPayload } from "@/lib/recommendation/build-pyreason-payload"
+import { buildRecommendationPayload } from "@/lib/recommendation/build-recommendation-payload"
 import { runFallbackReasoner } from "@/lib/recommendation/fallback-reasoner"
 import { rankRecommendations } from "@/lib/recommendation/rank-recommendations"
-import { runPyReason } from "@/lib/recommendation/run-pyreason"
 import type { CatalogSectionRecord, RequirementBlockRecord } from "@/lib/recommendation/types"
 import type { Course, SelectedCourse } from "@/lib/types"
 
@@ -89,7 +88,7 @@ export async function POST(req: Request) {
             orderBy: { createdAt: "asc" },
           }),
         ])
-        const payload = buildPyReasonPayload({
+        const payload = buildRecommendationPayload({
           studentId: student.id,
           studentName: student.name,
           selectedMajor: selectedMajor || student.major || "",
@@ -106,15 +105,8 @@ export async function POST(req: Request) {
           })),
           catalogCourses,
         })
-        let inferredResults
-        let engine: "pyreason" | "fallback" = "pyreason"
-        try {
-          const pyreasonResponse = await runPyReason(payload)
-          inferredResults = pyreasonResponse.results
-        } catch {
-          engine = "fallback"
-          inferredResults = runFallbackReasoner(payload)
-        }
+        const inferredResults = runFallbackReasoner(payload)
+        const engine = "deterministic"
         const ranked = rankRecommendations(payload.candidateCourses, inferredResults)
         const candidateByCode = new Map(payload.candidateCourses.map((c) => [c.courseCode, c]))
         const formatMissingFromGroups = (

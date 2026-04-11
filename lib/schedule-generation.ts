@@ -1,5 +1,5 @@
 import type { Course } from "@/lib/types";
-import { extractCourseCodesFromText } from "@/lib/recommendation/build-pyreason-payload";
+import { extractCourseCodesFromText } from "@/lib/recommendation/build-recommendation-payload";
 
 export type WorkloadLevel = "low" | "medium" | "high";
 

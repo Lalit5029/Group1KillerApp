@@ -530,7 +530,7 @@ export default function CourseScheduler({
   const estimateCourseCredits = (courseCode: string, section?: Course) =>
     estimateSectionCredits(courseCode, section)
 
-  /** PyReason passes explicit codes; CS BS with no codes uses the fixed workload matrix; else degree JSON slots + fillers. */
+  /** Explicit recommendations pass course codes; CS BS with no codes uses the fixed workload matrix; else degree JSON slots + fillers. */
   const buildScheduleFromCourseCodes = (courseCodes: string[], workload: WorkloadLevel) => {
     if (!selectedMajor || !selectedYear || Object.keys(requirements).length === 0) {
       showNotification("Please confirm selection or wait for data to load.", "error");
@@ -801,7 +801,7 @@ export default function CourseScheduler({
 
     if (coursesAddedCount > 0) {
       const workloadLabel = workload.charAt(0).toUpperCase() + workload.slice(1);
-      // CS workload matrix (no PyReason list): correct catalog credits can yield 11 cr (e.g. y1f low).
+      // CS workload matrix only: correct catalog credits can yield 11 cr (e.g. y1f low).
       const minCreditsThisRun =
         useCsWorkloadMatrix && explicitCodes.length === 0 ? 11 : MIN_SEMESTER_CREDITS;
       if (totalScheduledCredits < minCreditsThisRun) {
@@ -820,9 +820,9 @@ export default function CourseScheduler({
     }
   };
 
-  // Suggested courses depend on imported academic history. PyReason reasons
-  // over completed/in-progress classes plus saved degree requirements and then
-  // hands the ordered results to the existing schedule builder above.
+  // Suggested courses depend on imported academic history. The deterministic
+  // recommender evaluates completed/in-progress classes plus saved degree
+  // requirements and then hands the ordered results to the existing schedule builder above.
   const applyRecommendedCoursesToSchedule = () => {
     if (!pendingRecommendationWorkload || latestRecommendations.length === 0) {
       setIsRecommendationPreviewOpen(false)
@@ -839,18 +839,18 @@ export default function CourseScheduler({
   }
 
   /**
-   * Dismiss PyReason preview. If the user did not apply recommendations, fill the schedule from the
+   * Dismiss the recommendation preview. If the user did not apply recommendations, fill the schedule from the
    * CS workload matrix (or degree-term slots). Uses a ref for workload because Radix often does not
    * invoke onOpenChange when the parent sets open=false programmatically (e.g. "Not now").
    */
   const closeRecommendationPreviewAndMaybeApplyMatrix = () => {
     const w = pendingWorkloadRef.current
     pendingWorkloadRef.current = null
-    const appliedPyReason = pyReasonRecommendationsAppliedRef.current
+    const appliedRecommendations = pyReasonRecommendationsAppliedRef.current
     pyReasonRecommendationsAppliedRef.current = false
     setPendingRecommendationWorkload(null)
     setIsRecommendationPreviewOpen(false)
-    if (w != null && !appliedPyReason) {
+    if (w != null && !appliedRecommendations) {
       buildScheduleFromCourseCodes([], w)
     }
   }
@@ -1957,7 +1957,7 @@ export default function CourseScheduler({
           <DialogHeader>
             <DialogTitle>Review Suggested Courses</DialogTitle>
             <DialogDescription>
-              PyReason built these candidates from the student's completed courses, in-progress courses,
+              The recommender built these candidates from the student's completed courses, in-progress courses,
               remaining requirements, and current catalog offerings. Choose whether to add the recommended
               courses to the schedule.
             </DialogDescription>
@@ -2040,7 +2040,7 @@ export default function CourseScheduler({
                   <CardHeader>
                     <CardTitle className="text-amber-900">Import Academic Records First</CardTitle>
                     <CardDescription className="text-amber-800">
-                      Suggested courses use PyReason to reason over the student's completed and in-progress classes.
+                      Suggested courses use the deterministic recommender to evaluate the student's completed and in-progress classes.
                       Import this student's MySlice record first so recommendations are based on real progress instead
                       of class year alone.
                     </CardDescription>

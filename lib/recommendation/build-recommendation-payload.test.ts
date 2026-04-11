@@ -1,9 +1,9 @@
-import { buildPyReasonPayload } from "./build-pyreason-payload";
+import { buildRecommendationPayload } from "./build-recommendation-payload";
 import { loadComputerScienceProgramRules } from "@/lib/program-rules/load-program-rules";
 
-describe("buildPyReasonPayload", () => {
+describe("buildRecommendationPayload", () => {
   it("does not recommend courses that are already passed or in progress", () => {
-    const payload = buildPyReasonPayload({
+    const payload = buildRecommendationPayload({
       studentId: "student-1",
       studentName: "Student One",
       selectedMajor: "Computer Science, BS",
@@ -50,7 +50,7 @@ describe("buildPyReasonPayload", () => {
   });
 
   it("uses unfinished degree requirements ahead of year-plan hints when degree blocks exist", () => {
-    const payload = buildPyReasonPayload({
+    const payload = buildRecommendationPayload({
       studentId: "student-1",
       studentName: "Student One",
       selectedMajor: "Computer Science, BS",
@@ -81,7 +81,7 @@ describe("buildPyReasonPayload", () => {
   });
 
   it("derives concrete candidates from unfinished upper-division credit buckets", () => {
-    const payload = buildPyReasonPayload({
+    const payload = buildRecommendationPayload({
       studentId: "student-1",
       studentName: "Student One",
       selectedMajor: "Computer Science, BS",
@@ -138,7 +138,7 @@ describe("buildPyReasonPayload", () => {
   });
 
   it("treats free-elective and SSH roadmap examples as fallback-only candidates", () => {
-    const payload = buildPyReasonPayload({
+    const payload = buildRecommendationPayload({
       studentId: "student-1",
       studentName: "Student One",
       selectedMajor: "Computer Science, BS",
@@ -172,7 +172,7 @@ describe("buildPyReasonPayload", () => {
   });
 
   it("supplements a too-small primary pool with flexible roadmap examples", () => {
-    const payload = buildPyReasonPayload({
+    const payload = buildRecommendationPayload({
       studentId: "student-1",
       studentName: "Student One",
       selectedMajor: "Computer Science, BS",
@@ -206,7 +206,7 @@ describe("buildPyReasonPayload", () => {
   });
 
   it("supplements a tiny degree-driven pool with strict and flexible roadmap candidates", () => {
-    const payload = buildPyReasonPayload({
+    const payload = buildRecommendationPayload({
       studentId: "student-1",
       studentName: "Student One",
       selectedMajor: "Computer Science, BS",
@@ -260,7 +260,7 @@ describe("buildPyReasonPayload", () => {
 
   it("uses structured program rules as the source of truth when provided", () => {
     const programRules = loadComputerScienceProgramRules();
-    const payload = buildPyReasonPayload({
+    const payload = buildRecommendationPayload({
       studentId: "student-1",
       studentName: "Student One",
       selectedMajor: "Computer Science, BS",
@@ -318,7 +318,7 @@ describe("buildPyReasonPayload", () => {
   });
 
   it("counts ECN courses toward incomplete Social Science & Humanities degree blocks", () => {
-    const payload = buildPyReasonPayload({
+    const payload = buildRecommendationPayload({
       studentId: "student-1",
       studentName: "Student One",
       selectedMajor: "Computer Science, BS",

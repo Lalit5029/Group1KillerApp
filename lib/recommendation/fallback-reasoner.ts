@@ -1,13 +1,11 @@
-import type { InferenceResult, PyReasonPayload } from "./types";
+import type { InferenceResult, RecommendationPayload } from "./types";
 
 /**
- * Deterministic fallback reasoner.
+ * Deterministic recommendation reasoner.
  *
- * We prefer PyReason, but we keep a local mirror of the core inference semantics
- * so the recommendation endpoint can still respond gracefully if the Python
- * dependency is missing in a development environment.
+ * This is the primary recommendation engine over the structured payload.
  */
-export function runFallbackReasoner(payload: PyReasonPayload): InferenceResult[] {
+export function runFallbackReasoner(payload: RecommendationPayload): InferenceResult[] {
   return payload.candidateCourses.map((course) => {
     const missingPrereq = course.missingPrereqs.length > 0;
     const missingCoreq = course.missingCoreqs.length > 0;

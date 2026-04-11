@@ -1,4 +1,4 @@
-import { buildPyReasonPayload } from "./build-pyreason-payload";
+import { buildRecommendationPayload } from "./build-recommendation-payload";
 import { runFallbackReasoner } from "./fallback-reasoner";
 import { rankRecommendations } from "./rank-recommendations";
 import { loadComputerScienceProgramRules } from "@/lib/program-rules/load-program-rules";
@@ -87,7 +87,7 @@ function runRecommendationScenario({
     ...inProgressCourses.map((courseCode) => academicCourse(courseCode, "IP", "Spring 2026")),
   ];
 
-  const payload = buildPyReasonPayload({
+  const payload = buildRecommendationPayload({
     studentId: "student-scenario",
     studentName: "Scenario Student",
     selectedMajor: "Computer Science, BS",
@@ -198,21 +198,23 @@ describe("recommendation scenarios", () => {
     ).toBe(true);
   });
 
-  it("keeps a blocked 400-level course below other eligible upper-division options", () => {
+  it("keeps a blocked upper-division course below other eligible upper-division options", () => {
     const result = runRecommendationScenario({
       selectedYear: "Senior",
-      completedCourses: CORE_COMPLETE_WITH_MAT397,
-      catalogCourseCodes: ["CIS 400", "CIS 442", "CSE 687"],
+      completedCourses: CORE_COMPLETE_WITH_MAT397.filter(
+        (courseCode) => !["CSE 384", "CSE 486"].includes(courseCode)
+      ),
+      catalogCourseCodes: ["CSE 486", "CIS 442", "CSE 687"],
     });
 
-    expect(findCourse(result.blocked, "CIS 400")?.missingPrereqs).toEqual(["MAT 331"]);
+    expect(findCourse(result.blocked, "CSE 486")?.missingPrereqs).toEqual(["CSE 384"]);
     expect(result.recommended.map((course) => course.courseCode)).toEqual(["CIS 442", "CSE 687"]);
   });
 
   it("supports ahead-of-year students by surfacing future-plan courses once they are eligible", () => {
     const result = runRecommendationScenario({
       selectedYear: "Freshman",
-      completedCourses: ["ECS 101", "CIS 151", "CIS 252", "MAT 295", "WRT 105", "FYS 101", "PHI 251"],
+      completedCourses: ["ECS 101", "CIS 151", "CIS 252", "MAT 295", "WRT 105", "FYS 101", "PHI 251", "CIS 351"],
       catalogCourseCodes: ["PHY 211", "MAT 296", "CIS 375", "CIS 351", "CIS 341", "CIS 352", "CSE 384"],
     });
 

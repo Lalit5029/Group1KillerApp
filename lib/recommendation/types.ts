@@ -3,7 +3,7 @@
  *
  * The recommendation flow is intentionally split into:
  * 1. Data shaping / fact extraction
- * 2. Reasoning (PyReason when available)
+ * 2. Deterministic recommendation inference
  * 3. Ranking + explanation generation
  *
  * This keeps schedule generation separate and allows us to improve the
@@ -86,7 +86,7 @@ export interface CandidateCourse {
   bottleneck: boolean;
 }
 
-export interface PyReasonFactCollection {
+export interface RecommendationFactCollection {
   passed: Array<{ student: string; course: string }>;
   failed: Array<{ student: string; course: string }>;
   inProgress: Array<{ student: string; course: string }>;
@@ -105,7 +105,7 @@ export interface PyReasonFactCollection {
   currentTerm: string[];
 }
 
-export interface PyReasonPayload {
+export interface RecommendationPayload {
   studentId: string;
   studentName: string;
   selectedMajor: string;
@@ -115,7 +115,7 @@ export interface PyReasonPayload {
   failedCourses: string[];
   inProgressCourses: string[];
   candidateCourses: CandidateCourse[];
-  facts: PyReasonFactCollection;
+  facts: RecommendationFactCollection;
 }
 
 export interface InferenceFlags {
@@ -170,7 +170,7 @@ export interface RecommendationApiResponse {
   recommendedCourses: RankedRecommendation[];
   blockedCourses: RankedRecommendation[];
   debug?: {
-    engine: "pyreason" | "fallback";
+    engine: "fallback" | "deterministic";
     candidateCount: number;
     term: string;
   };
