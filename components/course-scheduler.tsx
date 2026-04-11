@@ -9,7 +9,7 @@ import { CourseDetailsModal } from "./course-details-modal"
 import { CourseNotesModal } from "./course-notes-modal"
 import { NotificationArea } from "./notification-area"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Calendar, GraduationCap, BookOpen, Download, Upload } from "lucide-react"
+import { Calendar, GraduationCap, BookOpen, Download, Upload, Trash2 } from "lucide-react"
 import type { Course, SelectedCourse, Notification, Major, Requirements, CourseData, CourseSearchCriteria } from "@/lib/types"
 import { fetchCourses, fetchRequirements } from "@/lib/data-utils"
 import { findFirstBlockingCourse, findScheduleConflicts, hasConflict, parseDaysTimes } from "@/lib/schedule-utils"
@@ -34,6 +34,15 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog"
+import {
+  AlertDialog,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog"
 import { evaluateCsGraduationReadiness } from "@/lib/graduation-readiness"
 import { GraduationPathTimeline } from "@/components/graduation-path-timeline"
 import {
@@ -429,6 +438,8 @@ export default function CourseScheduler({
   // Manual load/save to database (called by buttons when logged in)
   const [isLoadingFromDb, setIsLoadingFromDb] = useState(false)
   const [isSavingToDb, setIsSavingToDb] = useState(false)
+  const [deleteImportDialogOpen, setDeleteImportDialogOpen] = useState(false)
+  const [isDeletingImported, setIsDeletingImported] = useState(false)
 
   const loadSavedCoursesFromDb = async () => {
     if (!session?.user) {
@@ -1644,6 +1655,32 @@ export default function CourseScheduler({
     return response.json().catch(() => null)
   }
 
+  const deleteImportedCoursesFromDb = async () => {
+    if (!session?.user) {
+      showNotification("Please log in to delete imported data", "error")
+      return
+    }
+    setIsDeletingImported(true)
+    try {
+      await persistImportedAcademicCourses([])
+      await persistImportedDegreeRequirements([])
+      setAcademicCourses([])
+      setDegreeCourses([])
+      setDeleteImportDialogOpen(false)
+      showNotification(
+        "Imported academic courses and DegreeWorks blocks removed for this student.",
+        "success"
+      )
+    } catch (err) {
+      showNotification(
+        err instanceof Error ? err.message : "Could not delete imported courses",
+        "error"
+      )
+    } finally {
+      setIsDeletingImported(false)
+    }
+  }
+
   const handleImport = async () => {
     setIsLoading(true)
     setImportLogs([])
@@ -2308,6 +2345,45 @@ export default function CourseScheduler({
                     </div>
                   </CardContent>
                 </Card>
+
+                {session?.user && academicCourses.length > 0 && (
+                  <div className="flex flex-wrap items-center justify-end gap-2">
+                    <Button
+                      type="button"
+                      variant="destructive"
+                      size="sm"
+                      className="gap-2"
+                      onClick={() => setDeleteImportDialogOpen(true)}
+                      disabled={isDeletingImported}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                      Delete imported courses
+                    </Button>
+                    <AlertDialog open={deleteImportDialogOpen} onOpenChange={setDeleteImportDialogOpen}>
+                      <AlertDialogContent>
+                        <AlertDialogHeader>
+                          <AlertDialogTitle>Delete imported courses?</AlertDialogTitle>
+                          <AlertDialogDescription>
+                            This removes the saved MySlice academic history for this student from the database.
+                            DegreeWorks blocks saved from the same import are removed too. Scheduled courses on the
+                            planner tab are not changed.
+                          </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel disabled={isDeletingImported}>Cancel</AlertDialogCancel>
+                          <Button
+                            type="button"
+                            variant="destructive"
+                            disabled={isDeletingImported}
+                            onClick={() => void deleteImportedCoursesFromDb()}
+                          >
+                            {isDeletingImported ? "Deleting…" : "Delete"}
+                          </Button>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
+                  </div>
+                )}
 
                 <div className="mt-6">
                   {renderCourseList(academicCourses)}
