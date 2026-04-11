@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { login, getCourseHistory } from "@/lib/myslice_scraper";
+import { login } from "../../../backend/src/myslice_scraper.js";
 
 // Ensure this route is dynamic
 export const dynamic = "force-dynamic";
@@ -24,15 +24,14 @@ export async function POST(request) {
     }
 
     console.log("Attempting to login to MySlice...");
-    // Login to MySlice
-    await login(username, password);
+    const jobId = Date.now().toString();
+    const result = await login(username, password, jobId, { manualLogin: false });
 
-    console.log("Login successful, fetching course history...");
-    // Get course history
-    const courses = await getCourseHistory();
-    console.log("Course history fetched successfully");
+    console.log("Login successful, course history included in result");
+    const courses = result.courses;
+    const blocks = result.blocks || [];
 
-    return NextResponse.json({ success: true, courses });
+    return NextResponse.json({ success: true, courses, blocks });
   } catch (error) {
     console.error("MySlice import error:", error);
     return NextResponse.json(
