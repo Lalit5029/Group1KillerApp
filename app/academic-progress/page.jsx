@@ -1,9 +1,9 @@
 'use client';
 
-import { useEffect } from 'react';
+import { Suspense, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 
-export default function AcademicProgressPage() {
+function AcademicProgressRedirect() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const studentId = searchParams.get('studentId');
@@ -21,5 +21,19 @@ export default function AcademicProgressPage() {
     <main className="min-h-screen p-8 text-sm text-slate-600">
       Redirecting to the selected student workspace...
     </main>
+  );
+}
+
+export default function AcademicProgressPage() {
+  return (
+    <Suspense
+      fallback={
+        <main className="min-h-screen p-8 text-sm text-slate-600">
+          Loading…
+        </main>
+      }
+    >
+      <AcademicProgressRedirect />
+    </Suspense>
   );
 }
