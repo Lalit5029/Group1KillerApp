@@ -225,7 +225,6 @@
 
 .hover-card-effect:hover {
   transform: translateY(-4px);
-  box-shadow: 0 12px 20px -10px hsl(var(--primary) / 0.35);
 }
 
 .search-container input {

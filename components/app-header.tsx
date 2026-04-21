@@ -61,7 +61,7 @@ export function AppHeader({
               }
               onValueChange={(v) => onPlannerTermChange(v)}
             >
-              <SelectTrigger className="h-9 min-w-[200px] max-w-[280px] border-white/30 bg-white/15 text-primary-foreground backdrop-blur-sm">
+              <SelectTrigger className="h-9 w-[140px] border-white/30 bg-white/15 text-primary-foreground backdrop-blur-sm focus:ring-0 focus:ring-offset-0 focus-visible:ring-0 focus-visible:ring-offset-0 focus:outline-none">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>

@@ -68,7 +68,7 @@ export function MainControls({
         </DialogContent>
       </Dialog>
 
-      <div className="bg-gradient-to-br from-primary-50 to-white p-6 rounded-xl shadow-sm mb-6">
+      <div className="bg-gradient-to-br from-primary-50 to-white p-6 rounded-xl shadow-sm mb-6 transition-all hover:shadow-[0_0_24px_8px_hsl(24_100%_48%/0.25)]">
         <div className="flex flex-wrap gap-3 justify-center">
           <Button
             onClick={() => {
@@ -76,7 +76,7 @@ export function MainControls({
               setIsWorkloadDialogOpen(true)
             }}
             disabled={disabled}
-            className="flex items-center gap-2 bg-gradient-primary hover:opacity-90 transition-opacity"
+            className="flex items-center gap-2 bg-gradient-primary hover:opacity-90 transition-all hover:shadow-[0_0_16px_4px_hsl(24_100%_48%/0.45)]"
           >
             <Sparkles className="h-4 w-4" />
             Add Suggested Courses
@@ -85,7 +85,7 @@ export function MainControls({
           <Button
             onClick={onToggleSearch}
             disabled={disabled}
-            className="flex items-center gap-2 bg-gradient-primary hover:opacity-90 transition-opacity"
+            className="flex items-center gap-2 bg-gradient-primary hover:opacity-90 transition-all hover:shadow-[0_0_16px_4px_hsl(24_100%_48%/0.45)]"
           >
             <Search className="h-4 w-4" />
             Search & Add Courses
@@ -94,7 +94,7 @@ export function MainControls({
           <Button
             onClick={onOpenWhatIf}
             disabled={disabled}
-            className="flex items-center gap-2 bg-primary-700 hover:bg-primary-800 text-white"
+            className="flex items-center gap-2 bg-primary-700 hover:bg-primary-800 text-white transition-all hover:shadow-[0_0_16px_4px_hsl(24_100%_48%/0.45)]"
           >
             <FlaskConical className="h-4 w-4" />
             What-if planner
@@ -104,7 +104,7 @@ export function MainControls({
 
           <Button
             onClick={onResetSchedule}
-            className="flex items-center gap-2 bg-primary-700 hover:bg-primary-800 text-white"
+            className="flex items-center gap-2 bg-primary-700 hover:bg-primary-800 text-white transition-all hover:shadow-[0_0_16px_4px_hsl(24_100%_48%/0.45)]"
           >
             <Trash2 className="h-4 w-4" />
             Reset Schedule
