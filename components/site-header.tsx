@@ -24,7 +24,7 @@ export function SiteHeader({ title, subtitle, children, className }: SiteHeaderP
         <div className="flex min-w-0 flex-1 items-center gap-3">
           <Link
             href="/students"
-            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary font-serif text-lg font-black text-primary-foreground shadow-md ring-1 ring-primary/20 transition hover:bg-primary/95"
+            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary font-serif text-lg font-black text-primary-foreground shadow-md ring-1 ring-primary/20 transition-all hover:bg-primary/95 hover:shadow-[0_0_16px_4px_hsl(24_100%_48%/0.45)]"
             aria-label="Syracuse Course Planner home"
           >
             SU
@@ -40,8 +40,8 @@ export function SiteHeader({ title, subtitle, children, className }: SiteHeaderP
         </div>
         <div className="flex shrink-0 items-center gap-2 sm:gap-3">
           {children}
-          <PresentationPrivacyToggle />
-          <ThemeToggle />
+          <PresentationPrivacyToggle className="transition-all hover:shadow-[0_0_16px_4px_hsl(24_100%_48%/0.45)] rounded-lg" />
+          <ThemeToggle className="transition-all hover:shadow-[0_0_16px_4px_hsl(24_100%_48%/0.45)] rounded-lg" />
         </div>
       </div>
     </header>
