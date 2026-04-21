@@ -9,7 +9,7 @@ import { CourseDetailsModal } from "./course-details-modal"
 import { CourseNotesModal } from "./course-notes-modal"
 import { NotificationArea } from "./notification-area"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Calendar, GraduationCap, BookOpen, Download, Upload } from "lucide-react"
+import { Calendar, GraduationCap, BookOpen, Download, Upload, Trash2, AlertTriangle, ShieldCheck } from "lucide-react"
 import type { Course, SelectedCourse, Notification, Major, Requirements, CourseData, CourseSearchCriteria } from "@/lib/types"
 import { fetchCourses, fetchRequirements } from "@/lib/data-utils"
 import { findFirstBlockingCourse, findScheduleConflicts, hasConflict, parseDaysTimes } from "@/lib/schedule-utils"
@@ -34,6 +34,15 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog"
+import {
+  AlertDialog,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog"
 import { evaluateCsGraduationReadiness } from "@/lib/graduation-readiness"
 import { GraduationPathTimeline } from "@/components/graduation-path-timeline"
 import {
@@ -240,6 +249,8 @@ export default function CourseScheduler({
     roadmap: Record<string, string[]>;
   } | null>(null)
   const advisorAlerts = useMemo(() => evaluateCsGraduationReadiness(academicCourses), [academicCourses])
+  const liveScheduleConflicts = useMemo(() => findScheduleConflicts(selectedCourses), [selectedCourses])
+  const hasLiveConflicts = liveScheduleConflicts.length > 0
   const { sanitizeAdvisorAlert, formatGrade, hideSensitiveAcademic } = usePresentationPrivacy()
 
   const renderRecommendationCard = useCallback(
@@ -429,6 +440,8 @@ export default function CourseScheduler({
   // Manual load/save to database (called by buttons when logged in)
   const [isLoadingFromDb, setIsLoadingFromDb] = useState(false)
   const [isSavingToDb, setIsSavingToDb] = useState(false)
+  const [deleteImportDialogOpen, setDeleteImportDialogOpen] = useState(false)
+  const [isDeletingImported, setIsDeletingImported] = useState(false)
 
   const loadSavedCoursesFromDb = async () => {
     if (!session?.user) {
@@ -1604,6 +1617,15 @@ export default function CourseScheduler({
     if (/Failed to fetch/i.test(message)) {
       return "Could not reach the import service. Start backend API on port 3001, or retry to use the built-in /api fallback."
     }
+    if (/not available on this cloud host|not available in this cloud environment|serverless hosts/i.test(message)) {
+      return message
+    }
+    if (/executablePath|Browser was not found|Chrome was not found at/i.test(message)) {
+      return (
+        "MySlice import needs Google Chrome on your computer. It does not run on typical cloud deployments (no browser). " +
+        "Run the app locally with Chrome installed, or use the optional backend on your machine (port 3001)."
+      )
+    }
     if (/not authorized to access this component|security authorization|40\s*,\s*20/i.test(message)) {
       return "MySlice logged in, but that account is not authorized to open the Course History component directly. In the same browser window, open Academics or Student Records → Course History in View/Display mode, then retry the import."
     }
@@ -1642,6 +1664,32 @@ export default function CourseScheduler({
     }
 
     return response.json().catch(() => null)
+  }
+
+  const deleteImportedCoursesFromDb = async () => {
+    if (!session?.user) {
+      showNotification("Please log in to delete imported data", "error")
+      return
+    }
+    setIsDeletingImported(true)
+    try {
+      await persistImportedAcademicCourses([])
+      await persistImportedDegreeRequirements([])
+      setAcademicCourses([])
+      setDegreeCourses([])
+      setDeleteImportDialogOpen(false)
+      showNotification(
+        "Imported academic courses and DegreeWorks blocks removed for this student.",
+        "success"
+      )
+    } catch (err) {
+      showNotification(
+        err instanceof Error ? err.message : "Could not delete imported courses",
+        "error"
+      )
+    } finally {
+      setIsDeletingImported(false)
+    }
   }
 
   const handleImport = async () => {
@@ -2200,6 +2248,43 @@ export default function CourseScheduler({
                 disabled={!selectedMajor || !selectedYear || courses.length === 0}
               />
 
+              <Card className={hasLiveConflicts ? "border-red-200 bg-red-50" : "border-emerald-200 bg-emerald-50"}>
+                <CardHeader className="pb-3">
+                  <CardTitle className="flex items-center gap-2 text-base">
+                    {hasLiveConflicts ? (
+                      <AlertTriangle className="h-4 w-4 text-red-600" />
+                    ) : (
+                      <ShieldCheck className="h-4 w-4 text-emerald-600" />
+                    )}
+                    Live Schedule Conflict Radar
+                  </CardTitle>
+                  <CardDescription className={hasLiveConflicts ? "text-red-800" : "text-emerald-800"}>
+                    {hasLiveConflicts
+                      ? `${liveScheduleConflicts.length} conflict${liveScheduleConflicts.length > 1 ? "s" : ""} detected right now.`
+                      : selectedCourses.length > 0
+                        ? "No time conflicts detected in your current schedule."
+                        : "Add courses to start live conflict monitoring."}
+                  </CardDescription>
+                </CardHeader>
+                {hasLiveConflicts && (
+                  <CardContent className="space-y-2 pt-0">
+                    {liveScheduleConflicts.slice(0, 3).map((conflict) => (
+                      <div key={conflict.id} className="rounded-md border border-red-200 bg-white/70 p-2 text-sm text-red-900">
+                        <p className="font-medium">
+                          {conflict.courseA.Class} {conflict.courseA.Section} vs {conflict.courseB.Class} {conflict.courseB.Section}
+                        </p>
+                        <p>{conflict.overlapLabel}</p>
+                      </div>
+                    ))}
+                    {liveScheduleConflicts.length > 3 && (
+                      <p className="text-xs text-red-800">
+                        +{liveScheduleConflicts.length - 3} more conflict{liveScheduleConflicts.length - 3 > 1 ? "s" : ""}
+                      </p>
+                    )}
+                  </CardContent>
+                )}
+              </Card>
+
               {session?.user && (
                 <div className="flex flex-wrap gap-2 items-center">
                   <Button
@@ -2308,6 +2393,45 @@ export default function CourseScheduler({
                     </div>
                   </CardContent>
                 </Card>
+
+                {session?.user && academicCourses.length > 0 && (
+                  <div className="flex flex-wrap items-center justify-end gap-2">
+                    <Button
+                      type="button"
+                      variant="destructive"
+                      size="sm"
+                      className="gap-2"
+                      onClick={() => setDeleteImportDialogOpen(true)}
+                      disabled={isDeletingImported}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                      Delete imported courses
+                    </Button>
+                    <AlertDialog open={deleteImportDialogOpen} onOpenChange={setDeleteImportDialogOpen}>
+                      <AlertDialogContent>
+                        <AlertDialogHeader>
+                          <AlertDialogTitle>Delete imported courses?</AlertDialogTitle>
+                          <AlertDialogDescription>
+                            This removes the saved MySlice academic history for this student from the database.
+                            DegreeWorks blocks saved from the same import are removed too. Scheduled courses on the
+                            planner tab are not changed.
+                          </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel disabled={isDeletingImported}>Cancel</AlertDialogCancel>
+                          <Button
+                            type="button"
+                            variant="destructive"
+                            disabled={isDeletingImported}
+                            onClick={() => void deleteImportedCoursesFromDb()}
+                          >
+                            {isDeletingImported ? "Deleting…" : "Delete"}
+                          </Button>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
+                  </div>
+                )}
 
                 <div className="mt-6">
                   {renderCourseList(academicCourses)}
